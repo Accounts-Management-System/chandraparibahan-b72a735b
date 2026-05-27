@@ -264,42 +264,25 @@ function TripDialog({
             </Field>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-border/60 p-3 bg-card/40">
-            <div className="space-y-2">
-              <Field label={t("route1")}>
-                <select
-                  value={route1 ? `${vehicleId}::${route1}` : ""}
-                  onChange={(e) => pickRoute(1, e.target.value)}
-                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
-                >
-                  <option value="">— {t("selectRoute")} —</option>
-                  {routeOptions.map((r) => (
-                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
-                  ))}
-                </select>
-              </Field>
+          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/60 p-3 bg-card/40">
+            <div className="space-y-1">
               <Field label={t("fare1")}>
                 <Input type="number" step="any" value={fare1} onChange={(e) => setFare1(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
               </Field>
+              <div className="text-[11px] text-muted-foreground pl-1">
+                {t("route")}: <span className="text-primary font-semibold">{route1 || "—"}</span>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Field label={t("route2")}>
-                <select
-                  value={route2 ? `${vehicleId}::${route2}` : ""}
-                  onChange={(e) => pickRoute(2, e.target.value)}
-                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
-                >
-                  <option value="">— {t("selectRoute")} —</option>
-                  {routeOptions.map((r) => (
-                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
-                  ))}
-                </select>
-              </Field>
+            <div className="space-y-1">
               <Field label={t("fare2")}>
                 <Input type="number" step="any" value={fare2} onChange={(e) => setFare2(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
               </Field>
+              <div className="text-[11px] text-muted-foreground pl-1">
+                {t("route")}: <span className="text-primary font-semibold">{route2 || "—"}</span>
+              </div>
             </div>
           </div>
+
 
 
           {/* live calc preview */}
