@@ -99,7 +99,7 @@ function Page() {
             </Field>
             <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
-              <Button type="submit" disabled={save.isPending}>{t("save")}</Button>
+              <Button type="submit" disabled={save.isPending}>{editing ? t("update") : t("submit")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
