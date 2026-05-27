@@ -15,6 +15,7 @@ import {
   FileBarChart,
   LogOut,
   Languages,
+  Factory,
 } from "lucide-react";
 
 const nav = [
@@ -24,6 +25,7 @@ const nav = [
   { to: "/other-income", icon: PiggyBank, key: "otherIncome" as const },
   { to: "/vehicles", icon: Bus, key: "vehicles" as const },
   { to: "/contacts", icon: Users, key: "contacts" as const },
+  { to: "/data-manufacturer", icon: Factory, key: "dataManufacturer" as const },
   { to: "/data-bank", icon: Database, key: "dataBank" as const },
   { to: "/reports", icon: FileBarChart, key: "reports" as const },
 ];
