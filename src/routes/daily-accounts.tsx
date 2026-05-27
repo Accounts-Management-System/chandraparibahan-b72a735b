@@ -13,8 +13,6 @@ import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
-export const Route = createFileRoute("/daily-accounts")({
-  component: DailyAccountsPage,
 });
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -25,7 +23,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-const _routeEnd = null;
 
 type Trip = {
   id: string;
