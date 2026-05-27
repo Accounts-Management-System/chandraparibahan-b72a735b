@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
@@ -105,7 +105,7 @@ function DailyAccountsPage() {
 }
 
 type VRow = { vehicle_no: string };
-type RouteOpt = { vehicle_id: string; name: string; fare: number };
+type RouteOpt = { name: string; fare: number };
 
 function TripDialog({
   open, onOpenChange, editing, lastDate,
@@ -123,8 +123,6 @@ function TripDialog({
   const [jama2, setJama2] = useState<number | "">(editing?.jama_2 ?? "");
   const [dena1, setDena1] = useState<number | "">(editing?.dena_1 ?? "");
   const [dena2, setDena2] = useState<number | "">(editing?.dena_2 ?? "");
-  const [route1, setRoute1] = useState(editing?.route_1 ?? "");
-  const [route2, setRoute2] = useState(editing?.route_2 ?? "");
   const [fare1, setFare1] = useState<number | "">(editing?.fare_1 ?? "");
   const [fare2, setFare2] = useState<number | "">(editing?.fare_2 ?? "");
   const [supervisor, setSupervisor] = useState(editing?.supervisor ?? "");
@@ -139,7 +137,7 @@ function TripDialog({
   const { data: allRoutes = [] } = useQuery({
     queryKey: ["all-routes"],
     queryFn: async () => {
-      const { data } = await supabase.from("vehicle_routes").select("vehicle_id,name,fare");
+      const { data } = await supabase.from("vehicle_routes").select("name,fare");
       return (data ?? []) as RouteOpt[];
     },
   });
@@ -163,8 +161,6 @@ function TripDialog({
     setJama2(source?.jama_2 ?? "");
     setDena1(source?.dena_1 ?? "");
     setDena2(source?.dena_2 ?? "");
-    setRoute1(source?.route_1 ?? "");
-    setRoute2(source?.route_2 ?? "");
     setFare1(source?.fare_1 ?? "");
     setFare2(source?.fare_2 ?? "");
     setSupervisor(source?.supervisor ?? "");
@@ -174,7 +170,7 @@ function TripDialog({
     setTripDate(today);
     setVehicleId(""); setVehicleNo("");
     setJama1(""); setJama2(""); setDena1(""); setDena2("");
-    setRoute1(""); setRoute2(""); setFare1(""); setFare2("");
+    setFare1(""); setFare2("");
     setSupervisor("");
   };
 
@@ -186,36 +182,23 @@ function TripDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, vehicles, lastTrip]);
 
-
-  const routeOptions = useMemo(() => {
-    return allRoutes.map((r) => {
-      const v = vehicles.find((x) => x.id === r.vehicle_id);
-      return { ...r, label: `${r.name}${v ? ` — ${v.vehicle_no}` : ""}`, vehicle_no: v?.vehicle_no ?? "" };
-    });
-  }, [allRoutes, vehicles]);
+  // Auto-derive route name aligned to fare amount (Excel VLOOKUP-style)
+  const matchRoute = (f: number | "") => {
+    const n = Number(f || 0);
+    if (!n) return "";
+    const hit = allRoutes.find((r) => Number(r.fare) === n);
+    return hit?.name ?? "";
+  };
+  const route1 = matchRoute(fare1);
+  const route2 = matchRoute(fare2);
+  const routeTotal = matchRoute((Number(fare1 || 0) + Number(fare2 || 0)) as number);
 
   const pickVehicle = (vid: string) => {
     setVehicleId(vid);
     const v = vehicles.find((x) => x.id === vid);
     setVehicleNo(v?.vehicle_no ?? "");
   };
-  const pickRoute = (which: 1 | 2, key: string) => {
-    // key = `${vehicle_id}::${name}` to be unique
-    const r = routeOptions.find((x) => `${x.vehicle_id}::${x.name}` === key);
-    if (!r) {
-      if (which === 1) { setRoute1(""); setFare1(""); } else { setRoute2(""); setFare2(""); }
-      return;
-    }
-    if (which === 1) {
-      setRoute1(r.name); setFare1(r.fare);
-      // auto-align vehicle to route 1
-      if (r.vehicle_id && r.vehicle_id !== vehicleId) {
-        setVehicleId(r.vehicle_id); setVehicleNo(r.vehicle_no);
-      }
-    } else {
-      setRoute2(r.name); setFare2(r.fare);
-    }
-  };
+
 
   const save = useMutation({
     mutationFn: async () => {
@@ -281,50 +264,35 @@ function TripDialog({
             </Field>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-border/60 p-3 bg-card/40">
-            <div className="space-y-2">
-              <Field label={t("route1")}>
-                <select
-                  value={route1 ? `${vehicleId}::${route1}` : ""}
-                  onChange={(e) => pickRoute(1, e.target.value)}
-                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
-                >
-                  <option value="">— {t("selectRoute")} —</option>
-                  {routeOptions.map((r) => (
-                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
-                  ))}
-                </select>
-              </Field>
+          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/60 p-3 bg-card/40">
+            <div className="space-y-1">
               <Field label={t("fare1")}>
                 <Input type="number" step="any" value={fare1} onChange={(e) => setFare1(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
               </Field>
+              <div className="text-[11px] text-muted-foreground pl-1">
+                {t("route")}: <span className="text-primary font-semibold">{route1 || "—"}</span>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Field label={t("route2")}>
-                <select
-                  value={route2 ? `${vehicleId}::${route2}` : ""}
-                  onChange={(e) => pickRoute(2, e.target.value)}
-                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
-                >
-                  <option value="">— {t("selectRoute")} —</option>
-                  {routeOptions.map((r) => (
-                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
-                  ))}
-                </select>
-              </Field>
+            <div className="space-y-1">
               <Field label={t("fare2")}>
                 <Input type="number" step="any" value={fare2} onChange={(e) => setFare2(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
               </Field>
+              <div className="text-[11px] text-muted-foreground pl-1">
+                {t("route")}: <span className="text-primary font-semibold">{route2 || "—"}</span>
+              </div>
             </div>
           </div>
 
 
+
           {/* live calc preview */}
-          <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">
             <div>{t("jamaTotal")}: <span className="text-emerald-400 font-semibold">{Number(jama1 || 0) + Number(jama2 || 0)}</span></div>
             <div>{t("denaTotal")}: <span className="text-rose-400 font-semibold">{Number(dena1 || 0) + Number(dena2 || 0)}</span></div>
             <div>{t("balance")}: <span className="text-primary font-semibold">{Number(jama1 || 0) + Number(jama2 || 0) - Number(dena1 || 0) - Number(dena2 || 0)}</span></div>
+            <div>{t("fareTotal")}: <span className="text-primary font-semibold">{Number(fare1 || 0) + Number(fare2 || 0)}</span> {routeTotal && <span className="ml-1 text-primary">({routeTotal})</span>}</div>
           </div>
+
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>

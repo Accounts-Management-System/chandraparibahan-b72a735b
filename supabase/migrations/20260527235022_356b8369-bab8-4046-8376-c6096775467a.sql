@@ -1,0 +1,1 @@
+ALTER TABLE public.vehicle_routes ALTER COLUMN vehicle_id DROP NOT NULL;
