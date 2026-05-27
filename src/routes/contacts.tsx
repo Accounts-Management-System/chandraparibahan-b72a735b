@@ -209,7 +209,7 @@ function Page() {
                 {t("cancel")}
               </Button>
               <Button type="submit" disabled={save.isPending}>
-                {t("save")}
+                {editing ? t("update") : t("submit")}
               </Button>
             </DialogFooter>
           </form>
