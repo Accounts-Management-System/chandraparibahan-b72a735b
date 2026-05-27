@@ -9,14 +9,51 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VehiclesRouteImport } from './routes/vehicles'
+import { Route as TransfersRouteImport } from './routes/transfers'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as OtherIncomeRouteImport } from './routes/other-income'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ExpensesRouteImport } from './routes/expenses'
+import { Route as DataBankRouteImport } from './routes/data-bank'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DailyAccountsRouteImport } from './routes/daily-accounts'
+import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as IndexRouteImport } from './routes/index'
 
+const VehiclesRoute = VehiclesRouteImport.update({
+  id: '/vehicles',
+  path: '/vehicles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransfersRoute = TransfersRouteImport.update({
+  id: '/transfers',
+  path: '/transfers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtherIncomeRoute = OtherIncomeRouteImport.update({
+  id: '/other-income',
+  path: '/other-income',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpensesRoute = ExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataBankRoute = DataBankRouteImport.update({
+  id: '/data-bank',
+  path: '/data-bank',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -29,6 +66,11 @@ const DailyAccountsRoute = DailyAccountsRouteImport.update({
   path: '/daily-accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,45 +79,149 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
+  '/data-bank': typeof DataBankRoute
+  '/expenses': typeof ExpensesRoute
   '/login': typeof LoginRoute
+  '/other-income': typeof OtherIncomeRoute
+  '/reports': typeof ReportsRoute
+  '/transfers': typeof TransfersRoute
+  '/vehicles': typeof VehiclesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
+  '/data-bank': typeof DataBankRoute
+  '/expenses': typeof ExpensesRoute
   '/login': typeof LoginRoute
+  '/other-income': typeof OtherIncomeRoute
+  '/reports': typeof ReportsRoute
+  '/transfers': typeof TransfersRoute
+  '/vehicles': typeof VehiclesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
+  '/data-bank': typeof DataBankRoute
+  '/expenses': typeof ExpensesRoute
   '/login': typeof LoginRoute
+  '/other-income': typeof OtherIncomeRoute
+  '/reports': typeof ReportsRoute
+  '/transfers': typeof TransfersRoute
+  '/vehicles': typeof VehiclesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/daily-accounts' | '/dashboard' | '/login'
+  fullPaths:
+    | '/'
+    | '/contacts'
+    | '/daily-accounts'
+    | '/dashboard'
+    | '/data-bank'
+    | '/expenses'
+    | '/login'
+    | '/other-income'
+    | '/reports'
+    | '/transfers'
+    | '/vehicles'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/daily-accounts' | '/dashboard' | '/login'
-  id: '__root__' | '/' | '/daily-accounts' | '/dashboard' | '/login'
+  to:
+    | '/'
+    | '/contacts'
+    | '/daily-accounts'
+    | '/dashboard'
+    | '/data-bank'
+    | '/expenses'
+    | '/login'
+    | '/other-income'
+    | '/reports'
+    | '/transfers'
+    | '/vehicles'
+  id:
+    | '__root__'
+    | '/'
+    | '/contacts'
+    | '/daily-accounts'
+    | '/dashboard'
+    | '/data-bank'
+    | '/expenses'
+    | '/login'
+    | '/other-income'
+    | '/reports'
+    | '/transfers'
+    | '/vehicles'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ContactsRoute: typeof ContactsRoute
   DailyAccountsRoute: typeof DailyAccountsRoute
   DashboardRoute: typeof DashboardRoute
+  DataBankRoute: typeof DataBankRoute
+  ExpensesRoute: typeof ExpensesRoute
   LoginRoute: typeof LoginRoute
+  OtherIncomeRoute: typeof OtherIncomeRoute
+  ReportsRoute: typeof ReportsRoute
+  TransfersRoute: typeof TransfersRoute
+  VehiclesRoute: typeof VehiclesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vehicles': {
+      id: '/vehicles'
+      path: '/vehicles'
+      fullPath: '/vehicles'
+      preLoaderRoute: typeof VehiclesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfers': {
+      id: '/transfers'
+      path: '/transfers'
+      fullPath: '/transfers'
+      preLoaderRoute: typeof TransfersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/other-income': {
+      id: '/other-income'
+      path: '/other-income'
+      fullPath: '/other-income'
+      preLoaderRoute: typeof OtherIncomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-bank': {
+      id: '/data-bank'
+      path: '/data-bank'
+      fullPath: '/data-bank'
+      preLoaderRoute: typeof DataBankRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -92,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DailyAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,9 +257,16 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ContactsRoute: ContactsRoute,
   DailyAccountsRoute: DailyAccountsRoute,
   DashboardRoute: DashboardRoute,
+  DataBankRoute: DataBankRoute,
+  ExpensesRoute: ExpensesRoute,
   LoginRoute: LoginRoute,
+  OtherIncomeRoute: OtherIncomeRoute,
+  ReportsRoute: ReportsRoute,
+  TransfersRoute: TransfersRoute,
+  VehiclesRoute: VehiclesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
