@@ -135,24 +135,48 @@ function TripDialog({
     },
   });
 
-  // when dialog opens, reset
+  // Last entered trip (for prefill defaults when adding new)
+  const { data: lastTrip } = useQuery({
+    queryKey: ["last-trip"],
+    queryFn: async () => {
+      const { data } = await supabase.from("trips").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      return (data ?? null) as Trip | null;
+    },
+  });
+
+  const applyDefaults = (source: Trip | null) => {
+    setTripDate(source?.trip_date ?? today);
+    const vNo = source?.vehicle_no ?? "";
+    setVehicleNo(vNo);
+    const v = vehicles.find((x) => x.vehicle_no === vNo);
+    setVehicleId(v?.id ?? "");
+    setJama1(source?.jama_1 ?? "");
+    setJama2(source?.jama_2 ?? "");
+    setDena1(source?.dena_1 ?? "");
+    setDena2(source?.dena_2 ?? "");
+    setRoute1(source?.route_1 ?? "");
+    setRoute2(source?.route_2 ?? "");
+    setFare1(source?.fare_1 ?? "");
+    setFare2(source?.fare_2 ?? "");
+    setSupervisor(source?.supervisor ?? "");
+  };
+
+  const clearForm = () => {
+    setTripDate(today);
+    setVehicleId(""); setVehicleNo("");
+    setJama1(""); setJama2(""); setDena1(""); setDena2("");
+    setRoute1(""); setRoute2(""); setFare1(""); setFare2("");
+    setSupervisor("");
+  };
+
+  // when dialog opens, prefill from editing or last entry
   useEffect(() => {
     if (open) {
-      setTripDate(editing?.trip_date ?? lastDate ?? today);
-      setVehicleNo(editing?.vehicle_no ?? "");
-      const v = vehicles.find((x) => x.vehicle_no === (editing?.vehicle_no ?? ""));
-      setVehicleId(v?.id ?? "");
-      setJama1(editing?.jama_1 ?? "");
-      setJama2(editing?.jama_2 ?? "");
-      setDena1(editing?.dena_1 ?? "");
-      setDena2(editing?.dena_2 ?? "");
-      setRoute1(editing?.route_1 ?? "");
-      setRoute2(editing?.route_2 ?? "");
-      setFare1(editing?.fare_1 ?? "");
-      setFare2(editing?.fare_2 ?? "");
-      setSupervisor(editing?.supervisor ?? "");
+      applyDefaults(editing ?? lastTrip ?? null);
     }
-  }, [open, editing, vehicles, lastDate, today]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing, vehicles, lastTrip]);
+
 
   const vehicleRoutes = useMemo(
     () => allRoutes.filter((r) => r.vehicle_id === vehicleId),
@@ -279,9 +303,12 @@ function TripDialog({
             <div>{t("balance")}: <span className="text-primary font-semibold">{Number(jama1 || 0) + Number(jama2 || 0) - Number(dena1 || 0) - Number(dena2 || 0)}</span></div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit" disabled={save.isPending}>{t("save")}</Button>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+            <Button type="submit" disabled={save.isPending}>
+              {editing ? t("update") : t("submit")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
