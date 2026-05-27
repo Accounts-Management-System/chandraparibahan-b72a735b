@@ -286,11 +286,13 @@ function TripDialog({
 
 
           {/* live calc preview */}
-          <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">
             <div>{t("jamaTotal")}: <span className="text-emerald-400 font-semibold">{Number(jama1 || 0) + Number(jama2 || 0)}</span></div>
             <div>{t("denaTotal")}: <span className="text-rose-400 font-semibold">{Number(dena1 || 0) + Number(dena2 || 0)}</span></div>
             <div>{t("balance")}: <span className="text-primary font-semibold">{Number(jama1 || 0) + Number(jama2 || 0) - Number(dena1 || 0) - Number(dena2 || 0)}</span></div>
+            <div>{t("fareTotal")}: <span className="text-primary font-semibold">{Number(fare1 || 0) + Number(fare2 || 0)}</span> {routeTotal && <span className="ml-1 text-primary">({routeTotal})</span>}</div>
           </div>
+
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>
