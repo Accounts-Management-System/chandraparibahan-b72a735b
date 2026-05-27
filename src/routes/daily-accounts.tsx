@@ -187,21 +187,34 @@ function TripDialog({
   }, [open, editing, vehicles, lastTrip]);
 
 
-  const vehicleRoutes = useMemo(
-    () => allRoutes.filter((r) => r.vehicle_id === vehicleId),
-    [allRoutes, vehicleId],
-  );
+  const routeOptions = useMemo(() => {
+    return allRoutes.map((r) => {
+      const v = vehicles.find((x) => x.id === r.vehicle_id);
+      return { ...r, label: `${r.name}${v ? ` — ${v.vehicle_no}` : ""}`, vehicle_no: v?.vehicle_no ?? "" };
+    });
+  }, [allRoutes, vehicles]);
 
   const pickVehicle = (vid: string) => {
     setVehicleId(vid);
     const v = vehicles.find((x) => x.id === vid);
     setVehicleNo(v?.vehicle_no ?? "");
-    setRoute1(""); setRoute2(""); setFare1(""); setFare2("");
   };
-  const pickRoute = (which: 1 | 2, name: string) => {
-    const r = vehicleRoutes.find((x) => x.name === name);
-    if (which === 1) { setRoute1(name); setFare1(r ? r.fare : ""); }
-    else { setRoute2(name); setFare2(r ? r.fare : ""); }
+  const pickRoute = (which: 1 | 2, key: string) => {
+    // key = `${vehicle_id}::${name}` to be unique
+    const r = routeOptions.find((x) => `${x.vehicle_id}::${x.name}` === key);
+    if (!r) {
+      if (which === 1) { setRoute1(""); setFare1(""); } else { setRoute2(""); setFare2(""); }
+      return;
+    }
+    if (which === 1) {
+      setRoute1(r.name); setFare1(r.fare);
+      // auto-align vehicle to route 1
+      if (r.vehicle_id && r.vehicle_id !== vehicleId) {
+        setVehicleId(r.vehicle_id); setVehicleNo(r.vehicle_no);
+      }
+    } else {
+      setRoute2(r.name); setFare2(r.fare);
+    }
   };
 
   const save = useMutation({
