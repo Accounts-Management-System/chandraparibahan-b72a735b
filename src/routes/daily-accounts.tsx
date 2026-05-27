@@ -222,17 +222,9 @@ function TripDialog({
     onError: (e: any) => toast.error(e.message),
   });
 
-  // software-style: label row + input row
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      {children}
-    </div>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{t("dailyAccounts")}</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
