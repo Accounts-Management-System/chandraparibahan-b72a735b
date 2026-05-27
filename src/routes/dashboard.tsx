@@ -1,98 +1,150 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { useT, fmtNum } from "@/lib/i18n";
+import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Wallet, Bus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Receipt,
+  Wallet,
+  PiggyBank,
+  Bus,
+  Users,
+  ArrowLeftRight,
+  Database,
+  FileBarChart,
+  TrendingUp,
+  Activity,
+} from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-const tiles: { to: string; key: any; color: string }[] = [
-  { to: "/daily-accounts", key: "dailyAccounts", color: "bg-emerald-500" },
-  { to: "/expenses", key: "expenses", color: "bg-rose-500" },
-  { to: "/other-income", key: "otherIncome", color: "bg-amber-500" },
-  { to: "/vehicles", key: "vehicles", color: "bg-sky-500" },
-  { to: "/contacts?type=individual", key: "individual", color: "bg-indigo-500" },
-  { to: "/contacts?type=company", key: "company", color: "bg-violet-500" },
-  { to: "/contacts?type=rental", key: "rental", color: "bg-fuchsia-500" },
-  { to: "/contacts?type=vendor", key: "vendor", color: "bg-pink-500" },
-  { to: "/contacts?type=owner", key: "owner", color: "bg-orange-500" },
-  { to: "/contacts?type=helper", key: "helper", color: "bg-lime-500" },
-  { to: "/contacts?type=dada_bhai", key: "dada_bhai", color: "bg-teal-500" },
-  { to: "/contacts?type=mejho_bhai", key: "mejho_bhai", color: "bg-cyan-500" },
-  { to: "/contacts?type=choto_bhai", key: "choto_bhai", color: "bg-blue-500" },
-  { to: "/contacts?type=bordidi", key: "bordidi", color: "bg-purple-500" },
-  { to: "/contacts?type=mejhdidi", key: "mejhdidi", color: "bg-red-500" },
-  { to: "/transfers", key: "transfers", color: "bg-yellow-600" },
-  { to: "/data-bank", key: "dataBank", color: "bg-slate-600" },
-  { to: "/reports", key: "reports", color: "bg-stone-600" },
+const tiles = [
+  { to: "/daily-accounts", key: "dailyAccounts" as const, icon: Receipt },
+  { to: "/expenses", key: "expenses" as const, icon: Wallet },
+  { to: "/other-income", key: "otherIncome" as const, icon: PiggyBank },
+  { to: "/vehicles", key: "vehicles" as const, icon: Bus },
+  { to: "/contacts", key: "contacts" as const, icon: Users },
+  { to: "/transfers", key: "transfers" as const, icon: ArrowLeftRight },
+  { to: "/data-bank", key: "dataBank" as const, icon: Database },
+  { to: "/reports", key: "reports" as const, icon: FileBarChart },
 ];
 
 function DashboardPage() {
   const { t, lang } = useT();
-
   const today = new Date().toISOString().slice(0, 10);
-  const summary = useQuery({
-    queryKey: ["dash-summary", today],
+  const [date, setDate] = useState(today);
+  const [vehicle, setVehicle] = useState<string>("all");
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ["vehicles-list"],
     queryFn: async () => {
-      const [trips, exp, oth] = await Promise.all([
-        supabase.from("trips").select("jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").eq("trip_date", today),
-        supabase.from("expenses").select("amount").eq("expense_date", today),
-        supabase.from("other_incomes").select("amount").eq("income_date", today),
-      ]);
-      const jama = (trips.data ?? []).reduce(
+      const { data } = await supabase.from("vehicles").select("vehicle_no").order("vehicle_no");
+      return (data ?? []) as { vehicle_no: string }[];
+    },
+  });
+
+  const summary = useQuery({
+    queryKey: ["dash-summary", date, vehicle],
+    queryFn: async () => {
+      let q = supabase.from("trips").select("jama_1,jama_2").eq("trip_date", date);
+      if (vehicle !== "all") q = q.eq("vehicle_no", vehicle);
+      const { data } = await q;
+      const rows = data ?? [];
+      const jama = rows.reduce(
         (s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0),
         0,
       );
-      const dena = (trips.data ?? []).reduce(
-        (s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0),
-        0,
-      );
-      const fares = (trips.data ?? []).reduce(
-        (s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0),
-        0,
-      );
-      const expense = (exp.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
-      const otherInc = (oth.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
-      return { jama, dena, fares, expense, otherInc, tripCount: trips.data?.length ?? 0 };
+      return { jama, tripCount: rows.length };
     },
   });
 
   const s = summary.data;
-  const income = (s?.jama ?? 0) + (s?.otherInc ?? 0);
-  const expense = (s?.expense ?? 0) + (s?.dena ?? 0);
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold">{t("dashboard")}</h1>
-          <p className="text-sm text-muted-foreground">{t("todaysSummary")}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("overview")}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <SummaryCard icon={TrendingUp} label={t("income")} value={fmtNum(income, lang)} color="text-emerald-600" />
-          <SummaryCard icon={TrendingDown} label={t("expense")} value={fmtNum(expense, lang)} color="text-rose-600" />
-          <SummaryCard icon={Wallet} label={t("net")} value={fmtNum(income - expense, lang)} color="text-sky-600" />
-          <SummaryCard icon={Bus} label={t("recentTrips")} value={fmtNum(s?.tripCount ?? 0, lang)} color="text-violet-600" />
+        {/* Filters */}
+        <Card className="p-4 border-border/50 bg-card/60 backdrop-blur">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="h-11"
+            />
+            <Select value={vehicle} onValueChange={setVehicle}>
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder={t("selectVehicle")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allVehicles")}</SelectItem>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.vehicle_no} value={v.vehicle_no}>
+                    {v.vehicle_no}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            {fmtDate(date, lang)} · {vehicle === "all" ? t("allVehicles") : vehicle}
+          </p>
+        </Card>
+
+        {/* Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SummaryCard
+            icon={TrendingUp}
+            label={t("totalJama")}
+            value={fmtNum(s?.jama ?? 0, lang)}
+            accent="from-primary to-primary-glow"
+          />
+          <SummaryCard
+            icon={Activity}
+            label={t("tripCount")}
+            value={fmtNum(s?.tripCount ?? 0, lang)}
+            accent="from-accent to-primary"
+          />
         </div>
 
+        {/* Module buttons */}
         <div>
-          <h2 className="text-lg font-semibold mb-3">{t("brand")}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {tiles.map((tile) => (
-              <Link
-                key={tile.to}
-                to={tile.to}
-                className="group rounded-lg border bg-card p-4 hover:shadow-md hover:border-primary transition-all"
-              >
-                <div className={`w-10 h-10 rounded-md ${tile.color} mb-3`} />
-                <div className="font-medium text-sm">{t(tile.key)}</div>
-              </Link>
-            ))}
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            {t("quickEntry")}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {tiles.map((tile) => {
+              const Icon = tile.icon;
+              return (
+                <Link
+                  key={tile.to}
+                  to={tile.to}
+                  className="group relative overflow-hidden rounded-xl border border-border/60 bg-card/70 p-5 transition-all hover:border-primary/60 hover:bg-card hover:-translate-y-0.5 hover:shadow-[0_8px_30px_-8px] hover:shadow-primary/40"
+                >
+                  <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-gradient-to-br from-primary/30 to-accent/30 text-primary group-hover:from-primary group-hover:to-primary-glow group-hover:text-primary-foreground transition-all mb-3">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="font-medium text-sm">{t(tile.key)}</div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -100,14 +152,29 @@ function DashboardPage() {
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, color }: any) {
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  accent: string;
+}) {
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <Icon className={`h-4 w-4 ${color}`} />
+    <Card className="relative overflow-hidden p-6 border-border/50 bg-card/70 backdrop-blur">
+      <div
+        className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${accent} opacity-20 blur-2xl`}
+      />
+      <div className="relative">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+          <Icon className="h-4 w-4" />
+          {label}
+        </div>
+        <div className="text-4xl font-bold mt-3 tracking-tight">{value}</div>
       </div>
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
     </Card>
   );
 }
