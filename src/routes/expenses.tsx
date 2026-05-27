@@ -4,22 +4,46 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { LookupSelect } from "@/components/LookupSelect";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/expenses")({ component: Page });
 
-type Row = { id: string; expense_date: string; category: string; vehicle_no: string | null; amount: number };
+type Row = {
+  id: string;
+  expense_date: string;
+  category: string;
+  head: string | null;
+  description: string | null;
+  amount: number;
+};
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      {children}
+    </div>
+  );
+}
 
 function Page() {
   const { t, lang } = useT();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(today);
+  const [category, setCategory] = useState("");
+  const [head, setHead] = useState("");
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState<number | "">("");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["expenses"],
@@ -30,13 +54,44 @@ function Page() {
     },
   });
 
+  const last = rows[0];
+
+  useEffect(() => {
+    if (!open) return;
+    if (editing) {
+      setDate(editing.expense_date);
+      setCategory(editing.category ?? "");
+      setHead(editing.head ?? "");
+      setDescription(editing.description ?? "");
+      setAmount(editing.amount ?? "");
+    } else {
+      setDate(last?.expense_date ?? today);
+      setCategory(last?.category ?? "");
+      setHead(last?.head ?? "");
+      setDescription(last?.description ?? "");
+      setAmount("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing, last?.id]);
+
+  const clearForm = () => {
+    setDate(today); setCategory(""); setHead(""); setDescription(""); setAmount("");
+  };
+
   const del = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("expenses").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["expenses"] }); toast.success(t("deleted")); },
   });
 
   const save = useMutation({
-    mutationFn: async (form: any) => {
+    mutationFn: async () => {
+      const form = {
+        expense_date: date,
+        category,
+        head: head || null,
+        description: description || null,
+        amount: Number(amount || 0),
+      };
       if (editing) { const { error } = await supabase.from("expenses").update(form).eq("id", editing.id); if (error) throw error; }
       else { const { error } = await supabase.from("expenses").insert(form); if (error) throw error; }
     },
@@ -61,7 +116,8 @@ function Page() {
           columns={[
             { key: "expense_date", header: t("date"), render: (r) => fmtDate(r.expense_date, lang) },
             { key: "category", header: t("category") },
-            { key: "vehicle_no", header: t("vehicleNo") },
+            { key: "head", header: t("head") },
+            { key: "description", header: t("description") },
             { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
           ]}
           onEdit={(r) => { setEditing(r); setOpen(true); }}
@@ -70,49 +126,35 @@ function Page() {
         />
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{t("expenses")}</DialogTitle></DialogHeader>
           <form
             className="grid grid-cols-2 gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const f = new FormData(e.currentTarget);
-              save.mutate({
-                expense_date: f.get("expense_date"),
-                category: f.get("category"),
-                vehicle_no: f.get("vehicle_no") || null,
-                amount: Number(f.get("amount") || 0),
-              });
-            }}
+            onSubmit={(e) => { e.preventDefault(); save.mutate(); }}
           >
             <Field label={t("date")}>
-              <Input name="expense_date" type="date" defaultValue={editing?.expense_date ?? new Date().toISOString().slice(0,10)} required className="h-10" />
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="h-10" />
             </Field>
             <Field label={t("category")}>
-              <Input name="category" defaultValue={editing?.category} required className="h-10" />
+              <LookupSelect kind="category" value={category} onChange={setCategory} required />
             </Field>
-            <Field label={t("vehicleNo")}>
-              <Input name="vehicle_no" defaultValue={editing?.vehicle_no ?? ""} className="h-10" />
+            <Field label={t("head")}>
+              <LookupSelect kind="head" value={head} onChange={setHead} />
+            </Field>
+            <Field label={t("description")}>
+              <LookupSelect kind="description" value={description} onChange={setDescription} />
             </Field>
             <Field label={t("amount")}>
-              <Input name="amount" type="number" step="any" defaultValue={editing?.amount ?? ""} required className="h-10" />
+              <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
             </Field>
-            <DialogFooter className="col-span-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
+            <DialogFooter className="col-span-2 gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={save.isPending}>{editing ? t("update") : t("submit")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
     </AppLayout>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      {children}
-    </div>
   );
 }

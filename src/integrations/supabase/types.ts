@@ -44,12 +44,38 @@ export type Database = {
         }
         Relationships: []
       }
+      entry_lookups: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
           category: string
           created_at: string
+          description: string | null
           expense_date: string
+          head: string | null
           id: string
           updated_at: string
           vehicle_no: string | null
@@ -58,7 +84,9 @@ export type Database = {
           amount?: number
           category: string
           created_at?: string
+          description?: string | null
           expense_date?: string
+          head?: string | null
           id?: string
           updated_at?: string
           vehicle_no?: string | null
@@ -67,7 +95,9 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
+          description?: string | null
           expense_date?: string
+          head?: string | null
           id?: string
           updated_at?: string
           vehicle_no?: string | null
@@ -79,6 +109,8 @@ export type Database = {
           amount: number
           category: string
           created_at: string
+          description: string | null
+          head: string | null
           id: string
           income_date: string
           updated_at: string
@@ -88,6 +120,8 @@ export type Database = {
           amount?: number
           category: string
           created_at?: string
+          description?: string | null
+          head?: string | null
           id?: string
           income_date?: string
           updated_at?: string
@@ -97,6 +131,8 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
+          description?: string | null
+          head?: string | null
           id?: string
           income_date?: string
           updated_at?: string

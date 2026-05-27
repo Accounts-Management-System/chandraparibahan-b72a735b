@@ -187,21 +187,34 @@ function TripDialog({
   }, [open, editing, vehicles, lastTrip]);
 
 
-  const vehicleRoutes = useMemo(
-    () => allRoutes.filter((r) => r.vehicle_id === vehicleId),
-    [allRoutes, vehicleId],
-  );
+  const routeOptions = useMemo(() => {
+    return allRoutes.map((r) => {
+      const v = vehicles.find((x) => x.id === r.vehicle_id);
+      return { ...r, label: `${r.name}${v ? ` — ${v.vehicle_no}` : ""}`, vehicle_no: v?.vehicle_no ?? "" };
+    });
+  }, [allRoutes, vehicles]);
 
   const pickVehicle = (vid: string) => {
     setVehicleId(vid);
     const v = vehicles.find((x) => x.id === vid);
     setVehicleNo(v?.vehicle_no ?? "");
-    setRoute1(""); setRoute2(""); setFare1(""); setFare2("");
   };
-  const pickRoute = (which: 1 | 2, name: string) => {
-    const r = vehicleRoutes.find((x) => x.name === name);
-    if (which === 1) { setRoute1(name); setFare1(r ? r.fare : ""); }
-    else { setRoute2(name); setFare2(r ? r.fare : ""); }
+  const pickRoute = (which: 1 | 2, key: string) => {
+    // key = `${vehicle_id}::${name}` to be unique
+    const r = routeOptions.find((x) => `${x.vehicle_id}::${x.name}` === key);
+    if (!r) {
+      if (which === 1) { setRoute1(""); setFare1(""); } else { setRoute2(""); setFare2(""); }
+      return;
+    }
+    if (which === 1) {
+      setRoute1(r.name); setFare1(r.fare);
+      // auto-align vehicle to route 1
+      if (r.vehicle_id && r.vehicle_id !== vehicleId) {
+        setVehicleId(r.vehicle_id); setVehicleNo(r.vehicle_no);
+      }
+    } else {
+      setRoute2(r.name); setFare2(r.fare);
+    }
   };
 
   const save = useMutation({
@@ -271,10 +284,14 @@ function TripDialog({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-border/60 p-3 bg-card/40">
             <div className="space-y-2">
               <Field label={t("route1")}>
-                <select value={route1} onChange={(e) => pickRoute(1, e.target.value)} disabled={!vehicleId} className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm disabled:opacity-50">
+                <select
+                  value={route1 ? `${vehicleId}::${route1}` : ""}
+                  onChange={(e) => pickRoute(1, e.target.value)}
+                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
+                >
                   <option value="">— {t("selectRoute")} —</option>
-                  {vehicleRoutes.map((r) => (
-                    <option key={r.name} value={r.name} className="bg-card">{r.name}</option>
+                  {routeOptions.map((r) => (
+                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
                   ))}
                 </select>
               </Field>
@@ -284,10 +301,14 @@ function TripDialog({
             </div>
             <div className="space-y-2">
               <Field label={t("route2")}>
-                <select value={route2} onChange={(e) => pickRoute(2, e.target.value)} disabled={!vehicleId} className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm disabled:opacity-50">
+                <select
+                  value={route2 ? `${vehicleId}::${route2}` : ""}
+                  onChange={(e) => pickRoute(2, e.target.value)}
+                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
+                >
                   <option value="">— {t("selectRoute")} —</option>
-                  {vehicleRoutes.map((r) => (
-                    <option key={r.name} value={r.name} className="bg-card">{r.name}</option>
+                  {routeOptions.map((r) => (
+                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
                   ))}
                 </select>
               </Field>
@@ -296,6 +317,7 @@ function TripDialog({
               </Field>
             </div>
           </div>
+
 
           {/* live calc preview */}
           <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">

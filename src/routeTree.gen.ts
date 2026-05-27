@@ -14,6 +14,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OtherIncomeRouteImport } from './routes/other-income'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExpensesRouteImport } from './routes/expenses'
+import { Route as DataManufacturerRouteImport } from './routes/data-manufacturer'
 import { Route as DataBankRouteImport } from './routes/data-bank'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DailyAccountsRouteImport } from './routes/daily-accounts'
@@ -43,6 +44,11 @@ const LoginRoute = LoginRouteImport.update({
 const ExpensesRoute = ExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataManufacturerRoute = DataManufacturerRouteImport.update({
+  id: '/data-manufacturer',
+  path: '/data-manufacturer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataBankRoute = DataBankRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
+  '/data-manufacturer': typeof DataManufacturerRoute
   '/expenses': typeof ExpensesRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
+  '/data-manufacturer': typeof DataManufacturerRoute
   '/expenses': typeof ExpensesRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
+  '/data-manufacturer': typeof DataManufacturerRoute
   '/expenses': typeof ExpensesRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/daily-accounts'
     | '/dashboard'
     | '/data-bank'
+    | '/data-manufacturer'
     | '/expenses'
     | '/login'
     | '/other-income'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/daily-accounts'
     | '/dashboard'
     | '/data-bank'
+    | '/data-manufacturer'
     | '/expenses'
     | '/login'
     | '/other-income'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/daily-accounts'
     | '/dashboard'
     | '/data-bank'
+    | '/data-manufacturer'
     | '/expenses'
     | '/login'
     | '/other-income'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   DailyAccountsRoute: typeof DailyAccountsRoute
   DashboardRoute: typeof DashboardRoute
   DataBankRoute: typeof DataBankRoute
+  DataManufacturerRoute: typeof DataManufacturerRoute
   ExpensesRoute: typeof ExpensesRoute
   LoginRoute: typeof LoginRoute
   OtherIncomeRoute: typeof OtherIncomeRoute
@@ -195,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/expenses'
       fullPath: '/expenses'
       preLoaderRoute: typeof ExpensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-manufacturer': {
+      id: '/data-manufacturer'
+      path: '/data-manufacturer'
+      fullPath: '/data-manufacturer'
+      preLoaderRoute: typeof DataManufacturerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data-bank': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   DailyAccountsRoute: DailyAccountsRoute,
   DashboardRoute: DashboardRoute,
   DataBankRoute: DataBankRoute,
+  DataManufacturerRoute: DataManufacturerRoute,
   ExpensesRoute: ExpensesRoute,
   LoginRoute: LoginRoute,
   OtherIncomeRoute: OtherIncomeRoute,
