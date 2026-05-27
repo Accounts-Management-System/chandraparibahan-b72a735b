@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VehiclesRouteImport } from './routes/vehicles'
-import { Route as TransfersRouteImport } from './routes/transfers'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OtherIncomeRouteImport } from './routes/other-income'
 import { Route as LoginRouteImport } from './routes/login'
@@ -24,11 +23,6 @@ import { Route as IndexRouteImport } from './routes/index'
 const VehiclesRoute = VehiclesRouteImport.update({
   id: '/vehicles',
   path: '/vehicles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TransfersRoute = TransfersRouteImport.update({
-  id: '/transfers',
-  path: '/transfers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -87,7 +81,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
   '/reports': typeof ReportsRoute
-  '/transfers': typeof TransfersRoute
   '/vehicles': typeof VehiclesRoute
 }
 export interface FileRoutesByTo {
@@ -100,7 +93,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
   '/reports': typeof ReportsRoute
-  '/transfers': typeof TransfersRoute
   '/vehicles': typeof VehiclesRoute
 }
 export interface FileRoutesById {
@@ -114,7 +106,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
   '/reports': typeof ReportsRoute
-  '/transfers': typeof TransfersRoute
   '/vehicles': typeof VehiclesRoute
 }
 export interface FileRouteTypes {
@@ -129,7 +120,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/other-income'
     | '/reports'
-    | '/transfers'
     | '/vehicles'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -142,7 +132,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/other-income'
     | '/reports'
-    | '/transfers'
     | '/vehicles'
   id:
     | '__root__'
@@ -155,7 +144,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/other-income'
     | '/reports'
-    | '/transfers'
     | '/vehicles'
   fileRoutesById: FileRoutesById
 }
@@ -169,7 +157,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OtherIncomeRoute: typeof OtherIncomeRoute
   ReportsRoute: typeof ReportsRoute
-  TransfersRoute: typeof TransfersRoute
   VehiclesRoute: typeof VehiclesRoute
 }
 
@@ -180,13 +167,6 @@ declare module '@tanstack/react-router' {
       path: '/vehicles'
       fullPath: '/vehicles'
       preLoaderRoute: typeof VehiclesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/transfers': {
-      id: '/transfers'
-      path: '/transfers'
-      fullPath: '/transfers'
-      preLoaderRoute: typeof TransfersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -265,7 +245,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OtherIncomeRoute: OtherIncomeRoute,
   ReportsRoute: ReportsRoute,
-  TransfersRoute: TransfersRoute,
   VehiclesRoute: VehiclesRoute,
 }
 export const routeTree = rootRouteImport

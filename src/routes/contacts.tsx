@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+
 import { useT } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,6 @@ type Row = {
   type: string;
   phone: string | null;
   address: string | null;
-  notes: string | null;
 };
 
 function Page() {
@@ -169,7 +168,6 @@ function Page() {
                 type: f.get("type"),
                 phone: f.get("phone") || null,
                 address: f.get("address") || null,
-                notes: f.get("notes") || null,
               });
             }}
           >
@@ -205,13 +203,6 @@ function Page() {
               placeholder={t("address")}
               defaultValue={editing?.address ?? ""}
               className="h-11"
-            />
-            <Textarea
-              name="notes"
-              placeholder={t("notes")}
-              defaultValue={editing?.notes ?? ""}
-              rows={2}
-              className="col-span-2"
             />
             <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
