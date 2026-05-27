@@ -303,9 +303,12 @@ function TripDialog({
             <div>{t("balance")}: <span className="text-primary font-semibold">{Number(jama1 || 0) + Number(jama2 || 0) - Number(dena1 || 0) - Number(dena2 || 0)}</span></div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit" disabled={save.isPending}>{t("save")}</Button>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+            <Button type="submit" disabled={save.isPending}>
+              {editing ? t("update") : t("submit")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
