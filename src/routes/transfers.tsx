@@ -80,11 +80,11 @@ function Page() {
               notes: f.get("notes") || null,
             });
           }}>
-            <div><Label>{t("date")}</Label><Input name="transfer_date" type="date" defaultValue={editing?.transfer_date ?? new Date().toISOString().slice(0,10)} required /></div>
-            <div><Label>{t("amount")}</Label><Input name="amount" type="number" step="any" defaultValue={editing?.amount ?? 0} required /></div>
-            <div><Label>{t("fromParty")}</Label><Input name="from_party" defaultValue={editing?.from_party} required /></div>
-            <div><Label>{t("toParty")}</Label><Input name="to_party" defaultValue={editing?.to_party} required /></div>
-            <div className="col-span-2"><Label>{t("notes")}</Label><Textarea name="notes" defaultValue={editing?.notes ?? ""} rows={2} /></div>
+            <Input name="transfer_date" type="date" placeholder={t("date")} defaultValue={editing?.transfer_date ?? new Date().toISOString().slice(0,10)} required className="h-11" />
+            <Input name="amount" type="number" step="any" placeholder={t("enterAmount")} defaultValue={editing?.amount ?? ""} required className="h-11" />
+            <Input name="from_party" placeholder={t("fromParty")} defaultValue={editing?.from_party} required className="h-11" />
+            <Input name="to_party" placeholder={t("toParty")} defaultValue={editing?.to_party} required className="h-11" />
+            <Textarea name="notes" placeholder={t("notes")} defaultValue={editing?.notes ?? ""} rows={2} className="col-span-2" />
             <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={save.isPending}>{t("save")}</Button>

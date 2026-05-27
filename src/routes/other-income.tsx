@@ -85,11 +85,11 @@ function Page() {
               amount: Number(f.get("amount") || 0),
             });
           }}>
-            <div><Label>{t("date")}</Label><Input name="income_date" type="date" defaultValue={editing?.income_date ?? new Date().toISOString().slice(0,10)} required /></div>
-            <div><Label>{t("category")}</Label><Input name="category" defaultValue={editing?.category} required /></div>
-            <div className="col-span-2"><Label>{t("description")}</Label><Textarea name="description" defaultValue={editing?.description ?? ""} rows={2} /></div>
-            <div><Label>{t("vehicleNo")}</Label><Input name="vehicle_no" defaultValue={editing?.vehicle_no ?? ""} /></div>
-            <div><Label>{t("amount")}</Label><Input name="amount" type="number" step="any" defaultValue={editing?.amount ?? 0} required /></div>
+            <Input name="income_date" type="date" placeholder={t("date")} defaultValue={editing?.income_date ?? new Date().toISOString().slice(0,10)} required className="h-11" />
+            <Input name="category" placeholder={t("enterCategory")} defaultValue={editing?.category} required className="h-11" />
+            <Textarea name="description" placeholder={t("enterDescription")} defaultValue={editing?.description ?? ""} rows={2} className="col-span-2" />
+            <Input name="vehicle_no" placeholder={t("vehicleNo")} defaultValue={editing?.vehicle_no ?? ""} className="h-11" />
+            <Input name="amount" type="number" step="any" placeholder={t("enterAmount")} defaultValue={editing?.amount ?? ""} required className="h-11" />
             <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={save.isPending}>{t("save")}</Button>

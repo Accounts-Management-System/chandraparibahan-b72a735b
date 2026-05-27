@@ -76,9 +76,9 @@ function Page() {
               notes: f.get("notes") || null,
             });
           }}>
-            <div><Label>{t("vehicleNo")}</Label><Input name="vehicle_no" defaultValue={editing?.vehicle_no} required /></div>
-            <div><Label>{t("owner")}</Label><Input name="owner_name" defaultValue={editing?.owner_name ?? ""} /></div>
-            <div><Label>{t("notes")}</Label><Textarea name="notes" defaultValue={editing?.notes ?? ""} rows={2} /></div>
+            <Input name="vehicle_no" placeholder={t("vehicleNo")} defaultValue={editing?.vehicle_no} required className="h-11" />
+            <Input name="owner_name" placeholder={t("owner")} defaultValue={editing?.owner_name ?? ""} className="h-11" />
+            <Textarea name="notes" placeholder={t("notes")} defaultValue={editing?.notes ?? ""} rows={2} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={save.isPending}>{t("save")}</Button>
