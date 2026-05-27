@@ -284,10 +284,14 @@ function TripDialog({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-border/60 p-3 bg-card/40">
             <div className="space-y-2">
               <Field label={t("route1")}>
-                <select value={route1} onChange={(e) => pickRoute(1, e.target.value)} disabled={!vehicleId} className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm disabled:opacity-50">
+                <select
+                  value={route1 ? `${vehicleId}::${route1}` : ""}
+                  onChange={(e) => pickRoute(1, e.target.value)}
+                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
+                >
                   <option value="">— {t("selectRoute")} —</option>
-                  {vehicleRoutes.map((r) => (
-                    <option key={r.name} value={r.name} className="bg-card">{r.name}</option>
+                  {routeOptions.map((r) => (
+                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
                   ))}
                 </select>
               </Field>
@@ -297,10 +301,14 @@ function TripDialog({
             </div>
             <div className="space-y-2">
               <Field label={t("route2")}>
-                <select value={route2} onChange={(e) => pickRoute(2, e.target.value)} disabled={!vehicleId} className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm disabled:opacity-50">
+                <select
+                  value={route2 ? `${vehicleId}::${route2}` : ""}
+                  onChange={(e) => pickRoute(2, e.target.value)}
+                  className="h-10 w-full rounded-md border border-input bg-input px-3 text-sm"
+                >
                   <option value="">— {t("selectRoute")} —</option>
-                  {vehicleRoutes.map((r) => (
-                    <option key={r.name} value={r.name} className="bg-card">{r.name}</option>
+                  {routeOptions.map((r) => (
+                    <option key={`${r.vehicle_id}::${r.name}`} value={`${r.vehicle_id}::${r.name}`} className="bg-card">{r.label}</option>
                   ))}
                 </select>
               </Field>
@@ -309,6 +317,7 @@ function TripDialog({
               </Field>
             </div>
           </div>
+
 
           {/* live calc preview */}
           <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">
