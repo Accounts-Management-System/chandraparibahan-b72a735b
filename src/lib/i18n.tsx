@@ -3,27 +3,22 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 type Lang = "bn" | "en";
 
 const dict = {
-  // brand
   brand: { bn: "চন্দ্রা পরিবহন", en: "Chandra Paribahan" },
   tagline: { bn: "ব্যবস্থাপনা সিস্টেম", en: "Management System" },
-  // auth
   login: { bn: "লগইন", en: "Login" },
   logout: { bn: "লগআউট", en: "Logout" },
   email: { bn: "ইমেইল", en: "Email" },
   password: { bn: "পাসওয়ার্ড", en: "Password" },
   signup: { bn: "নতুন অ্যাকাউন্ট", en: "Sign up" },
   loginForm: { bn: "চন্দ্রা পরিবহন লগইন ফর্ম", en: "Chandra Paribahan Login Form" },
-  // nav
   dashboard: { bn: "ড্যাশবোর্ড", en: "Dashboard" },
   dailyAccounts: { bn: "দৈনিক জমা হিসাব", en: "Daily Accounts" },
   expenses: { bn: "দৈনিক খরচ", en: "Daily Expenses" },
   otherIncome: { bn: "অন্যান্য জমা", en: "Other Income" },
   vehicles: { bn: "গাড়ী", en: "Vehicles" },
   contacts: { bn: "যোগাযোগ", en: "Contacts" },
-  transfers: { bn: "ট্রান্সফার", en: "Transfers" },
   dataBank: { bn: "ডাটা ব্যাংক", en: "Data Bank" },
   reports: { bn: "রিপোর্ট", en: "Reports" },
-  // contact types
   individual: { bn: "ব্যক্তিগত", en: "Individual" },
   company: { bn: "কোম্পানি", en: "Company" },
   rental: { bn: "ভাড়া", en: "Rental" },
@@ -36,27 +31,33 @@ const dict = {
   choto_bhai: { bn: "ছোট ভাই", en: "Choto Bhai" },
   bordidi: { bn: "বড় দিদি", en: "Bor Didi" },
   mejhdidi: { bn: "মেঝো দিদি", en: "Mejh Didi" },
-  // form fields
   date: { bn: "তারিখ", en: "Date" },
   vehicleNo: { bn: "গাড়ী নাম্বার", en: "Vehicle No" },
-  jama1: { bn: "জমা টাকা-১", en: "Deposit-1" },
-  jama2: { bn: "জমা টাকা-২", en: "Deposit-2" },
-  dena1: { bn: "দেনা টাকা-১", en: "Debt-1" },
-  dena2: { bn: "দেনা টাকা-২", en: "Debt-2" },
-  fare1: { bn: "গাড়ী ভাড়া (রুট ১)", en: "Fare (Route 1)" },
-  fare2: { bn: "গাড়ী ভাড়া (রুট ২)", en: "Fare (Route 2)" },
+  jama1: { bn: "জমা-১", en: "Deposit-1" },
+  jama2: { bn: "জমা-২", en: "Deposit-2" },
+  dena1: { bn: "দেনা-১", en: "Debt-1" },
+  dena2: { bn: "দেনা-২", en: "Debt-2" },
+  fare1: { bn: "ভাড়া (রুট ১)", en: "Fare (Route 1)" },
+  fare2: { bn: "ভাড়া (রুট ২)", en: "Fare (Route 2)" },
+  route1: { bn: "রুট ১", en: "Route 1" },
+  route2: { bn: "রুট ২", en: "Route 2" },
+  route: { bn: "রুট", en: "Route" },
+  routes: { bn: "রুটসমূহ", en: "Routes" },
+  routeName: { bn: "রুটের নাম", en: "Route name" },
+  fare: { bn: "ভাড়া", en: "Fare" },
+  addRoute: { bn: "রুট যোগ করুন", en: "Add route" },
+  serial: { bn: "সিরিয়াল", en: "Serial" },
+  balance: { bn: "ব্যালেন্স", en: "Balance" },
+  jamaTotal: { bn: "জমা টাকা", en: "Deposit" },
+  denaTotal: { bn: "দেনা টাকা", en: "Debt" },
+  fareTotal: { bn: "মোট ভাড়া", en: "Total Fare" },
   supervisor: { bn: "সুপারভাইজার", en: "Supervisor" },
   category: { bn: "খাত", en: "Category" },
-  description: { bn: "বিবরণ", en: "Description" },
   amount: { bn: "পরিমান", en: "Amount" },
-  notes: { bn: "মন্তব্য", en: "Notes" },
   name: { bn: "নাম", en: "Name" },
   phone: { bn: "ফোন", en: "Phone" },
   address: { bn: "ঠিকানা", en: "Address" },
   type: { bn: "ধরন", en: "Type" },
-  fromParty: { bn: "প্রেরক", en: "From" },
-  toParty: { bn: "প্রাপক", en: "To" },
-  // actions
   save: { bn: "সংরক্ষণ", en: "Save" },
   add: { bn: "যোগ করুন", en: "Add" },
   edit: { bn: "সম্পাদনা", en: "Edit" },
@@ -86,12 +87,11 @@ const dict = {
   tripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
   selectVehicle: { bn: "গাড়ী নির্বাচন", en: "Select vehicle" },
   allVehicles: { bn: "সব গাড়ী", en: "All vehicles" },
+  selectRoute: { bn: "রুট নির্বাচন", en: "Select route" },
   quickEntry: { bn: "দ্রুত এন্ট্রি", en: "Quick Entry" },
   overview: { bn: "সারাংশ", en: "Overview" },
-  partyName: { bn: "পার্টির নাম", en: "Party name" },
   enterAmount: { bn: "পরিমান লিখুন", en: "Enter amount" },
   enterCategory: { bn: "খাত", en: "Category" },
-  enterDescription: { bn: "বিবরণ লিখুন", en: "Description" },
 } as const;
 
 type Key = keyof typeof dict;
@@ -134,6 +134,6 @@ export function fmtNum(n: number | string | null | undefined, lang: Lang): strin
 export function fmtDate(d: string | Date | null | undefined, lang: Lang): string {
   if (!d) return "-";
   const date = typeof d === "string" ? new Date(d) : d;
-  const s = date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+  const s = date.toLocaleDateString("en-GB");
   return lang === "bn" ? toBnDigits(s) : s;
 }

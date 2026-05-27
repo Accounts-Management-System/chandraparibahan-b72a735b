@@ -18,7 +18,6 @@ import {
   PiggyBank,
   Bus,
   Users,
-  ArrowLeftRight,
   Database,
   FileBarChart,
   TrendingUp,
@@ -36,7 +35,6 @@ const tiles = [
   { to: "/other-income", key: "otherIncome" as const, icon: PiggyBank },
   { to: "/vehicles", key: "vehicles" as const, icon: Bus },
   { to: "/contacts", key: "contacts" as const, icon: Users },
-  { to: "/transfers", key: "transfers" as const, icon: ArrowLeftRight },
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
 ];

@@ -20,7 +20,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          notes: string | null
           phone: string | null
           type: Database["public"]["Enums"]["contact_type"]
           updated_at: string
@@ -30,7 +29,6 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          notes?: string | null
           phone?: string | null
           type: Database["public"]["Enums"]["contact_type"]
           updated_at?: string
@@ -40,7 +38,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          notes?: string | null
           phone?: string | null
           type?: Database["public"]["Enums"]["contact_type"]
           updated_at?: string
@@ -52,7 +49,6 @@ export type Database = {
           amount: number
           category: string
           created_at: string
-          description: string | null
           expense_date: string
           id: string
           updated_at: string
@@ -62,7 +58,6 @@ export type Database = {
           amount?: number
           category: string
           created_at?: string
-          description?: string | null
           expense_date?: string
           id?: string
           updated_at?: string
@@ -72,7 +67,6 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
-          description?: string | null
           expense_date?: string
           id?: string
           updated_at?: string
@@ -85,7 +79,6 @@ export type Database = {
           amount: number
           category: string
           created_at: string
-          description: string | null
           id: string
           income_date: string
           updated_at: string
@@ -95,7 +88,6 @@ export type Database = {
           amount?: number
           category: string
           created_at?: string
-          description?: string | null
           id?: string
           income_date?: string
           updated_at?: string
@@ -105,44 +97,10 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
-          description?: string | null
           id?: string
           income_date?: string
           updated_at?: string
           vehicle_no?: string | null
-        }
-        Relationships: []
-      }
-      transfers: {
-        Row: {
-          amount: number
-          created_at: string
-          from_party: string
-          id: string
-          notes: string | null
-          to_party: string
-          transfer_date: string
-          updated_at: string
-        }
-        Insert: {
-          amount?: number
-          created_at?: string
-          from_party: string
-          id?: string
-          notes?: string | null
-          to_party: string
-          transfer_date?: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          from_party?: string
-          id?: string
-          notes?: string | null
-          to_party?: string
-          transfer_date?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -156,7 +114,9 @@ export type Database = {
           id: string
           jama_1: number
           jama_2: number
-          notes: string | null
+          route_1: string | null
+          route_2: string | null
+          serial_no: number | null
           supervisor: string | null
           trip_date: string
           updated_at: string
@@ -171,7 +131,9 @@ export type Database = {
           id?: string
           jama_1?: number
           jama_2?: number
-          notes?: string | null
+          route_1?: string | null
+          route_2?: string | null
+          serial_no?: number | null
           supervisor?: string | null
           trip_date?: string
           updated_at?: string
@@ -186,13 +148,50 @@ export type Database = {
           id?: string
           jama_1?: number
           jama_2?: number
-          notes?: string | null
+          route_1?: string | null
+          route_2?: string | null
+          serial_no?: number | null
           supervisor?: string | null
           trip_date?: string
           updated_at?: string
           vehicle_no?: string
         }
         Relationships: []
+      }
+      vehicle_routes: {
+        Row: {
+          created_at: string
+          fare: number
+          id: string
+          name: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          fare?: number
+          id?: string
+          name: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          fare?: number
+          id?: string
+          name?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_routes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {

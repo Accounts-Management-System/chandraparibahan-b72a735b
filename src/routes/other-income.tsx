@@ -3,9 +3,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +13,7 @@ import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/other-income")({ component: Page });
 
-type Row = { id: string; income_date: string; category: string; description: string | null; vehicle_no: string | null; amount: number };
+type Row = { id: string; income_date: string; category: string; vehicle_no: string | null; amount: number };
 
 function Page() {
   const { t, lang } = useT();
@@ -28,7 +26,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(1000);
       if (error) throw error;
-      return data as Row[];
+      return (data ?? []) as Row[];
     },
   });
 
@@ -53,7 +51,7 @@ function Page() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">{t("otherIncome")}</h1>
-            <p className="text-sm text-muted-foreground">{t("total")}: <span className="font-semibold text-emerald-600">{fmtNum(total, lang)}</span></p>
+            <p className="text-sm text-muted-foreground">{t("total")}: <span className="font-semibold text-emerald-400">{fmtNum(total, lang)}</span></p>
           </div>
           <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>
         </div>
@@ -62,7 +60,6 @@ function Page() {
           columns={[
             { key: "income_date", header: t("date"), render: (r) => fmtDate(r.income_date, lang) },
             { key: "category", header: t("category") },
-            { key: "description", header: t("description") },
             { key: "vehicle_no", header: t("vehicleNo") },
             { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
           ]}
@@ -80,16 +77,22 @@ function Page() {
             save.mutate({
               income_date: f.get("income_date"),
               category: f.get("category"),
-              description: f.get("description") || null,
               vehicle_no: f.get("vehicle_no") || null,
               amount: Number(f.get("amount") || 0),
             });
           }}>
-            <Input name="income_date" type="date" placeholder={t("date")} defaultValue={editing?.income_date ?? new Date().toISOString().slice(0,10)} required className="h-11" />
-            <Input name="category" placeholder={t("enterCategory")} defaultValue={editing?.category} required className="h-11" />
-            <Textarea name="description" placeholder={t("enterDescription")} defaultValue={editing?.description ?? ""} rows={2} className="col-span-2" />
-            <Input name="vehicle_no" placeholder={t("vehicleNo")} defaultValue={editing?.vehicle_no ?? ""} className="h-11" />
-            <Input name="amount" type="number" step="any" placeholder={t("enterAmount")} defaultValue={editing?.amount ?? ""} required className="h-11" />
+            <Field label={t("date")}>
+              <Input name="income_date" type="date" defaultValue={editing?.income_date ?? new Date().toISOString().slice(0,10)} required className="h-10" />
+            </Field>
+            <Field label={t("category")}>
+              <Input name="category" defaultValue={editing?.category} required className="h-10" />
+            </Field>
+            <Field label={t("vehicleNo")}>
+              <Input name="vehicle_no" defaultValue={editing?.vehicle_no ?? ""} className="h-10" />
+            </Field>
+            <Field label={t("amount")}>
+              <Input name="amount" type="number" step="any" defaultValue={editing?.amount ?? ""} required className="h-10" />
+            </Field>
             <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={save.isPending}>{t("save")}</Button>
@@ -98,5 +101,14 @@ function Page() {
         </DialogContent>
       </Dialog>
     </AppLayout>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      {children}
+    </div>
   );
 }
