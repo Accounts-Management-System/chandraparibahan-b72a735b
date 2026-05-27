@@ -134,19 +134,16 @@ function TripDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
       <DialogContent className="max-w-2xl">
         <DialogHeader><DialogTitle>{t("dailyAccounts")}</DialogTitle></DialogHeader>
         <form onSubmit={onSubmit} className="grid grid-cols-2 gap-3">
-          <Field name="trip_date" label={t("date")} type="date" defaultValue={editing?.trip_date ?? new Date().toISOString().slice(0,10)} required />
-          <Field name="vehicle_no" label={t("vehicleNo")} defaultValue={editing?.vehicle_no} required />
-          <Field name="jama_1" label={t("jama1")} type="number" step="any" defaultValue={editing?.jama_1 ?? 0} />
-          <Field name="jama_2" label={t("jama2")} type="number" step="any" defaultValue={editing?.jama_2 ?? 0} />
-          <Field name="dena_1" label={t("dena1")} type="number" step="any" defaultValue={editing?.dena_1 ?? 0} />
-          <Field name="dena_2" label={t("dena2")} type="number" step="any" defaultValue={editing?.dena_2 ?? 0} />
-          <Field name="fare_1" label={t("fare1")} type="number" step="any" defaultValue={editing?.fare_1 ?? 0} />
-          <Field name="fare_2" label={t("fare2")} type="number" step="any" defaultValue={editing?.fare_2 ?? 0} />
-          <Field name="supervisor" label={t("supervisor")} defaultValue={editing?.supervisor ?? ""} />
-          <div className="col-span-2">
-            <Label>{t("notes")}</Label>
-            <Textarea name="notes" defaultValue={editing?.notes ?? ""} rows={2} />
-          </div>
+          <Input name="trip_date" type="date" placeholder={t("date")} defaultValue={editing?.trip_date ?? new Date().toISOString().slice(0,10)} required className="h-11" />
+          <Input name="vehicle_no" placeholder={t("vehicleNo")} defaultValue={editing?.vehicle_no} required className="h-11" />
+          <Input name="jama_1" type="number" step="any" placeholder={t("jama1")} defaultValue={editing?.jama_1 ?? ""} className="h-11" />
+          <Input name="jama_2" type="number" step="any" placeholder={t("jama2")} defaultValue={editing?.jama_2 ?? ""} className="h-11" />
+          <Input name="dena_1" type="number" step="any" placeholder={t("dena1")} defaultValue={editing?.dena_1 ?? ""} className="h-11" />
+          <Input name="dena_2" type="number" step="any" placeholder={t("dena2")} defaultValue={editing?.dena_2 ?? ""} className="h-11" />
+          <Input name="fare_1" type="number" step="any" placeholder={t("fare1")} defaultValue={editing?.fare_1 ?? ""} className="h-11" />
+          <Input name="fare_2" type="number" step="any" placeholder={t("fare2")} defaultValue={editing?.fare_2 ?? ""} className="h-11" />
+          <Input name="supervisor" placeholder={t("supervisor")} defaultValue={editing?.supervisor ?? ""} className="col-span-2 h-11" />
+          <Textarea name="notes" placeholder={t("notes")} defaultValue={editing?.notes ?? ""} rows={2} className="col-span-2" />
           <DialogFooter className="col-span-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
             <Button type="submit" disabled={save.isPending}>{t("save")}</Button>
@@ -157,11 +154,3 @@ function TripDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
   );
 }
 
-function Field({ label, ...props }: any) {
-  return (
-    <div>
-      <Label>{label}</Label>
-      <Input {...props} />
-    </div>
-  );
-}

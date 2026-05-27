@@ -82,6 +82,16 @@ const dict = {
   net: { bn: "নিট", en: "Net" },
   todaysSummary: { bn: "আজকের সারাংশ", en: "Today's Summary" },
   recentTrips: { bn: "সাম্প্রতিক ট্রিপ", en: "Recent Trips" },
+  totalJama: { bn: "মোট জমা", en: "Total Deposit" },
+  tripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
+  selectVehicle: { bn: "গাড়ী নির্বাচন", en: "Select vehicle" },
+  allVehicles: { bn: "সব গাড়ী", en: "All vehicles" },
+  quickEntry: { bn: "দ্রুত এন্ট্রি", en: "Quick Entry" },
+  overview: { bn: "সারাংশ", en: "Overview" },
+  partyName: { bn: "পার্টির নাম", en: "Party name" },
+  enterAmount: { bn: "পরিমান লিখুন", en: "Enter amount" },
+  enterCategory: { bn: "খাত", en: "Category" },
+  enterDescription: { bn: "বিবরণ লিখুন", en: "Description" },
 } as const;
 
 type Key = keyof typeof dict;
