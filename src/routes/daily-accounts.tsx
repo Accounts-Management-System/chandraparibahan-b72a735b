@@ -105,7 +105,7 @@ function DailyAccountsPage() {
 }
 
 type VRow = { vehicle_no: string };
-type RouteOpt = { vehicle_id: string; name: string; fare: number };
+type RouteOpt = { name: string; fare: number };
 
 function TripDialog({
   open, onOpenChange, editing, lastDate,
@@ -123,8 +123,6 @@ function TripDialog({
   const [jama2, setJama2] = useState<number | "">(editing?.jama_2 ?? "");
   const [dena1, setDena1] = useState<number | "">(editing?.dena_1 ?? "");
   const [dena2, setDena2] = useState<number | "">(editing?.dena_2 ?? "");
-  const [route1, setRoute1] = useState(editing?.route_1 ?? "");
-  const [route2, setRoute2] = useState(editing?.route_2 ?? "");
   const [fare1, setFare1] = useState<number | "">(editing?.fare_1 ?? "");
   const [fare2, setFare2] = useState<number | "">(editing?.fare_2 ?? "");
   const [supervisor, setSupervisor] = useState(editing?.supervisor ?? "");
@@ -139,7 +137,7 @@ function TripDialog({
   const { data: allRoutes = [] } = useQuery({
     queryKey: ["all-routes"],
     queryFn: async () => {
-      const { data } = await supabase.from("vehicle_routes").select("vehicle_id,name,fare");
+      const { data } = await supabase.from("vehicle_routes").select("name,fare");
       return (data ?? []) as RouteOpt[];
     },
   });
@@ -163,8 +161,6 @@ function TripDialog({
     setJama2(source?.jama_2 ?? "");
     setDena1(source?.dena_1 ?? "");
     setDena2(source?.dena_2 ?? "");
-    setRoute1(source?.route_1 ?? "");
-    setRoute2(source?.route_2 ?? "");
     setFare1(source?.fare_1 ?? "");
     setFare2(source?.fare_2 ?? "");
     setSupervisor(source?.supervisor ?? "");
@@ -174,7 +170,7 @@ function TripDialog({
     setTripDate(today);
     setVehicleId(""); setVehicleNo("");
     setJama1(""); setJama2(""); setDena1(""); setDena2("");
-    setRoute1(""); setRoute2(""); setFare1(""); setFare2("");
+    setFare1(""); setFare2("");
     setSupervisor("");
   };
 
@@ -186,36 +182,23 @@ function TripDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, vehicles, lastTrip]);
 
-
-  const routeOptions = useMemo(() => {
-    return allRoutes.map((r) => {
-      const v = vehicles.find((x) => x.id === r.vehicle_id);
-      return { ...r, label: `${r.name}${v ? ` — ${v.vehicle_no}` : ""}`, vehicle_no: v?.vehicle_no ?? "" };
-    });
-  }, [allRoutes, vehicles]);
+  // Auto-derive route name aligned to fare amount (Excel VLOOKUP-style)
+  const matchRoute = (f: number | "") => {
+    const n = Number(f || 0);
+    if (!n) return "";
+    const hit = allRoutes.find((r) => Number(r.fare) === n);
+    return hit?.name ?? "";
+  };
+  const route1 = matchRoute(fare1);
+  const route2 = matchRoute(fare2);
+  const routeTotal = matchRoute((Number(fare1 || 0) + Number(fare2 || 0)) as number);
 
   const pickVehicle = (vid: string) => {
     setVehicleId(vid);
     const v = vehicles.find((x) => x.id === vid);
     setVehicleNo(v?.vehicle_no ?? "");
   };
-  const pickRoute = (which: 1 | 2, key: string) => {
-    // key = `${vehicle_id}::${name}` to be unique
-    const r = routeOptions.find((x) => `${x.vehicle_id}::${x.name}` === key);
-    if (!r) {
-      if (which === 1) { setRoute1(""); setFare1(""); } else { setRoute2(""); setFare2(""); }
-      return;
-    }
-    if (which === 1) {
-      setRoute1(r.name); setFare1(r.fare);
-      // auto-align vehicle to route 1
-      if (r.vehicle_id && r.vehicle_id !== vehicleId) {
-        setVehicleId(r.vehicle_id); setVehicleNo(r.vehicle_no);
-      }
-    } else {
-      setRoute2(r.name); setFare2(r.fare);
-    }
-  };
+
 
   const save = useMutation({
     mutationFn: async () => {
