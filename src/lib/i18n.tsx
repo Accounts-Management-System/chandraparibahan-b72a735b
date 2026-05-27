@@ -97,6 +97,12 @@ const dict = {
   clearForm: { bn: "ফরম ক্লিয়ার", en: "Clear Form" },
   vehicleInfo: { bn: "গাড়ী তথ্য", en: "Vehicle Info" },
   addRouteSection: { bn: "রুট যোগ করুন", en: "Add Route" },
+  head: { bn: "খরচ খাত", en: "Head" },
+  description: { bn: "বিবরন", en: "Description" },
+  dataManufacturer: { bn: "ডাটা ম্যানুফ্যাকচার", en: "Data Manufacturer" },
+  manage: { bn: "ব্যবস্থাপনা", en: "Manage" },
+  value: { bn: "মান", en: "Value" },
+  selectOrType: { bn: "নির্বাচন বা টাইপ করুন", en: "Select or type" },
 } as const;
 
 type Key = keyof typeof dict;
