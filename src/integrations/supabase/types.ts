@@ -14,7 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          type: Database["public"]["Enums"]["contact_type"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          type: Database["public"]["Enums"]["contact_type"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          type?: Database["public"]["Enums"]["contact_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          expense_date: string
+          id: string
+          updated_at: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Relationships: []
+      }
+      other_incomes: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          income_date: string
+          updated_at: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          income_date?: string
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          income_date?: string
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Relationships: []
+      }
+      transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          from_party: string
+          id: string
+          notes: string | null
+          to_party: string
+          transfer_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          from_party: string
+          id?: string
+          notes?: string | null
+          to_party: string
+          transfer_date?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_party?: string
+          id?: string
+          notes?: string | null
+          to_party?: string
+          transfer_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          created_at: string
+          dena_1: number
+          dena_2: number
+          fare_1: number
+          fare_2: number
+          id: string
+          jama_1: number
+          jama_2: number
+          notes: string | null
+          supervisor: string | null
+          trip_date: string
+          updated_at: string
+          vehicle_no: string
+        }
+        Insert: {
+          created_at?: string
+          dena_1?: number
+          dena_2?: number
+          fare_1?: number
+          fare_2?: number
+          id?: string
+          jama_1?: number
+          jama_2?: number
+          notes?: string | null
+          supervisor?: string | null
+          trip_date?: string
+          updated_at?: string
+          vehicle_no: string
+        }
+        Update: {
+          created_at?: string
+          dena_1?: number
+          dena_2?: number
+          fare_1?: number
+          fare_2?: number
+          id?: string
+          jama_1?: number
+          jama_2?: number
+          notes?: string | null
+          supervisor?: string | null
+          trip_date?: string
+          updated_at?: string
+          vehicle_no?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          owner_name: string | null
+          updated_at: string
+          vehicle_no: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_name?: string | null
+          updated_at?: string
+          vehicle_no: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_name?: string | null
+          updated_at?: string
+          vehicle_no?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +229,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      contact_type:
+        | "individual"
+        | "company"
+        | "rental"
+        | "vendor"
+        | "owner"
+        | "helper"
+        | "partner"
+        | "dada_bhai"
+        | "mejho_bhai"
+        | "choto_bhai"
+        | "bordidi"
+        | "mejhdidi"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +368,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contact_type: [
+        "individual",
+        "company",
+        "rental",
+        "vendor",
+        "owner",
+        "helper",
+        "partner",
+        "dada_bhai",
+        "mejho_bhai",
+        "choto_bhai",
+        "bordidi",
+        "mejhdidi",
+      ],
+    },
   },
 } as const
