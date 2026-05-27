@@ -1,0 +1,129 @@
+import React, { createContext, useContext, useEffect, useState } from "react";
+
+type Lang = "bn" | "en";
+
+const dict = {
+  // brand
+  brand: { bn: "চন্দ্রা পরিবহন", en: "Chandra Paribahan" },
+  tagline: { bn: "ব্যবস্থাপনা সিস্টেম", en: "Management System" },
+  // auth
+  login: { bn: "লগইন", en: "Login" },
+  logout: { bn: "লগআউট", en: "Logout" },
+  email: { bn: "ইমেইল", en: "Email" },
+  password: { bn: "পাসওয়ার্ড", en: "Password" },
+  signup: { bn: "নতুন অ্যাকাউন্ট", en: "Sign up" },
+  loginForm: { bn: "চন্দ্রা পরিবহন লগইন ফর্ম", en: "Chandra Paribahan Login Form" },
+  // nav
+  dashboard: { bn: "ড্যাশবোর্ড", en: "Dashboard" },
+  dailyAccounts: { bn: "দৈনিক জমা হিসাব", en: "Daily Accounts" },
+  expenses: { bn: "দৈনিক খরচ", en: "Daily Expenses" },
+  otherIncome: { bn: "অন্যান্য জমা", en: "Other Income" },
+  vehicles: { bn: "গাড়ী", en: "Vehicles" },
+  contacts: { bn: "যোগাযোগ", en: "Contacts" },
+  transfers: { bn: "ট্রান্সফার", en: "Transfers" },
+  dataBank: { bn: "ডাটা ব্যাংক", en: "Data Bank" },
+  reports: { bn: "রিপোর্ট", en: "Reports" },
+  // contact types
+  individual: { bn: "ব্যক্তিগত", en: "Individual" },
+  company: { bn: "কোম্পানি", en: "Company" },
+  rental: { bn: "ভাড়া", en: "Rental" },
+  vendor: { bn: "ভেন্ডর", en: "Vendor" },
+  owner: { bn: "মালিক", en: "Owner" },
+  helper: { bn: "সহকারী", en: "Helper" },
+  partner: { bn: "অংশীদার", en: "Partner" },
+  dada_bhai: { bn: "দাদা ভাই", en: "Dada Bhai" },
+  mejho_bhai: { bn: "মেঝো ভাই", en: "Mejho Bhai" },
+  choto_bhai: { bn: "ছোট ভাই", en: "Choto Bhai" },
+  bordidi: { bn: "বড় দিদি", en: "Bor Didi" },
+  mejhdidi: { bn: "মেঝো দিদি", en: "Mejh Didi" },
+  // form fields
+  date: { bn: "তারিখ", en: "Date" },
+  vehicleNo: { bn: "গাড়ী নাম্বার", en: "Vehicle No" },
+  jama1: { bn: "জমা টাকা-১", en: "Deposit-1" },
+  jama2: { bn: "জমা টাকা-২", en: "Deposit-2" },
+  dena1: { bn: "দেনা টাকা-১", en: "Debt-1" },
+  dena2: { bn: "দেনা টাকা-২", en: "Debt-2" },
+  fare1: { bn: "গাড়ী ভাড়া (রুট ১)", en: "Fare (Route 1)" },
+  fare2: { bn: "গাড়ী ভাড়া (রুট ২)", en: "Fare (Route 2)" },
+  supervisor: { bn: "সুপারভাইজার", en: "Supervisor" },
+  category: { bn: "খাত", en: "Category" },
+  description: { bn: "বিবরণ", en: "Description" },
+  amount: { bn: "পরিমান", en: "Amount" },
+  notes: { bn: "মন্তব্য", en: "Notes" },
+  name: { bn: "নাম", en: "Name" },
+  phone: { bn: "ফোন", en: "Phone" },
+  address: { bn: "ঠিকানা", en: "Address" },
+  type: { bn: "ধরন", en: "Type" },
+  fromParty: { bn: "প্রেরক", en: "From" },
+  toParty: { bn: "প্রাপক", en: "To" },
+  // actions
+  save: { bn: "সংরক্ষণ", en: "Save" },
+  add: { bn: "যোগ করুন", en: "Add" },
+  edit: { bn: "সম্পাদনা", en: "Edit" },
+  delete: { bn: "মুছুন", en: "Delete" },
+  cancel: { bn: "বাতিল", en: "Cancel" },
+  search: { bn: "অনুসন্ধান", en: "Search" },
+  filter: { bn: "ফিল্টার", en: "Filter" },
+  all: { bn: "সব", en: "All" },
+  total: { bn: "মোট", en: "Total" },
+  actions: { bn: "ক্রিয়া", en: "Actions" },
+  from: { bn: "থেকে", en: "From" },
+  to: { bn: "পর্যন্ত", en: "To" },
+  apply: { bn: "প্রয়োগ", en: "Apply" },
+  exportCsv: { bn: "CSV এক্সপোর্ট", en: "Export CSV" },
+  print: { bn: "প্রিন্ট", en: "Print" },
+  loading: { bn: "লোড হচ্ছে...", en: "Loading..." },
+  noData: { bn: "কোন তথ্য নেই", en: "No data" },
+  confirmDelete: { bn: "আপনি কি নিশ্চিত মুছে ফেলতে চান?", en: "Are you sure you want to delete?" },
+  saved: { bn: "সংরক্ষিত হয়েছে", en: "Saved" },
+  deleted: { bn: "মুছে ফেলা হয়েছে", en: "Deleted" },
+  income: { bn: "আয়", en: "Income" },
+  expense: { bn: "ব্যয়", en: "Expense" },
+  net: { bn: "নিট", en: "Net" },
+  todaysSummary: { bn: "আজকের সারাংশ", en: "Today's Summary" },
+  recentTrips: { bn: "সাম্প্রতিক ট্রিপ", en: "Recent Trips" },
+} as const;
+
+type Key = keyof typeof dict;
+
+const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void; t: (k: Key) => string }>({
+  lang: "bn",
+  setLang: () => {},
+  t: (k) => k,
+});
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("bn");
+  useEffect(() => {
+    const saved = (typeof window !== "undefined" && (localStorage.getItem("lang") as Lang)) || "bn";
+    setLangState(saved);
+  }, []);
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    if (typeof window !== "undefined") localStorage.setItem("lang", l);
+  };
+  const t = (k: Key) => (dict[k] ? dict[k][lang] : (k as string));
+  return <LangCtx.Provider value={{ lang, setLang, t }}>{children}</LangCtx.Provider>;
+}
+
+export function useT() {
+  return useContext(LangCtx);
+}
+
+const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+export function toBnDigits(input: string | number): string {
+  return String(input).replace(/[0-9]/g, (d) => bnDigits[+d]);
+}
+export function fmtNum(n: number | string | null | undefined, lang: Lang): string {
+  if (n === null || n === undefined || n === "") return "-";
+  const num = Number(n);
+  if (Number.isNaN(num)) return "-";
+  const s = num.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return lang === "bn" ? toBnDigits(s) : s;
+}
+export function fmtDate(d: string | Date | null | undefined, lang: Lang): string {
+  if (!d) return "-";
+  const date = typeof d === "string" ? new Date(d) : d;
+  const s = date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+  return lang === "bn" ? toBnDigits(s) : s;
+}
