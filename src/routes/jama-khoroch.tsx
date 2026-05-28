@@ -212,9 +212,6 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const [head, setHead] = useState(editing?.head ?? "");
-  const [description, setDescription] = useState(editing?.description ?? "");
-
   const [category, setCategory] = useState(editing?.category ?? "");
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
