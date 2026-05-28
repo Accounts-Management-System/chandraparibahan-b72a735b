@@ -15,7 +15,7 @@ import {
 import {
   Receipt,
   Wallet,
-  PiggyBank,
+  Coins,
   Bus,
   Users,
   Database,
@@ -23,9 +23,8 @@ import {
   Factory,
   BookOpen,
   ShieldCheck,
-  TrendingUp,
-  Activity,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useState } from "react";
 import { useRole } from "@/lib/useRole";
 
@@ -37,7 +36,7 @@ const tiles = [
   { to: "/daily-accounts", key: "dailyAccounts" as const, icon: Receipt },
   { to: "/jama-khoroch", key: "jamaKhoroch" as const, icon: BookOpen },
   { to: "/expenses", key: "expenses" as const, icon: Wallet },
-  { to: "/other-income", key: "otherIncome" as const, icon: PiggyBank },
+  { to: "/other-income", key: "otherIncome" as const, icon: Coins },
   { to: "/vehicles", key: "vehicles" as const, icon: Bus },
   { to: "/contacts", key: "shareholders" as const, icon: Users },
   { to: "/data-manufacturer", key: "dataManufacturer" as const, icon: Factory, writeOnly: true },
@@ -62,21 +61,23 @@ function DashboardPage() {
   });
 
   const summary = useQuery({
-    queryKey: ["dash-summary", date, vehicle],
+    queryKey: ["dash-trips", date, vehicle],
     queryFn: async () => {
-      let q = supabase.from("trips").select("jama_1,jama_2").eq("trip_date", date);
+      let q = supabase
+        .from("trips")
+        .select("vehicle_no,serial_no,jama_1,jama_2")
+        .eq("trip_date", date)
+        .order("serial_no", { ascending: true });
       if (vehicle !== "all") q = q.eq("vehicle_no", vehicle);
       const { data } = await q;
-      const rows = data ?? [];
-      const jama = rows.reduce(
-        (s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0),
-        0,
-      );
-      return { jama, tripCount: rows.length };
+      return (data ?? []) as { vehicle_no: string; serial_no: number | null; jama_1: number; jama_2: number }[];
     },
   });
 
-  const s = summary.data;
+  const chartData = (summary.data ?? []).map((r, i) => ({
+    name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
+    jama: Number(r.jama_1 || 0) + Number(r.jama_2 || 0),
+  }));
 
   return (
     <AppLayout>
@@ -114,21 +115,28 @@ function DashboardPage() {
           </p>
         </Card>
 
-        {/* Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SummaryCard
-            icon={TrendingUp}
-            label={t("totalJama")}
-            value={fmtNum(s?.jama ?? 0, lang)}
-            accent="from-primary to-primary-glow"
-          />
-          <SummaryCard
-            icon={Activity}
-            label={t("tripCount")}
-            value={fmtNum(s?.tripCount ?? 0, lang)}
-            accent="from-accent to-primary"
-          />
-        </div>
+        {/* Per-trip chart */}
+        <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            {t("tripChart")}
+          </div>
+          {chartData.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">{t("noData")}</p>
+          ) : (
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 0.08)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "oklch(0.7 0.04 270)" }} interval={0} angle={-30} textAnchor="end" height={50} />
+                  <YAxis tick={{ fontSize: 10, fill: "oklch(0.7 0.04 270)" }} />
+                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="jama" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+
 
         {/* Module buttons */}
         <div>
