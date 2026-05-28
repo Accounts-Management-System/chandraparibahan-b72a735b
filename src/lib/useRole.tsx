@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
+import { ensureBootstrapAdmin } from "./admin.functions";
 
 export type Role = "admin" | "moderator" | "shareholder" | null;
 
@@ -11,6 +13,7 @@ export type Role = "admin" | "moderator" | "shareholder" | null;
  */
 export function useRole() {
   const { user } = useAuth();
+  const bootstrapAdmin = useServerFn(ensureBootstrapAdmin);
 
   const q = useQuery({
     queryKey: ["my-role", user?.id ?? "none"],
@@ -31,7 +34,10 @@ export function useRole() {
       const { count } = await supabase
         .from("user_roles")
         .select("*", { count: "exact", head: true });
-      if ((count ?? 0) === 0) return "admin";
+      if ((count ?? 0) === 0) {
+        await bootstrapAdmin({});
+        return "admin";
+      }
       return null;
     },
   });

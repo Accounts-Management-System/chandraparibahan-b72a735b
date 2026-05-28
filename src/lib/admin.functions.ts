@@ -10,16 +10,25 @@ async function requireAdmin(userId: string) {
     .select("role")
     .eq("user_id", userId);
   if (mine && mine.some((r) => r.role === "admin")) return;
-  const { count } = await supabaseAdmin
+  const { count: adminCount } = await supabaseAdmin
     .from("user_roles")
-    .select("*", { count: "exact", head: true });
-  if ((count ?? 0) === 0) {
-    // bootstrap: grant admin to first caller
+    .select("*", { count: "exact", head: true })
+    .eq("role", "admin");
+  if ((adminCount ?? 0) === 0) {
+    // bootstrap: if no admin exists, grant admin to current caller
     await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
     return;
   }
   throw new Error("Forbidden: admin only");
 }
+
+/** Persist first logged-in user as admin so write access works immediately. */
+export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.userId);
+    return { ok: true };
+  });
 
 /** Create a moderator account (email/password). */
 export const createModerator = createServerFn({ method: "POST" })

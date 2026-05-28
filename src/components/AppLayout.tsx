@@ -79,9 +79,11 @@ function Watermark() {
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const { role, isAdmin, canWrite } = useRole();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite));
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -102,9 +104,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="px-4 py-5 border-b">
           <h1 className="text-lg font-bold text-primary">{t("brand")}</h1>
           <p className="text-xs text-muted-foreground">{t("tagline")}</p>
+          <p className="mt-2 inline-flex rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+            {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
+          </p>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-1">
-          {nav.map((n) => {
+          {visibleNav.map((n) => {
             const Icon = n.icon;
             const active = pathname === n.to || (n.to !== "/dashboard" && pathname.startsWith(n.to));
             return (
@@ -143,7 +148,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
         <header className="md:hidden flex items-center justify-between border-b px-4 py-3 bg-card/80 backdrop-blur">
-          <h1 className="font-bold text-primary">{t("brand")}</h1>
+          <div>
+            <h1 className="font-bold text-primary">{t("brand")}</h1>
+            <p className="text-[10px] text-muted-foreground">
+              {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
+            </p>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
               {lang === "bn" ? "EN" : "বাং"}
@@ -164,7 +174,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur flex overflow-x-auto z-20">
-        {nav.map((n) => {
+        {visibleNav.map((n) => {
           const Icon = n.icon;
           const active = pathname === n.to;
           return (

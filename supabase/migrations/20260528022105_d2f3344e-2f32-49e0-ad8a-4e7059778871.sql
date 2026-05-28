@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.bootstrap_admin_if_no_roles(uuid);

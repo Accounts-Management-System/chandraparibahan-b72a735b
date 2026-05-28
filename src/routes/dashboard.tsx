@@ -20,10 +20,14 @@ import {
   Users,
   Database,
   FileBarChart,
+  Factory,
+  BookOpen,
+  ShieldCheck,
   TrendingUp,
   Activity,
 } from "lucide-react";
 import { useState } from "react";
+import { useRole } from "@/lib/useRole";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -31,16 +35,20 @@ export const Route = createFileRoute("/dashboard")({
 
 const tiles = [
   { to: "/daily-accounts", key: "dailyAccounts" as const, icon: Receipt },
+  { to: "/jama-khoroch", key: "jamaKhoroch" as const, icon: BookOpen },
   { to: "/expenses", key: "expenses" as const, icon: Wallet },
   { to: "/other-income", key: "otherIncome" as const, icon: PiggyBank },
   { to: "/vehicles", key: "vehicles" as const, icon: Bus },
-  { to: "/contacts", key: "contacts" as const, icon: Users },
+  { to: "/contacts", key: "shareholders" as const, icon: Users },
+  { to: "/data-manufacturer", key: "dataManufacturer" as const, icon: Factory, writeOnly: true },
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
+  { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
 
 function DashboardPage() {
   const { t, lang } = useT();
+  const { isAdmin, canWrite } = useRole();
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(today);
   const [vehicle, setVehicle] = useState<string>("all");
@@ -128,7 +136,7 @@ function DashboardPage() {
             {t("quickEntry")}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {tiles.map((tile) => {
+            {tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite)).map((tile) => {
               const Icon = tile.icon;
               return (
                 <Link
