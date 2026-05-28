@@ -21,6 +21,14 @@ async function requireAdmin(userId: string) {
   throw new Error("Forbidden: admin only");
 }
 
+/** Persist first logged-in user as admin so write access works immediately. */
+export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.userId);
+    return { ok: true };
+  });
+
 /** Create a moderator account (email/password). */
 export const createModerator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
