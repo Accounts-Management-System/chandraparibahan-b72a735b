@@ -38,11 +38,11 @@ function LoginPage() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success(t("saved"));
-        navigate({ to: "/dashboard" });
+        toast.success(t("signupCheckEmail"));
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        toast.success(t("loginSuccess"));
         navigate({ to: "/dashboard" });
       }
     } catch (err: any) {
