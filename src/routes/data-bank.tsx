@@ -13,7 +13,7 @@ export const Route = createFileRoute("/data-bank")({
   component: Page,
   validateSearch: (s: Record<string, unknown>) =>
     z.object({
-      shareholder: z.string().optional(),
+      owner: z.string().optional(),
       car: z.string().optional(),
       date: z.string().optional(),
       month: z.string().optional(),
@@ -28,20 +28,19 @@ function Page() {
   const [date, setDate] = useState<string>(search.date ?? "");
   const [month, setMonth] = useState<string>(search.month ?? "");
   const [car, setCar] = useState<string>(search.car ?? "");
-  const [shareholderId, setShareholderId] = useState<string>(search.shareholder ?? "");
+  const [ownerId, setOwnerId] = useState<string>(search.owner ?? "");
 
-  const { data: shareholders = [] } = useQuery({
-    queryKey: ["sh-list"],
-    queryFn: async () => (await supabase.from("contacts").select("id,name").order("name")).data ?? [],
+  const { data: owners = [] } = useQuery({
+    queryKey: ["owners-list"],
+    queryFn: async () => (await supabase.from("owners").select("id,name").order("name")).data ?? [],
   });
   const { data: vehiclesAll = [] } = useQuery({
-    queryKey: ["veh-shareholder"],
-    queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,shareholder_id").order("vehicle_no")).data ?? [],
+    queryKey: ["veh-owner"],
+    queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,owner_id").order("vehicle_no")).data ?? [],
   });
 
-  // determine vehicle list filtered by shareholder
-  const vehicleNosForFilter = shareholderId
-    ? (vehiclesAll as any[]).filter((v) => v.shareholder_id === shareholderId).map((v) => v.vehicle_no)
+  const vehicleNosForFilter = ownerId
+    ? (vehiclesAll as any[]).filter((v) => v.owner_id === ownerId).map((v) => v.vehicle_no)
     : null;
 
   const buildFilter = <T extends any>(q: any, dateCol: string) => {
@@ -59,25 +58,25 @@ function Page() {
   };
 
   const trips = useQuery({
-    queryKey: ["db-trips", date, month, car, shareholderId],
+    queryKey: ["db-trips", date, month, car, ownerId],
     queryFn: async () => {
-      let q: any = supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(500);
+      const q: any = supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(500);
       const { data } = (await buildFilter(q, "trip_date")) as any;
       return (data ?? []) as any[];
     },
   });
   const exp = useQuery({
-    queryKey: ["db-exp", date, month, car, shareholderId],
+    queryKey: ["db-exp", date, month, car, ownerId],
     queryFn: async () => {
-      let q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
+      const q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
       const { data } = (await buildFilter(q, "expense_date")) as any;
       return (data ?? []) as any[];
     },
   });
   const oth = useQuery({
-    queryKey: ["db-oth", date, month, car, shareholderId],
+    queryKey: ["db-oth", date, month, car, ownerId],
     queryFn: async () => {
-      let q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      const q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
       const { data } = (await buildFilter(q, "income_date")) as any;
       return (data ?? []) as any[];
     },
@@ -87,8 +86,8 @@ function Page() {
     if (!vno) return "—";
     const v = (vehiclesAll as any[]).find((x) => x.vehicle_no === vno);
     if (!v) return "—";
-    const sh = (shareholders as any[]).find((s) => s.id === v.shareholder_id);
-    return sh?.name ?? "—";
+    const o = (owners as any[]).find((s) => s.id === v.owner_id);
+    return o?.name ?? "—";
   };
 
   const totalJama = (trips.data ?? []).reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
@@ -98,8 +97,8 @@ function Page() {
   const totalExp = (exp.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
   const totalOth = (oth.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
 
-  const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, shareholder: shareholderId || undefined } });
-  const clear = () => { setDate(""); setMonth(""); setCar(""); setShareholderId(""); navigate({ search: {} }); };
+  const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, owner: ownerId || undefined } });
+  const clear = () => { setDate(""); setMonth(""); setCar(""); setOwnerId(""); navigate({ search: {} }); };
 
   return (
     <AppLayout>
@@ -123,10 +122,10 @@ function Page() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] uppercase text-muted-foreground">{t("searchByShareholder")}</label>
-            <select value={shareholderId} onChange={(e) => setShareholderId(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
+            <label className="text-[10px] uppercase text-muted-foreground">{t("searchByOwner")}</label>
+            <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
               <option value="">{t("all")}</option>
-              {(shareholders as any[]).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
+              {(owners as any[]).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
             </select>
           </div>
           <div className="flex items-end gap-2">
@@ -156,7 +155,7 @@ function Page() {
                 ["serial_no", t("serial"), (v: any) => fmtNum(v, lang)],
                 ["trip_date", t("date"), (v: any) => fmtDate(v, lang)],
                 ["vehicle_no", t("vehicleNo")],
-                ["__owner", t("shareholder"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
+                ["__owner", t("owner"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
                 ["__jama", t("jamaTotal"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0), lang)],
                 ["__dena", t("denaTotal"), (_: any, r: any) => fmtNum(Number(r.dena_1 || 0) + Number(r.dena_2 || 0), lang)],
                 ["__bal", t("balance"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0) - Number(r.dena_1 || 0) - Number(r.dena_2 || 0), lang)],
@@ -171,6 +170,9 @@ function Page() {
               rows={exp.data ?? []}
               cols={[
                 ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
+                ["__owner", t("owner"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
+                ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
+                ["category", t("category")],
                 ["head", t("head")],
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
@@ -182,7 +184,10 @@ function Page() {
               rows={oth.data ?? []}
               cols={[
                 ["income_date", t("date"), (v: any) => fmtDate(v, lang)],
-                ["vehicle_no", t("vehicleNo")],
+                ["__owner", t("owner"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
+                ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
+                ["category", t("category")],
+                ["head", t("head")],
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}

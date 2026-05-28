@@ -136,6 +136,10 @@ const dict = {
   loggedIn: { bn: "লগইন করা আছে", en: "Logged in" },
   loginSuccess: { bn: "লগইন সফল হয়েছে", en: "Login successful" },
   signupCheckEmail: { bn: "অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল কনফার্ম করুন।", en: "Account created. Please confirm your email." },
+  owners: { bn: "ওনার / মালিক", en: "Owners" },
+  dynamicDropdown: { bn: "ডায়নামিক ড্রপডাউন", en: "Dynamic Dropdown" },
+  headsHint: { bn: "একাধিক নাম: এক লাইনে একটি বা কমা দিয়ে আলাদা করুন", en: "Multiple names: one per line or comma separated" },
+  searchByOwner: { bn: "ওনার দিয়ে সার্চ", en: "Search by Owner" },
 } as const;
 
 type Key = keyof typeof dict;

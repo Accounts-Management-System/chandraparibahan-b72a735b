@@ -10,13 +10,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { useRole } from "@/lib/useRole";
 
 export const Route = createFileRoute("/vehicles")({ component: Page });
 
-type Vehicle = { id: string; vehicle_no: string; owner_name: string | null };
+type Vehicle = { id: string; vehicle_no: string; owner_name: string | null; owner_id: string | null };
+type Owner = { id: string; name: string };
 
 function Page() {
   const { t } = useT();
+  const { canWrite } = useRole();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Vehicle | null>(null);
@@ -24,17 +27,20 @@ function Page() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["vehicles"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("vehicles").select("id,vehicle_no,owner_name").order("vehicle_no");
+      const { data, error } = await supabase.from("vehicles").select("id,vehicle_no,owner_name,owner_id").order("vehicle_no");
       if (error) throw error;
       return data as Vehicle[];
     },
   });
+  const { data: owners = [] } = useQuery({
+    queryKey: ["owners-list"],
+    queryFn: async () => ((await supabase.from("owners").select("id,name").order("name")).data ?? []) as Owner[],
+  });
+
+  const ownerName = (id: string | null) => owners.find((o) => o.id === id)?.name ?? "—";
 
   const del = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("vehicles").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => { const { error } = await supabase.from("vehicles").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["vehicles"] }); toast.success(t("deleted")); },
   });
 
@@ -43,46 +49,47 @@ function Page() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("vehicles")}</h1>
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" />{t("add")}
-          </Button>
+          {canWrite && (
+            <Button onClick={() => { setEditing(null); setOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />{t("add")}
+            </Button>
+          )}
         </div>
         <DataTable<Vehicle>
           rows={isLoading ? [] : rows}
           columns={[
             { key: "vehicle_no", header: t("vehicleNo") },
-            { key: "owner_name", header: t("owner") },
+            { key: "owner_id", header: t("owner"), render: (r) => ownerName(r.owner_id) },
           ]}
-          onEdit={(r) => { setEditing(r); setOpen(true); }}
-          onDelete={(r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); }}
+          onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
+          onDelete={canWrite ? (r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); } : undefined}
           emptyText={isLoading ? t("loading") : t("noData")}
         />
       </div>
-      <VehicleDialog open={open} onOpenChange={setOpen} editing={editing} />
+      <VehicleDialog open={open} onOpenChange={setOpen} editing={editing} owners={owners} />
     </AppLayout>
   );
 }
 
 function VehicleDialog({
-  open, onOpenChange, editing,
-}: { open: boolean; onOpenChange: (v: boolean) => void; editing: Vehicle | null }) {
+  open, onOpenChange, editing, owners,
+}: { open: boolean; onOpenChange: (v: boolean) => void; editing: Vehicle | null; owners: Owner[] }) {
   const { t } = useT();
   const qc = useQueryClient();
   const [vehicleNo, setVehicleNo] = useState("");
-  const [ownerName, setOwnerName] = useState("");
+  const [ownerId, setOwnerId] = useState<string>("");
 
   useEffect(() => {
     if (open) {
       setVehicleNo(editing?.vehicle_no ?? "");
-      setOwnerName(editing?.owner_name ?? "");
+      setOwnerId(editing?.owner_id ?? "");
     }
   }, [open, editing]);
 
-  const clearForm = () => { setVehicleNo(""); setOwnerName(""); };
-
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { vehicle_no: vehicleNo, owner_name: ownerName || null };
+      const payload: any = { vehicle_no: vehicleNo, owner_id: ownerId || null };
+      payload.owner_name = owners.find((o) => o.id === ownerId)?.name ?? null;
       if (editing) {
         const { error } = await supabase.from("vehicles").update(payload).eq("id", editing.id);
         if (error) throw error;
@@ -105,9 +112,11 @@ function VehicleDialog({
         <DialogHeader><DialogTitle>{t("vehicles")}</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
           <Input value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} placeholder={t("vehicleNo")} required className="h-10" />
-          <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder={t("owner")} className="h-10" />
+          <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm">
+            <option value="">— {t("owner")} —</option>
+            {owners.map((o) => <option key={o.id} value={o.id} className="bg-card">{o.name}</option>)}
+          </select>
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
             <Button type="submit" disabled={save.isPending}>{editing ? t("update") : t("submit")}</Button>
           </DialogFooter>
