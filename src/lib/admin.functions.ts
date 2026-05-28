@@ -2,25 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-/** Ensure caller has admin role (with bootstrap exception: first user is admin). */
-async function requireAdmin(userId: string) {
-  const { data: mine } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-  if (mine && mine.some((r) => r.role === "admin")) return;
-  const { count: adminCount } = await supabaseAdmin
-    .from("user_roles")
-    .select("*", { count: "exact", head: true })
-    .eq("role", "admin");
-  if ((adminCount ?? 0) === 0) {
-    // bootstrap: if no admin exists, grant admin to current caller
-    await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
-    return;
-  }
-  throw new Error("Forbidden: admin only");
-}
+import { requireAdmin } from "./admin.helpers.server";
 
 /** Persist first logged-in user as admin so write access works immediately. */
 export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
