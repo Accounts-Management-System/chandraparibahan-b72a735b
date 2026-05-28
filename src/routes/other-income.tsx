@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { useRole } from "@/lib/useRole";
 
 export const Route = createFileRoute("/other-income")({ component: Page });
 
@@ -20,6 +21,7 @@ type Row = {
   category: string;
   head: string | null;
   description: string | null;
+  vehicle_no: string | null;
   amount: number;
 };
 
@@ -34,6 +36,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Page() {
   const { t, lang } = useT();
+  const { canWrite } = useRole();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
@@ -43,7 +46,13 @@ function Page() {
   const [category, setCategory] = useState("");
   const [head, setHead] = useState("");
   const [description, setDescription] = useState("");
+  const [vehicleNo, setVehicleNo] = useState("");
   const [amount, setAmount] = useState<number | "">("");
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ["vehicles-list-other-income"],
+    queryFn: async () => (await supabase.from("vehicles").select("vehicle_no").order("vehicle_no")).data ?? [],
+  });
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["other_incomes"],
@@ -63,19 +72,21 @@ function Page() {
       setCategory(editing.category ?? "");
       setHead(editing.head ?? "");
       setDescription(editing.description ?? "");
+      setVehicleNo(editing.vehicle_no ?? "");
       setAmount(editing.amount ?? "");
     } else {
       setDate(last?.income_date ?? today);
       setCategory(last?.category ?? "");
       setHead(last?.head ?? "");
       setDescription(last?.description ?? "");
+      setVehicleNo(last?.vehicle_no ?? "");
       setAmount("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, last?.id]);
 
   const clearForm = () => {
-    setDate(today); setCategory(""); setHead(""); setDescription(""); setAmount("");
+    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount("");
   };
 
   const del = useMutation({
@@ -89,6 +100,7 @@ function Page() {
         category,
         head: head || null,
         description: description || null,
+        vehicle_no: vehicleNo || null,
         amount: Number(amount || 0),
       };
       if (editing) { const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id); if (error) throw error; }
@@ -108,19 +120,20 @@ function Page() {
             <h1 className="text-2xl font-bold">{t("otherIncome")}</h1>
             <p className="text-sm text-muted-foreground">{t("total")}: <span className="font-semibold text-emerald-400">{fmtNum(total, lang)}</span></p>
           </div>
-          <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>
+          {canWrite && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>}
         </div>
         <DataTable<Row>
           rows={isLoading ? [] : rows}
           columns={[
             { key: "income_date", header: t("date"), render: (r) => fmtDate(r.income_date, lang) },
             { key: "category", header: t("category") },
+            { key: "vehicle_no", header: t("vehicleNo"), render: (r) => r.vehicle_no ?? "—" },
             { key: "head", header: t("head") },
             { key: "description", header: t("description") },
             { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
           ]}
-          onEdit={(r) => { setEditing(r); setOpen(true); }}
-          onDelete={(r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); }}
+          onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
+          onDelete={canWrite ? (r) => del.mutate(r.id) : undefined}
           emptyText={isLoading ? t("loading") : t("noData")}
         />
       </div>
@@ -139,6 +152,12 @@ function Page() {
             </Field>
             <Field label={t("description")}>
               <LookupSelect kind="description" value={description} onChange={setDescription} />
+            </Field>
+            <Field label={t("vehicleNo")}>
+              <select value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm">
+                <option value="">{t("all")}</option>
+                {(vehicles as { vehicle_no: string }[]).map((v) => <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>)}
+              </select>
             </Field>
             <Field label={t("amount")}>
               <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
