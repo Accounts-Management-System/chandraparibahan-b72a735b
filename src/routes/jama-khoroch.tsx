@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { LookupSelect } from "@/components/LookupSelect";
+import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
 
 export const Route = createFileRoute("/jama-khoroch")({ component: Page });
 
@@ -87,8 +88,10 @@ function Page() {
               rows={jama}
               columns={[
                 { key: "income_date", header: t("date"), render: (r) => fmtDate(r.income_date, lang) },
+                { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
+                { key: "head", header: t("head"), render: (r) => r.head ?? "—" },
                 { key: "vehicle_no", header: t("vehicleNo"), render: (r) => r.vehicle_no ?? "—" },
-                { key: "description", header: t("description"), render: (r) => r.description ?? r.head ?? r.category ?? "—" },
+                { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
               onEdit={canWrite ? (r) => { setEditJ(r); setOpenJ(true); } : undefined}
@@ -108,7 +111,8 @@ function Page() {
               rows={khoroch}
               columns={[
                 { key: "expense_date", header: t("date"), render: (r) => fmtDate(r.expense_date, lang) },
-                { key: "head", header: t("head"), render: (r) => r.head ?? r.category ?? "—" },
+                { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
+                { key: "head", header: t("head"), render: (r) => r.head ?? "—" },
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
@@ -150,7 +154,7 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
         const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("other_incomes").insert({ ...form, category: form.category ?? "জমা" });
+        const { error } = await supabase.from("other_incomes").insert(form);
         if (error) throw error;
       }
     },
@@ -160,6 +164,8 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
 
   const [vehicleNo, setVehicleNo] = useState(editing?.vehicle_no ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
+  const [category, setCategory] = useState(editing?.category ?? "");
+  const [head, setHead] = useState(editing?.head ?? "");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -173,12 +179,16 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
             save.mutate({
               income_date: f.get("d"),
               vehicle_no: vehicleNo || null,
+              category: category || "জমা",
+              head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
             });
           }}
         >
           <Input type="date" name="d" defaultValue={editing?.income_date ?? today} required className="h-11" />
+          <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} />
+          <HeadSelect category={category} value={head} onChange={setHead} />
           <select value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} className="w-full h-11 rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {(vehicles as { vehicle_no: string }[]).map((v) => (
@@ -202,6 +212,7 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
 
+  const [category, setCategory] = useState(editing?.category ?? "");
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
 
@@ -211,7 +222,7 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
         const { error } = await supabase.from("expenses").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("expenses").insert({ ...form, category: form.head ?? "খরচ" });
+        const { error } = await supabase.from("expenses").insert(form);
         if (error) throw error;
       }
     },
@@ -230,6 +241,7 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
             const f = new FormData(e.currentTarget);
             save.mutate({
               expense_date: f.get("d"),
+              category: category || "খরচ",
               head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
@@ -237,7 +249,8 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
           }}
         >
           <Input type="date" name="d" defaultValue={editing?.expense_date ?? today} required className="h-11" />
-          <LookupSelect kind="head" value={head} onChange={setHead} placeholder={t("head")} />
+          <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
+          <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
           <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
