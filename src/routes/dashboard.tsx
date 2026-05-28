@@ -166,29 +166,3 @@ function DashboardPage() {
   );
 }
 
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: any;
-  label: string;
-  value: string;
-  accent: string;
-}) {
-  return (
-    <Card className="relative overflow-hidden p-6 border-border/50 bg-card/70 backdrop-blur">
-      <div
-        className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${accent} opacity-20 blur-2xl`}
-      />
-      <div className="relative">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-          <Icon className="h-4 w-4" />
-          {label}
-        </div>
-        <div className="text-4xl font-bold mt-3 tracking-tight">{value}</div>
-      </div>
-    </Card>
-  );
-}
