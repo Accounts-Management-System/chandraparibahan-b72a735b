@@ -99,6 +99,7 @@ function CalcPanel() {
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs text-muted-foreground">From</label>
           <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-11" />
@@ -106,7 +107,6 @@ function CalcPanel() {
         <div>
           <label className="text-xs text-muted-foreground">To</label>
           <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-11" />
-        </div>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
