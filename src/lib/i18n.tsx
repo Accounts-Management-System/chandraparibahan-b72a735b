@@ -89,7 +89,6 @@ const dict = {
   netIncome: { bn: "নিট ইনকাম (হাতে)", en: "Net Income (In Hand)" },
   totalDeposit: { bn: "মোট ডিপোজিট", en: "Total Deposit" },
   totalDebit: { bn: "মোট ডেবিট", en: "Total Debit" },
-  income: { bn: "ইনকাম", en: "Income" },
   totalOtherIncome: { bn: "অন্যান্য ইনকাম", en: "Other Income" },
   totalExpense: { bn: "মোট খরচ", en: "Total Expense" },
   calculation: { bn: "ক্যালকুলেশন", en: "Calculation" },
