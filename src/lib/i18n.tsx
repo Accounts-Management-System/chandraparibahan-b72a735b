@@ -140,6 +140,12 @@ const dict = {
   dynamicDropdown: { bn: "ডায়নামিক ড্রপডাউন", en: "Dynamic Dropdown" },
   headsHint: { bn: "একাধিক নাম: এক লাইনে একটি বা কমা দিয়ে আলাদা করুন", en: "Multiple names: one per line or comma separated" },
   searchByOwner: { bn: "ওনার দিয়ে সার্চ", en: "Search by Owner" },
+  searchByDate: { bn: "তারিখ দিয়ে সার্চ", en: "Search by Date" },
+  searchByDateRange: { bn: "তারিখ রেঞ্জ দিয়ে সার্চ", en: "Search by Date Range" },
+  searchByVehicle: { bn: "গাড়ী দিয়ে সার্চ", en: "Search by Vehicle" },
+  searchByCategory: { bn: "ক্যাটাগরি দিয়ে সার্চ", en: "Search by Category" },
+  vehicleFare: { bn: "গাড়ী ভাড়া", en: "Vehicle Fare" },
+  totalAmount: { bn: "মোট পরিমাণ", en: "Total Amount" },
 } as const;
 
 type Key = keyof typeof dict;
