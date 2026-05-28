@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { SearchFilters, MiniDashboard, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
@@ -42,12 +43,12 @@ function DailyAccountsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Trip | null>(null);
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<FilterState>(emptyFilters);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["trips"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(500);
+      const { data, error } = await supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(1000);
       if (error) throw error;
       return (data ?? []) as Trip[];
     },
@@ -62,9 +63,11 @@ function DailyAccountsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const filtered = rows.filter((r) =>
-    !search || r.vehicle_no.toLowerCase().includes(search.toLowerCase()) || r.supervisor?.toLowerCase().includes(search.toLowerCase()),
+  const filtered = useMemo(
+    () => rows.filter((r) => matchesFilters({ date: r.trip_date, vehicle_no: r.vehicle_no }, filters)),
+    [rows, filters],
   );
+  const totalJama = filtered.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
 
   return (
     <AppLayout>
@@ -79,7 +82,8 @@ function DailyAccountsPage() {
           </Button>
         </div>
 
-        <Input placeholder={t("search")} value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <SearchFilters value={filters} onChange={setFilters} show={{ date: true, vehicle: true }} />
+        <MiniDashboard tripCount={filtered.length} totalAmount={totalJama} lang={lang} />
 
         <DataTable<Trip>
           rows={isLoading ? [] : filtered}
