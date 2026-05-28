@@ -133,6 +133,9 @@ const dict = {
   pinSet: { bn: "পিন/পাসওয়ার্ড সেট করা হয়েছে", en: "PIN updated" },
   noLogin: { bn: "এখনো লগইন তৈরি হয়নি", en: "No login yet" },
   createLogin: { bn: "লগইন তৈরি", en: "Create Login" },
+  loggedIn: { bn: "লগইন করা আছে", en: "Logged in" },
+  loginSuccess: { bn: "লগইন সফল হয়েছে", en: "Login successful" },
+  signupCheckEmail: { bn: "অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল কনফার্ম করুন।", en: "Account created. Please confirm your email." },
 } as const;
 
 type Key = keyof typeof dict;
