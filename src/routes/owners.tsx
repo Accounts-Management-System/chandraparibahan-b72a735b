@@ -20,6 +20,7 @@ type Veh = { id: string; vehicle_no: string; owner_id: string | null };
 type Trip = { trip_date: string; vehicle_no: string; fare_1: number; fare_2: number };
 
 type FareRow = {
+  id: string;
   owner_name: string;
   vehicle_no: string;
   fare: number;
@@ -60,7 +61,7 @@ function Page() {
         .filter((tr) => !filters.dateFrom || tr.trip_date >= filters.dateFrom)
         .filter((tr) => !filters.dateTo || tr.trip_date <= filters.dateTo)
         .reduce((s, tr) => s + Number(tr.fare_1 || 0) + Number(tr.fare_2 || 0), 0);
-      return { owner_name: ownerName(v.owner_id), vehicle_no: v.vehicle_no, fare, owner_id: v.owner_id! };
+      return { id: v.id, owner_name: ownerName(v.owner_id), vehicle_no: v.vehicle_no, fare, owner_id: v.owner_id! };
     });
   }, [vehicles, trips, owners, filters]);
 
