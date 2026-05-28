@@ -2,39 +2,94 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { z } from "zod";
 
-export const Route = createFileRoute("/data-bank")({ component: Page });
+export const Route = createFileRoute("/data-bank")({
+  component: Page,
+  validateSearch: (s: Record<string, unknown>) =>
+    z.object({
+      shareholder: z.string().optional(),
+      car: z.string().optional(),
+      date: z.string().optional(),
+      month: z.string().optional(),
+    }).parse(s),
+});
 
 function Page() {
   const { t, lang } = useT();
-  const [date, setDate] = useState<string>("");
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
 
-  // last entry date
-  const { data: lastDate } = useQuery({
-    queryKey: ["last-trip-date"],
-    queryFn: async () => {
-      const { data } = await supabase.from("trips").select("trip_date").order("trip_date", { ascending: false }).limit(1);
-      return data?.[0]?.trip_date ?? new Date().toISOString().slice(0, 10);
-    },
+  const [date, setDate] = useState<string>(search.date ?? "");
+  const [month, setMonth] = useState<string>(search.month ?? "");
+  const [car, setCar] = useState<string>(search.car ?? "");
+  const [shareholderId, setShareholderId] = useState<string>(search.shareholder ?? "");
+
+  const { data: shareholders = [] } = useQuery({
+    queryKey: ["sh-list"],
+    queryFn: async () => (await supabase.from("contacts").select("id,name").order("name")).data ?? [],
   });
-  const effectiveDate = date || lastDate || new Date().toISOString().slice(0, 10);
+  const { data: vehiclesAll = [] } = useQuery({
+    queryKey: ["veh-shareholder"],
+    queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,shareholder_id").order("vehicle_no")).data ?? [],
+  });
+
+  // determine vehicle list filtered by shareholder
+  const vehicleNosForFilter = shareholderId
+    ? (vehiclesAll as any[]).filter((v) => v.shareholder_id === shareholderId).map((v) => v.vehicle_no)
+    : null;
+
+  const buildFilter = <T extends any>(q: any, dateCol: string) => {
+    if (date) q = q.eq(dateCol, date);
+    else if (month) {
+      const start = `${month}-01`;
+      const d = new Date(month + "-01");
+      d.setMonth(d.getMonth() + 1);
+      const end = d.toISOString().slice(0, 10);
+      q = q.gte(dateCol, start).lt(dateCol, end);
+    }
+    if (car) q = q.eq("vehicle_no", car);
+    else if (vehicleNosForFilter) q = q.in("vehicle_no", vehicleNosForFilter.length ? vehicleNosForFilter : ["__none__"]);
+    return q as Promise<{ data: T[] }>;
+  };
 
   const trips = useQuery({
-    queryKey: ["db-trips", effectiveDate],
-    queryFn: async () => (await supabase.from("trips").select("*").eq("trip_date", effectiveDate).order("serial_no", { ascending: true })).data ?? [],
+    queryKey: ["db-trips", date, month, car, shareholderId],
+    queryFn: async () => {
+      let q: any = supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(500);
+      const { data } = (await buildFilter(q, "trip_date")) as any;
+      return (data ?? []) as any[];
+    },
   });
   const exp = useQuery({
-    queryKey: ["db-exp", effectiveDate],
-    queryFn: async () => (await supabase.from("expenses").select("*").eq("expense_date", effectiveDate).order("created_at")).data ?? [],
+    queryKey: ["db-exp", date, month, car, shareholderId],
+    queryFn: async () => {
+      let q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
+      const { data } = (await buildFilter(q, "expense_date")) as any;
+      return (data ?? []) as any[];
+    },
   });
   const oth = useQuery({
-    queryKey: ["db-oth", effectiveDate],
-    queryFn: async () => (await supabase.from("other_incomes").select("*").eq("income_date", effectiveDate).order("created_at")).data ?? [],
+    queryKey: ["db-oth", date, month, car, shareholderId],
+    queryFn: async () => {
+      let q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      const { data } = (await buildFilter(q, "income_date")) as any;
+      return (data ?? []) as any[];
+    },
   });
+
+  const ownerByVehicle = (vno: string | null | undefined) => {
+    if (!vno) return "—";
+    const v = (vehiclesAll as any[]).find((x) => x.vehicle_no === vno);
+    if (!v) return "—";
+    const sh = (shareholders as any[]).find((s) => s.id === v.shareholder_id);
+    return sh?.name ?? "—";
+  };
 
   const totalJama = (trips.data ?? []).reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const totalDena = (trips.data ?? []).reduce((s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
@@ -43,17 +98,42 @@ function Page() {
   const totalExp = (exp.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
   const totalOth = (oth.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
 
+  const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, shareholder: shareholderId || undefined } });
+  const clear = () => { setDate(""); setMonth(""); setCar(""); setShareholderId(""); navigate({ search: {} }); };
+
   return (
     <AppLayout>
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">{t("dataBank")}</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{t("date")}:</span>
-            <Input type="date" value={effectiveDate} onChange={(e) => setDate(e.target.value)} className="h-9 w-auto" />
+        <h1 className="text-2xl font-bold">{t("dataBank")}</h1>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 rounded-lg border bg-card/60 p-3">
+          <div>
+            <label className="text-[10px] uppercase text-muted-foreground">{t("date")}</label>
+            <Input type="date" value={date} onChange={(e) => { setDate(e.target.value); setMonth(""); }} className="h-9" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase text-muted-foreground">{t("searchByMonth")}</label>
+            <Input type="month" value={month} onChange={(e) => { setMonth(e.target.value); setDate(""); }} className="h-9" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase text-muted-foreground">{t("searchByCar")}</label>
+            <select value={car} onChange={(e) => setCar(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
+              <option value="">{t("all")}</option>
+              {(vehiclesAll as any[]).map((v) => <option key={v.id} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] uppercase text-muted-foreground">{t("searchByShareholder")}</label>
+            <select value={shareholderId} onChange={(e) => setShareholderId(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
+              <option value="">{t("all")}</option>
+              {(shareholders as any[]).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
+            </select>
+          </div>
+          <div className="flex items-end gap-2">
+            <Button size="sm" onClick={apply}>{t("apply")}</Button>
+            <Button size="sm" variant="outline" onClick={clear}>{t("clearForm")}</Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{fmtDate(effectiveDate, lang)}</p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label={t("jamaTotal")} value={fmtNum(totalJama, lang)} color="text-emerald-400" />
@@ -76,6 +156,7 @@ function Page() {
                 ["serial_no", t("serial"), (v: any) => fmtNum(v, lang)],
                 ["trip_date", t("date"), (v: any) => fmtDate(v, lang)],
                 ["vehicle_no", t("vehicleNo")],
+                ["__owner", t("shareholder"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
                 ["__jama", t("jamaTotal"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0), lang)],
                 ["__dena", t("denaTotal"), (_: any, r: any) => fmtNum(Number(r.dena_1 || 0) + Number(r.dena_2 || 0), lang)],
                 ["__bal", t("balance"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0) - Number(r.dena_1 || 0) - Number(r.dena_2 || 0), lang)],
@@ -90,8 +171,8 @@ function Page() {
               rows={exp.data ?? []}
               cols={[
                 ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
-                ["category", t("category")],
-                ["vehicle_no", t("vehicleNo")],
+                ["head", t("head")],
+                ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
             />
@@ -101,7 +182,8 @@ function Page() {
               rows={oth.data ?? []}
               cols={[
                 ["income_date", t("date"), (v: any) => fmtDate(v, lang)],
-                ["category", t("category")],
+                ["vehicle_no", t("vehicleNo")],
+                ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
             />

@@ -14,12 +14,14 @@ import { Route as RoutesRouteImport } from './routes/routes'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OtherIncomeRouteImport } from './routes/other-income'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as JamaKhorochRouteImport } from './routes/jama-khoroch'
 import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as DataManufacturerRouteImport } from './routes/data-manufacturer'
 import { Route as DataBankRouteImport } from './routes/data-bank'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DailyAccountsRouteImport } from './routes/daily-accounts'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const VehiclesRoute = VehiclesRouteImport.update({
@@ -45,6 +47,11 @@ const OtherIncomeRoute = OtherIncomeRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JamaKhorochRoute = JamaKhorochRouteImport.update({
+  id: '/jama-khoroch',
+  path: '/jama-khoroch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExpensesRoute = ExpensesRouteImport.update({
@@ -77,6 +84,11 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -85,12 +97,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
   '/data-manufacturer': typeof DataManufacturerRoute
   '/expenses': typeof ExpensesRoute
+  '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
   '/reports': typeof ReportsRoute
@@ -99,12 +113,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
   '/data-manufacturer': typeof DataManufacturerRoute
   '/expenses': typeof ExpensesRoute
+  '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
   '/reports': typeof ReportsRoute
@@ -114,12 +130,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
   '/data-manufacturer': typeof DataManufacturerRoute
   '/expenses': typeof ExpensesRoute
+  '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
   '/reports': typeof ReportsRoute
@@ -130,12 +148,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/contacts'
     | '/daily-accounts'
     | '/dashboard'
     | '/data-bank'
     | '/data-manufacturer'
     | '/expenses'
+    | '/jama-khoroch'
     | '/login'
     | '/other-income'
     | '/reports'
@@ -144,12 +164,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/contacts'
     | '/daily-accounts'
     | '/dashboard'
     | '/data-bank'
     | '/data-manufacturer'
     | '/expenses'
+    | '/jama-khoroch'
     | '/login'
     | '/other-income'
     | '/reports'
@@ -158,12 +180,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/contacts'
     | '/daily-accounts'
     | '/dashboard'
     | '/data-bank'
     | '/data-manufacturer'
     | '/expenses'
+    | '/jama-khoroch'
     | '/login'
     | '/other-income'
     | '/reports'
@@ -173,12 +197,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ContactsRoute: typeof ContactsRoute
   DailyAccountsRoute: typeof DailyAccountsRoute
   DashboardRoute: typeof DashboardRoute
   DataBankRoute: typeof DataBankRoute
   DataManufacturerRoute: typeof DataManufacturerRoute
   ExpensesRoute: typeof ExpensesRoute
+  JamaKhorochRoute: typeof JamaKhorochRoute
   LoginRoute: typeof LoginRoute
   OtherIncomeRoute: typeof OtherIncomeRoute
   ReportsRoute: typeof ReportsRoute
@@ -223,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jama-khoroch': {
+      id: '/jama-khoroch'
+      path: '/jama-khoroch'
+      fullPath: '/jama-khoroch'
+      preLoaderRoute: typeof JamaKhorochRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/expenses': {
       id: '/expenses'
       path: '/expenses'
@@ -265,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -277,12 +317,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ContactsRoute: ContactsRoute,
   DailyAccountsRoute: DailyAccountsRoute,
   DashboardRoute: DashboardRoute,
   DataBankRoute: DataBankRoute,
   DataManufacturerRoute: DataManufacturerRoute,
   ExpensesRoute: ExpensesRoute,
+  JamaKhorochRoute: JamaKhorochRoute,
   LoginRoute: LoginRoute,
   OtherIncomeRoute: OtherIncomeRoute,
   ReportsRoute: ReportsRoute,

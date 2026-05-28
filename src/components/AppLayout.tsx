@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
+import { useRole } from "@/lib/useRole";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,19 +18,25 @@ import {
   LogOut,
   Languages,
   Factory,
+  ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 
-const nav = [
-  { to: "/dashboard", icon: LayoutDashboard, key: "dashboard" as const },
-  { to: "/daily-accounts", icon: Receipt, key: "dailyAccounts" as const },
-  { to: "/expenses", icon: Wallet, key: "expenses" as const },
-  { to: "/other-income", icon: PiggyBank, key: "otherIncome" as const },
-  { to: "/vehicles", icon: Bus, key: "vehicles" as const },
-  { to: "/routes", icon: RouteIcon, key: "routes" as const },
-  { to: "/contacts", icon: Users, key: "contacts" as const },
-  { to: "/data-manufacturer", icon: Factory, key: "dataManufacturer" as const },
-  { to: "/data-bank", icon: Database, key: "dataBank" as const },
-  { to: "/reports", icon: FileBarChart, key: "reports" as const },
+type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
+
+const nav: NavItem[] = [
+  { to: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
+  { to: "/daily-accounts", icon: Receipt, key: "dailyAccounts" },
+  { to: "/jama-khoroch", icon: BookOpen, key: "jamaKhoroch" },
+  { to: "/expenses", icon: Wallet, key: "expenses" },
+  { to: "/other-income", icon: PiggyBank, key: "otherIncome" },
+  { to: "/vehicles", icon: Bus, key: "vehicles" },
+  { to: "/routes", icon: RouteIcon, key: "routes" },
+  { to: "/contacts", icon: Users, key: "shareholders" },
+  { to: "/data-manufacturer", icon: Factory, key: "dataManufacturer", writeOnly: true },
+  { to: "/data-bank", icon: Database, key: "dataBank" },
+  { to: "/reports", icon: FileBarChart, key: "reports" },
+  { to: "/admin", icon: ShieldCheck, key: "admin", adminOnly: true },
 ];
 
 

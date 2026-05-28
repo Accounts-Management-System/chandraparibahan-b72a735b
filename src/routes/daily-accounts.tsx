@@ -86,11 +86,11 @@ function DailyAccountsPage() {
           columns={[
             { key: "serial_no", header: t("serial"), render: (r) => fmtNum(r.serial_no, lang) },
             { key: "trip_date", header: t("date"), render: (r) => fmtDate(r.trip_date, lang) },
-            { key: "vehicle_no", header: t("vehicleNo") },
+            { key: "vehicleNo", header: t("vehicleNo"), render: (r) => r.vehicle_no },
             { key: "jama_1", header: t("jamaTotal"), render: (r) => fmtNum(Number(r.jama_1) + Number(r.jama_2), lang) },
             { key: "dena_1", header: t("denaTotal"), render: (r) => fmtNum(Number(r.dena_1) + Number(r.dena_2), lang) },
+            { key: "balance", header: t("balance"), render: (r) => fmtNum(Number(r.jama_1) + Number(r.jama_2) - Number(r.dena_1) - Number(r.dena_2), lang) },
             { key: "fare_1", header: t("fareTotal"), render: (r) => fmtNum(Number(r.fare_1) + Number(r.fare_2), lang) },
-            { key: "route_1", header: t("route"), render: (r) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-" },
             { key: "supervisor", header: t("supervisor") },
           ]}
           onEdit={(r) => { setEditing(r); setOpen(true); }}
@@ -265,33 +265,26 @@ function TripDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/60 p-3 bg-card/40">
-            <div className="space-y-1">
-              <Field label={t("fare1")}>
-                <Input type="number" step="any" value={fare1} onChange={(e) => setFare1(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
-              </Field>
-              <div className="text-[11px] text-muted-foreground pl-1">
-                {t("route")}: <span className="text-primary font-semibold">{route1 || "—"}</span>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Field label={t("fare2")}>
-                <Input type="number" step="any" value={fare2} onChange={(e) => setFare2(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
-              </Field>
-              <div className="text-[11px] text-muted-foreground pl-1">
-                {t("route")}: <span className="text-primary font-semibold">{route2 || "—"}</span>
-              </div>
-            </div>
+            <Field label={t("fare1")}>
+              <Input type="number" step="any" value={fare1} onChange={(e) => setFare1(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
+            </Field>
+            <Field label={t("fare2")}>
+              <Input type="number" step="any" value={fare2} onChange={(e) => setFare2(e.target.value === "" ? "" : Number(e.target.value))} className="h-10" />
+            </Field>
           </div>
-
-
 
           {/* live calc preview */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground rounded-md border border-dashed border-border/60 px-3 py-2">
             <div>{t("jamaTotal")}: <span className="text-emerald-400 font-semibold">{Number(jama1 || 0) + Number(jama2 || 0)}</span></div>
             <div>{t("denaTotal")}: <span className="text-rose-400 font-semibold">{Number(dena1 || 0) + Number(dena2 || 0)}</span></div>
             <div>{t("balance")}: <span className="text-primary font-semibold">{Number(jama1 || 0) + Number(jama2 || 0) - Number(dena1 || 0) - Number(dena2 || 0)}</span></div>
-            <div>{t("fareTotal")}: <span className="text-primary font-semibold">{Number(fare1 || 0) + Number(fare2 || 0)}</span> {routeTotal && <span className="ml-1 text-primary">({routeTotal})</span>}</div>
+            <div>{t("fareTotal")}: <span className="text-primary font-semibold">{Number(fare1 || 0) + Number(fare2 || 0)}</span></div>
           </div>
+          {/* hidden auto route values — saved silently with the trip */}
+          <input type="hidden" value={route1} readOnly />
+          <input type="hidden" value={route2} readOnly />
+          <input type="hidden" value={routeTotal} readOnly />
+
 
 
           <DialogFooter className="gap-2 sm:gap-2">
