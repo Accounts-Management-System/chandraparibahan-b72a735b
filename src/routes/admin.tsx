@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { useT } from "@/lib/i18n";
+import { useT, fmtNum } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -42,15 +42,16 @@ function Page() {
     <AppLayout>
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{t("admin")}</h1>
-        <Tabs defaultValue="mods">
+        <Tabs defaultValue="calc">
           <TabsList>
+            <TabsTrigger value="calc">{t("calculation")}</TabsTrigger>
             <TabsTrigger value="mods">{t("moderator")}</TabsTrigger>
             <TabsTrigger value="diary">{t("myDiary")}</TabsTrigger>
           </TabsList>
+          <TabsContent value="calc"><CalcPanel /></TabsContent>
           <TabsContent value="mods"><ModeratorPanel /></TabsContent>
           <TabsContent value="diary"><DiaryPanel /></TabsContent>
         </Tabs>
-      </div>
     </AppLayout>
   );
 }
