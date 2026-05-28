@@ -52,7 +52,82 @@ function Page() {
           <TabsContent value="mods"><ModeratorPanel /></TabsContent>
           <TabsContent value="diary"><DiaryPanel /></TabsContent>
         </Tabs>
+      </div>
     </AppLayout>
+  );
+}
+
+function CalcPanel() {
+  const { t } = useT();
+  const today = new Date().toISOString().slice(0, 10);
+  const monthStart = today.slice(0, 8) + "01";
+  const [from, setFrom] = useState(monthStart);
+  const [to, setTo] = useState(today);
+
+  const { data: trips = [] } = useQuery({
+    queryKey: ["calc-trips", from, to],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trips")
+        .select("jama_1,jama_2,dena_1,dena_2")
+        .gte("trip_date", from)
+        .lte("trip_date", to);
+      return data ?? [];
+    },
+  });
+  const { data: others = [] } = useQuery({
+    queryKey: ["calc-others", from, to],
+    queryFn: async () => {
+      const { data } = await supabase.from("other_incomes").select("amount").gte("income_date", from).lte("income_date", to);
+      return data ?? [];
+    },
+  });
+  const { data: exps = [] } = useQuery({
+    queryKey: ["calc-exps", from, to],
+    queryFn: async () => {
+      const { data } = await supabase.from("expenses").select("amount").gte("expense_date", from).lte("expense_date", to);
+      return data ?? [];
+    },
+  });
+
+  const deposit = trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+  const debit = trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+  const income = deposit - debit;
+  const other = others.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const expense = exps.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const net = income + other - expense;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs text-muted-foreground">{t("dateFrom" as any) || "From"}</label>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-11" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">{t("dateTo" as any) || "To"}</label>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-11" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <CalcRow label={t("totalDeposit")} value={deposit} />
+        <CalcRow label={t("totalDebit")} value={debit} />
+        <CalcRow label={`${t("income")} (${t("totalDeposit")} − ${t("totalDebit")})`} value={income} highlight />
+        <CalcRow label={t("totalOtherIncome")} value={other} />
+        <CalcRow label={t("totalExpense")} value={expense} />
+        <CalcRow label={t("netIncome")} value={net} highlight />
+      </div>
+    </div>
+  );
+}
+
+function CalcRow({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+  const { lang } = useT();
+  return (
+    <div className={`rounded-lg border p-4 ${highlight ? "border-primary/60 bg-primary/10" : "border-border/60 bg-card/60"}`}>
+      <div className="text-xs text-muted-foreground mb-1">{label}</div>
+      <div className={`text-2xl font-bold ${highlight ? "text-primary" : ""}`}>{fmtNum(value, lang)}</div>
+    </div>
   );
 }
 
