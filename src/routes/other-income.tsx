@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
+import { SearchFilters, MiniDashboard, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/other-income")({ component: Page });
 
@@ -119,7 +120,12 @@ function Page() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const total = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const [filters, setFilters] = useState<FilterState>(emptyFilters);
+  const filtered = useMemo(
+    () => rows.filter((r) => matchesFilters({ date: r.income_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, filters)),
+    [rows, filters],
+  );
+  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   return (
     <AppLayout>
@@ -131,8 +137,10 @@ function Page() {
           </div>
           {canWrite && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>}
         </div>
+        <SearchFilters value={filters} onChange={setFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
+        <MiniDashboard tripCount={filtered.length} totalAmount={total} lang={lang} showTrips={false} showCount countLabel={t("total")} />
         <DataTable<Row>
-          rows={isLoading ? [] : rows}
+          rows={isLoading ? [] : filtered}
           columns={[
             { key: "income_date", header: t("date"), render: (r) => fmtDate(r.income_date, lang) },
             { key: "category", header: t("category") },
