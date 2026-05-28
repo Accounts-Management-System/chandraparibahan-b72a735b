@@ -10,11 +10,12 @@ async function requireAdmin(userId: string) {
     .select("role")
     .eq("user_id", userId);
   if (mine && mine.some((r) => r.role === "admin")) return;
-  const { count } = await supabaseAdmin
+  const { count: adminCount } = await supabaseAdmin
     .from("user_roles")
     .select("*", { count: "exact", head: true });
-  if ((count ?? 0) === 0) {
-    // bootstrap: grant admin to first caller
+    .eq("role", "admin");
+  if ((adminCount ?? 0) === 0) {
+    // bootstrap: if no admin exists, grant admin to current caller
     await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
     return;
   }
