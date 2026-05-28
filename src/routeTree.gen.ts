@@ -25,81 +25,21 @@ import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
-const VehiclesRoute = VehiclesRouteImport.update({
-  id: '/vehicles',
-  path: '/vehicles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoutesRoute = RoutesRouteImport.update({
-  id: '/routes',
-  path: '/routes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OwnersRoute = OwnersRouteImport.update({
-  id: '/owners',
-  path: '/owners',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OtherIncomeRoute = OtherIncomeRouteImport.update({
-  id: '/other-income',
-  path: '/other-income',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JamaKhorochRoute = JamaKhorochRouteImport.update({
-  id: '/jama-khoroch',
-  path: '/jama-khoroch',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExpensesRoute = ExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DataManufacturerRoute = DataManufacturerRouteImport.update({
-  id: '/data-manufacturer',
-  path: '/data-manufacturer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DataBankRoute = DataBankRouteImport.update({
-  id: '/data-bank',
-  path: '/data-bank',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DailyAccountsRoute = DailyAccountsRouteImport.update({
-  id: '/daily-accounts',
-  path: '/daily-accounts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactsRoute = ContactsRouteImport.update({
-  id: '/contacts',
-  path: '/contacts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const VehiclesRoute = VehiclesRouteImport.update({ id: '/vehicles', path: '/vehicles', getParentRoute: () => rootRouteImport } as any)
+const RoutesRoute = RoutesRouteImport.update({ id: '/routes', path: '/routes', getParentRoute: () => rootRouteImport } as any)
+const ReportsRoute = ReportsRouteImport.update({ id: '/reports', path: '/reports', getParentRoute: () => rootRouteImport } as any)
+const OwnersRoute = OwnersRouteImport.update({ id: '/owners', path: '/owners', getParentRoute: () => rootRouteImport } as any)
+const OtherIncomeRoute = OtherIncomeRouteImport.update({ id: '/other-income', path: '/other-income', getParentRoute: () => rootRouteImport } as any)
+const LoginRoute = LoginRouteImport.update({ id: '/login', path: '/login', getParentRoute: () => rootRouteImport } as any)
+const JamaKhorochRoute = JamaKhorochRouteImport.update({ id: '/jama-khoroch', path: '/jama-khoroch', getParentRoute: () => rootRouteImport } as any)
+const ExpensesRoute = ExpensesRouteImport.update({ id: '/expenses', path: '/expenses', getParentRoute: () => rootRouteImport } as any)
+const DataManufacturerRoute = DataManufacturerRouteImport.update({ id: '/data-manufacturer', path: '/data-manufacturer', getParentRoute: () => rootRouteImport } as any)
+const DataBankRoute = DataBankRouteImport.update({ id: '/data-bank', path: '/data-bank', getParentRoute: () => rootRouteImport } as any)
+const DashboardRoute = DashboardRouteImport.update({ id: '/dashboard', path: '/dashboard', getParentRoute: () => rootRouteImport } as any)
+const DailyAccountsRoute = DailyAccountsRouteImport.update({ id: '/daily-accounts', path: '/daily-accounts', getParentRoute: () => rootRouteImport } as any)
+const ContactsRoute = ContactsRouteImport.update({ id: '/contacts', path: '/contacts', getParentRoute: () => rootRouteImport } as any)
+const AdminRoute = AdminRouteImport.update({ id: '/admin', path: '/admin', getParentRoute: () => rootRouteImport } as any)
+const IndexRoute = IndexRouteImport.update({ id: '/', path: '/', getParentRoute: () => rootRouteImport } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -156,55 +96,18 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/admin'
-    | '/contacts'
-    | '/daily-accounts'
-    | '/dashboard'
-    | '/data-bank'
-    | '/data-manufacturer'
-    | '/expenses'
-    | '/jama-khoroch'
-    | '/login'
-    | '/other-income'
-    | '/owners'
-    | '/reports'
-    | '/routes'
-    | '/vehicles'
+    | '/' | '/admin' | '/contacts' | '/daily-accounts' | '/dashboard'
+    | '/data-bank' | '/data-manufacturer' | '/expenses' | '/jama-khoroch'
+    | '/login' | '/other-income' | '/owners' | '/reports' | '/routes' | '/vehicles'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/admin'
-    | '/contacts'
-    | '/daily-accounts'
-    | '/dashboard'
-    | '/data-bank'
-    | '/data-manufacturer'
-    | '/expenses'
-    | '/jama-khoroch'
-    | '/login'
-    | '/other-income'
-    | '/owners'
-    | '/reports'
-    | '/routes'
-    | '/vehicles'
+    | '/' | '/admin' | '/contacts' | '/daily-accounts' | '/dashboard'
+    | '/data-bank' | '/data-manufacturer' | '/expenses' | '/jama-khoroch'
+    | '/login' | '/other-income' | '/owners' | '/reports' | '/routes' | '/vehicles'
   id:
-    | '__root__'
-    | '/'
-    | '/admin'
-    | '/contacts'
-    | '/daily-accounts'
-    | '/dashboard'
-    | '/data-bank'
-    | '/data-manufacturer'
-    | '/expenses'
-    | '/jama-khoroch'
-    | '/login'
-    | '/other-income'
-    | '/owners'
-    | '/reports'
-    | '/routes'
-    | '/vehicles'
+    | '__root__' | '/' | '/admin' | '/contacts' | '/daily-accounts' | '/dashboard'
+    | '/data-bank' | '/data-manufacturer' | '/expenses' | '/jama-khoroch'
+    | '/login' | '/other-income' | '/owners' | '/reports' | '/routes' | '/vehicles'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,111 +130,21 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vehicles': {
-      id: '/vehicles'
-      path: '/vehicles'
-      fullPath: '/vehicles'
-      preLoaderRoute: typeof VehiclesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/routes': {
-      id: '/routes'
-      path: '/routes'
-      fullPath: '/routes'
-      preLoaderRoute: typeof RoutesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/owners': {
-      id: '/owners'
-      path: '/owners'
-      fullPath: '/owners'
-      preLoaderRoute: typeof OwnersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/other-income': {
-      id: '/other-income'
-      path: '/other-income'
-      fullPath: '/other-income'
-      preLoaderRoute: typeof OtherIncomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jama-khoroch': {
-      id: '/jama-khoroch'
-      path: '/jama-khoroch'
-      fullPath: '/jama-khoroch'
-      preLoaderRoute: typeof JamaKhorochRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/expenses': {
-      id: '/expenses'
-      path: '/expenses'
-      fullPath: '/expenses'
-      preLoaderRoute: typeof ExpensesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/data-manufacturer': {
-      id: '/data-manufacturer'
-      path: '/data-manufacturer'
-      fullPath: '/data-manufacturer'
-      preLoaderRoute: typeof DataManufacturerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/data-bank': {
-      id: '/data-bank'
-      path: '/data-bank'
-      fullPath: '/data-bank'
-      preLoaderRoute: typeof DataBankRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/daily-accounts': {
-      id: '/daily-accounts'
-      path: '/daily-accounts'
-      fullPath: '/daily-accounts'
-      preLoaderRoute: typeof DailyAccountsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacts': {
-      id: '/contacts'
-      path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof ContactsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    '/vehicles': { id: '/vehicles'; path: '/vehicles'; fullPath: '/vehicles'; preLoaderRoute: typeof VehiclesRouteImport; parentRoute: typeof rootRouteImport }
+    '/routes': { id: '/routes'; path: '/routes'; fullPath: '/routes'; preLoaderRoute: typeof RoutesRouteImport; parentRoute: typeof rootRouteImport }
+    '/reports': { id: '/reports'; path: '/reports'; fullPath: '/reports'; preLoaderRoute: typeof ReportsRouteImport; parentRoute: typeof rootRouteImport }
+    '/owners': { id: '/owners'; path: '/owners'; fullPath: '/owners'; preLoaderRoute: typeof OwnersRouteImport; parentRoute: typeof rootRouteImport }
+    '/other-income': { id: '/other-income'; path: '/other-income'; fullPath: '/other-income'; preLoaderRoute: typeof OtherIncomeRouteImport; parentRoute: typeof rootRouteImport }
+    '/login': { id: '/login'; path: '/login'; fullPath: '/login'; preLoaderRoute: typeof LoginRouteImport; parentRoute: typeof rootRouteImport }
+    '/jama-khoroch': { id: '/jama-khoroch'; path: '/jama-khoroch'; fullPath: '/jama-khoroch'; preLoaderRoute: typeof JamaKhorochRouteImport; parentRoute: typeof rootRouteImport }
+    '/expenses': { id: '/expenses'; path: '/expenses'; fullPath: '/expenses'; preLoaderRoute: typeof ExpensesRouteImport; parentRoute: typeof rootRouteImport }
+    '/data-manufacturer': { id: '/data-manufacturer'; path: '/data-manufacturer'; fullPath: '/data-manufacturer'; preLoaderRoute: typeof DataManufacturerRouteImport; parentRoute: typeof rootRouteImport }
+    '/data-bank': { id: '/data-bank'; path: '/data-bank'; fullPath: '/data-bank'; preLoaderRoute: typeof DataBankRouteImport; parentRoute: typeof rootRouteImport }
+    '/dashboard': { id: '/dashboard'; path: '/dashboard'; fullPath: '/dashboard'; preLoaderRoute: typeof DashboardRouteImport; parentRoute: typeof rootRouteImport }
+    '/daily-accounts': { id: '/daily-accounts'; path: '/daily-accounts'; fullPath: '/daily-accounts'; preLoaderRoute: typeof DailyAccountsRouteImport; parentRoute: typeof rootRouteImport }
+    '/contacts': { id: '/contacts'; path: '/contacts'; fullPath: '/contacts'; preLoaderRoute: typeof ContactsRouteImport; parentRoute: typeof rootRouteImport }
+    '/admin': { id: '/admin'; path: '/admin'; fullPath: '/admin'; preLoaderRoute: typeof AdminRouteImport; parentRoute: typeof rootRouteImport }
+    '/': { id: '/'; path: '/'; fullPath: '/'; preLoaderRoute: typeof IndexRouteImport; parentRoute: typeof rootRouteImport }
   }
 }
 
