@@ -4,11 +4,11 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { LookupSelect } from "@/components/LookupSelect";
+import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
@@ -48,11 +48,20 @@ function Page() {
   const [description, setDescription] = useState("");
   const [vehicleNo, setVehicleNo] = useState("");
   const [amount, setAmount] = useState<number | "">("");
+  const [ownerId, setOwnerId] = useState("");
 
+  const { data: owners = [] } = useQuery({
+    queryKey: ["owners-list"],
+    queryFn: async () => (await supabase.from("owners").select("id,name").order("name")).data ?? [],
+  });
   const { data: vehicles = [] } = useQuery({
     queryKey: ["vehicles-list-other-income"],
-    queryFn: async () => (await supabase.from("vehicles").select("vehicle_no").order("vehicle_no")).data ?? [],
+    queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,owner_id").order("vehicle_no")).data ?? [],
   });
+  const filteredVehicles = useMemo(() => {
+    const all = vehicles as { vehicle_no: string; owner_id: string | null }[];
+    return ownerId ? all.filter((v) => v.owner_id === ownerId) : all;
+  }, [vehicles, ownerId]);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["other_incomes"],
@@ -145,18 +154,24 @@ function Page() {
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="h-10" />
             </Field>
             <Field label={t("category")}>
-              <LookupSelect kind="category" value={category} onChange={setCategory} required />
+              <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
             </Field>
             <Field label={t("head")}>
-              <LookupSelect kind="head" value={head} onChange={setHead} />
+              <HeadSelect category={category} value={head} onChange={setHead} />
             </Field>
             <Field label={t("description")}>
-              <LookupSelect kind="description" value={description} onChange={setDescription} />
+              <Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-10" />
+            </Field>
+            <Field label={t("owner")}>
+              <select value={ownerId} onChange={(e) => { setOwnerId(e.target.value); setVehicleNo(""); }} className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm">
+                <option value="">{t("all")}</option>
+                {(owners as { id: string; name: string }[]).map((o) => <option key={o.id} value={o.id} className="bg-card">{o.name}</option>)}
+              </select>
             </Field>
             <Field label={t("vehicleNo")}>
               <select value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm">
                 <option value="">{t("all")}</option>
-                {(vehicles as { vehicle_no: string }[]).map((v) => <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>)}
+                {filteredVehicles.map((v) => <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>)}
               </select>
             </Field>
             <Field label={t("amount")}>
