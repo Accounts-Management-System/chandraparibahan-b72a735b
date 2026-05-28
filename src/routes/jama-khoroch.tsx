@@ -97,6 +97,7 @@ function Page() {
               onEdit={canWrite ? (r) => { setEditJ(r); setOpenJ(true); } : undefined}
               onDelete={canWrite ? (r) => delJ.mutate(r.id) : undefined}
             />
+          </TabsContent>
 
           <TabsContent value="khoroch">
             {canWrite && (
