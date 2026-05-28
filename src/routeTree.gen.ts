@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VehiclesRouteImport } from './routes/vehicles'
 import { Route as RoutesRouteImport } from './routes/routes'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as OwnersRouteImport } from './routes/owners'
 import { Route as OtherIncomeRouteImport } from './routes/other-income'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JamaKhorochRouteImport } from './routes/jama-khoroch'
@@ -37,6 +38,11 @@ const RoutesRoute = RoutesRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnersRoute = OwnersRouteImport.update({
+  id: '/owners',
+  path: '/owners',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OtherIncomeRoute = OtherIncomeRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
+  '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
   '/routes': typeof RoutesRoute
   '/vehicles': typeof VehiclesRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
+  '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
   '/routes': typeof RoutesRoute
   '/vehicles': typeof VehiclesRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
+  '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
   '/routes': typeof RoutesRoute
   '/vehicles': typeof VehiclesRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/jama-khoroch'
     | '/login'
     | '/other-income'
+    | '/owners'
     | '/reports'
     | '/routes'
     | '/vehicles'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/jama-khoroch'
     | '/login'
     | '/other-income'
+    | '/owners'
     | '/reports'
     | '/routes'
     | '/vehicles'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/jama-khoroch'
     | '/login'
     | '/other-income'
+    | '/owners'
     | '/reports'
     | '/routes'
     | '/vehicles'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   JamaKhorochRoute: typeof JamaKhorochRoute
   LoginRoute: typeof LoginRoute
   OtherIncomeRoute: typeof OtherIncomeRoute
+  OwnersRoute: typeof OwnersRoute
   ReportsRoute: typeof ReportsRoute
   RoutesRoute: typeof RoutesRoute
   VehiclesRoute: typeof VehiclesRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owners': {
+      id: '/owners'
+      path: '/owners'
+      fullPath: '/owners'
+      preLoaderRoute: typeof OwnersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/other-income': {
@@ -327,6 +347,7 @@ const rootRouteChildren: RootRouteChildren = {
   JamaKhorochRoute: JamaKhorochRoute,
   LoginRoute: LoginRoute,
   OtherIncomeRoute: OtherIncomeRoute,
+  OwnersRoute: OwnersRoute,
   ReportsRoute: ReportsRoute,
   RoutesRoute: RoutesRoute,
   VehiclesRoute: VehiclesRoute,
