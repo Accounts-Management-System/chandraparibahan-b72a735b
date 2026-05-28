@@ -110,6 +110,59 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expense_heads: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_heads_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -179,6 +232,33 @@ export type Database = {
           income_date?: string
           updated_at?: string
           vehicle_no?: string | null
+        }
+        Relationships: []
+      }
+      owners: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -297,6 +377,7 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          owner_id: string | null
           owner_name: string | null
           shareholder_id: string | null
           updated_at: string
@@ -306,6 +387,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          owner_id?: string | null
           owner_name?: string | null
           shareholder_id?: string | null
           updated_at?: string
@@ -315,12 +397,20 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          owner_id?: string | null
           owner_name?: string | null
           shareholder_id?: string | null
           updated_at?: string
           vehicle_no?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vehicles_shareholder_id_fkey"
             columns: ["shareholder_id"]
