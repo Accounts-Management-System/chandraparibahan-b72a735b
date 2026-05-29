@@ -85,7 +85,7 @@ function Page() {
 
           <TabsContent value="jama" className="space-y-3">
             <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
-            <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("entries") ?? "Entries"} />
+            <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
             {canWrite && (
               <div className="flex justify-end mb-2">
                 <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
@@ -110,7 +110,7 @@ function Page() {
 
           <TabsContent value="khoroch" className="space-y-3">
             <SearchFilters value={eFilters} onChange={setEFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
-            <MiniDashboard lang={lang} totalAmount={totalE} showTrips={false} showCount tripCount={khorochFiltered.length} countLabel={t("entries") ?? "Entries"} />
+            <MiniDashboard lang={lang} totalAmount={totalE} showTrips={false} showCount tripCount={khorochFiltered.length} countLabel={t("total")} />
             {canWrite && (
               <div className="flex justify-end mb-2">
                 <Button onClick={() => { setEditE(null); setOpenE(true); }}>
