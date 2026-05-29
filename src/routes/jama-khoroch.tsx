@@ -48,8 +48,14 @@ function Page() {
     },
   });
 
-  const totalJ = jama.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const totalE = khoroch.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const [jFilters, setJFilters] = useState<FilterState>(emptyFilters);
+  const [eFilters, setEFilters] = useState<FilterState>(emptyFilters);
+
+  const jamaFiltered = jama.filter((r) => matchesFilters({ date: r.income_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, jFilters));
+  const khorochFiltered = khoroch.filter((r) => matchesFilters({ date: r.expense_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, eFilters));
+
+  const totalJ = jamaFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const totalE = khorochFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   const delJ = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("other_incomes").delete().eq("id", id); if (error) throw error; },
