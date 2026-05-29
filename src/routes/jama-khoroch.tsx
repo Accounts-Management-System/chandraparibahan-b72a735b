@@ -83,7 +83,9 @@ function Page() {
             <TabsTrigger value="khoroch">{t("khoroch")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="jama">
+          <TabsContent value="jama" className="space-y-3">
+            <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
+            <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("entries") ?? "Entries"} />
             {canWrite && (
               <div className="flex justify-end mb-2">
                 <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
@@ -92,7 +94,7 @@ function Page() {
               </div>
             )}
             <DataTable<JRow>
-              rows={jama}
+              rows={jamaFiltered}
               columns={[
                 { key: "income_date", header: t("date"), render: (r) => fmtDate(r.income_date, lang) },
                 { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
@@ -106,7 +108,9 @@ function Page() {
             />
           </TabsContent>
 
-          <TabsContent value="khoroch">
+          <TabsContent value="khoroch" className="space-y-3">
+            <SearchFilters value={eFilters} onChange={setEFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
+            <MiniDashboard lang={lang} totalAmount={totalE} showTrips={false} showCount tripCount={khorochFiltered.length} countLabel={t("entries") ?? "Entries"} />
             {canWrite && (
               <div className="flex justify-end mb-2">
                 <Button onClick={() => { setEditE(null); setOpenE(true); }}>
@@ -115,11 +119,12 @@ function Page() {
               </div>
             )}
             <DataTable<ERow>
-              rows={khoroch}
+              rows={khorochFiltered}
               columns={[
                 { key: "expense_date", header: t("date"), render: (r) => fmtDate(r.expense_date, lang) },
                 { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
                 { key: "head", header: t("head"), render: (r) => r.head ?? "—" },
+                { key: "vehicle_no", header: t("vehicleNo"), render: (r) => r.vehicle_no ?? "—" },
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
