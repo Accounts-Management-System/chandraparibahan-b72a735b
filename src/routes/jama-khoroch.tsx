@@ -16,6 +16,7 @@ import { Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { LookupSelect } from "@/components/LookupSelect";
 import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
+import { SearchFilters, MiniDashboard, matchesFilters, emptyFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/jama-khoroch")({ component: Page });
 
@@ -47,8 +48,14 @@ function Page() {
     },
   });
 
-  const totalJ = jama.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const totalE = khoroch.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const [jFilters, setJFilters] = useState<FilterState>(emptyFilters);
+  const [eFilters, setEFilters] = useState<FilterState>(emptyFilters);
+
+  const jamaFiltered = jama.filter((r) => matchesFilters({ date: r.income_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, jFilters));
+  const khorochFiltered = khoroch.filter((r) => matchesFilters({ date: r.expense_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, eFilters));
+
+  const totalJ = jamaFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const totalE = khorochFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   const delJ = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("other_incomes").delete().eq("id", id); if (error) throw error; },
@@ -76,7 +83,9 @@ function Page() {
             <TabsTrigger value="khoroch">{t("khoroch")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="jama">
+          <TabsContent value="jama" className="space-y-3">
+            <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
+            <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
             {canWrite && (
               <div className="flex justify-end mb-2">
                 <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
@@ -85,7 +94,7 @@ function Page() {
               </div>
             )}
             <DataTable<JRow>
-              rows={jama}
+              rows={jamaFiltered}
               columns={[
                 { key: "income_date", header: t("date"), render: (r) => fmtDate(r.income_date, lang) },
                 { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
@@ -99,7 +108,9 @@ function Page() {
             />
           </TabsContent>
 
-          <TabsContent value="khoroch">
+          <TabsContent value="khoroch" className="space-y-3">
+            <SearchFilters value={eFilters} onChange={setEFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
+            <MiniDashboard lang={lang} totalAmount={totalE} showTrips={false} showCount tripCount={khorochFiltered.length} countLabel={t("total")} />
             {canWrite && (
               <div className="flex justify-end mb-2">
                 <Button onClick={() => { setEditE(null); setOpenE(true); }}>
@@ -108,11 +119,12 @@ function Page() {
               </div>
             )}
             <DataTable<ERow>
-              rows={khoroch}
+              rows={khorochFiltered}
               columns={[
                 { key: "expense_date", header: t("date"), render: (r) => fmtDate(r.expense_date, lang) },
                 { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
                 { key: "head", header: t("head"), render: (r) => r.head ?? "—" },
+                { key: "vehicle_no", header: t("vehicleNo"), render: (r) => r.vehicle_no ?? "—" },
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
