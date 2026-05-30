@@ -24,6 +24,7 @@ type Row = {
   description: string | null;
   vehicle_no: string | null;
   amount: number;
+  owner_id: string | null;
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -84,6 +85,7 @@ function Page() {
       setDescription(editing.description ?? "");
       setVehicleNo(editing.vehicle_no ?? "");
       setAmount(editing.amount ?? "");
+      setOwnerId(editing.owner_id ?? "");
     } else {
       setDate(last?.income_date ?? today);
       setCategory(last?.category ?? "");
@@ -91,12 +93,13 @@ function Page() {
       setDescription(last?.description ?? "");
       setVehicleNo(last?.vehicle_no ?? "");
       setAmount("");
+      setOwnerId(last?.owner_id ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, last?.id]);
 
   const clearForm = () => {
-    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount("");
+    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount(""); setOwnerId("");
   };
 
   const del = useMutation({
@@ -112,6 +115,7 @@ function Page() {
         description: description || null,
         vehicle_no: vehicleNo || null,
         amount: Number(amount || 0),
+        owner_id: ownerId || null,
       };
       if (editing) { const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id); if (error) throw error; }
       else { const { error } = await supabase.from("other_incomes").insert(form); if (error) throw error; }

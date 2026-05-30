@@ -16,12 +16,13 @@ import { Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { LookupSelect } from "@/components/LookupSelect";
 import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
+import { OwnerSelect } from "@/components/OwnerSelect";
 import { SearchFilters, MiniDashboard, matchesFilters, emptyFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/jama-khoroch")({ component: Page });
 
-type JRow = { id: string; income_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number };
-type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number };
+type JRow = { id: string; income_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
+type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
 
 function Page() {
   const { t, lang } = useT();
@@ -178,6 +179,7 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
   const [description, setDescription] = useState(editing?.description ?? "");
   const [category, setCategory] = useState(editing?.category ?? "");
   const [head, setHead] = useState(editing?.head ?? "");
+  const [ownerId, setOwnerId] = useState(editing?.owner_id ?? "");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -195,12 +197,14 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
               head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
+              owner_id: ownerId || null,
             });
           }}
         >
           <Input type="date" name="d" defaultValue={editing?.income_date ?? today} required className="h-11" />
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} />
           <HeadSelect category={category} value={head} onChange={setHead} />
+          <OwnerSelect value={ownerId} onChange={setOwnerId} />
           <select value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} className="w-full h-11 rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {(vehicles as { vehicle_no: string }[]).map((v) => (
@@ -227,6 +231,7 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
   const [category, setCategory] = useState(editing?.category ?? "");
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
+  const [ownerId, setOwnerId] = useState(editing?.owner_id ?? "");
 
   const save = useMutation({
     mutationFn: async (form: any) => {
@@ -257,12 +262,14 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
               head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
+              owner_id: ownerId || null,
             });
           }}
         >
           <Input type="date" name="d" defaultValue={editing?.expense_date ?? today} required className="h-11" />
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
+          <OwnerSelect value={ownerId} onChange={setOwnerId} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
           <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>

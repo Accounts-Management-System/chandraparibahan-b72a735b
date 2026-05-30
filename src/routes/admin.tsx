@@ -63,13 +63,26 @@ function CalcPanel() {
   const monthStart = today.slice(0, 8) + "01";
   const [from, setFrom] = useState(monthStart);
   const [to, setTo] = useState(today);
+  // scope: "main" = ownerless, "all" = everything, or owner id
+  const [scope, setScope] = useState<string>("main");
+
+  const { data: owners = [] } = useQuery({
+    queryKey: ["calc-owners"],
+    queryFn: async () => (await supabase.from("owners").select("id,name").order("name")).data ?? [],
+  });
+
+  // vehicles with owner mapping (for trip filtering)
+  const { data: vehiclesAll = [] } = useQuery({
+    queryKey: ["calc-vehicles"],
+    queryFn: async () => (await supabase.from("vehicles").select("vehicle_no,owner_id")).data ?? [],
+  });
 
   const { data: trips = [] } = useQuery({
     queryKey: ["calc-trips", from, to],
     queryFn: async () => {
       const { data } = await supabase
         .from("trips")
-        .select("jama_1,jama_2,dena_1,dena_2")
+        .select("vehicle_no,jama_1,jama_2,dena_1,dena_2")
         .gte("trip_date", from)
         .lte("trip_date", to);
       return data ?? [];
@@ -78,27 +91,71 @@ function CalcPanel() {
   const { data: others = [] } = useQuery({
     queryKey: ["calc-others", from, to],
     queryFn: async () => {
-      const { data } = await supabase.from("other_incomes").select("amount").gte("income_date", from).lte("income_date", to);
+      const { data } = await supabase.from("other_incomes").select("amount,owner_id").gte("income_date", from).lte("income_date", to);
       return data ?? [];
     },
   });
   const { data: exps = [] } = useQuery({
     queryKey: ["calc-exps", from, to],
     queryFn: async () => {
-      const { data } = await supabase.from("expenses").select("amount").gte("expense_date", from).lte("expense_date", to);
+      const { data } = await supabase.from("expenses").select("amount,owner_id").gte("expense_date", from).lte("expense_date", to);
       return data ?? [];
     },
   });
 
-  const deposit = trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-  const debit = trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+  // build vehicle_no -> owner_id map
+  const vehOwner = new Map<string, string | null>();
+  (vehiclesAll as any[]).forEach((v) => vehOwner.set(v.vehicle_no, v.owner_id));
+
+  const tripMatches = (vehNo: string) => {
+    if (scope === "all") return true;
+    const owner = vehOwner.get(vehNo) ?? null;
+    if (scope === "main") return !owner;
+    return owner === scope;
+  };
+  const rowMatches = (ownerId: string | null) => {
+    if (scope === "all") return true;
+    if (scope === "main") return !ownerId;
+    return ownerId === scope;
+  };
+
+  const tripsF = (trips as any[]).filter((r) => tripMatches(r.vehicle_no));
+  const othersF = (others as any[]).filter((r) => rowMatches(r.owner_id));
+  const expsF = (exps as any[]).filter((r) => rowMatches(r.owner_id));
+
+  const deposit = tripsF.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+  const debit = tripsF.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
   const income = deposit - debit;
-  const other = others.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const expense = exps.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const other = othersF.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const expense = expsF.reduce((s, r) => s + Number(r.amount || 0), 0);
   const net = income + other - expense;
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setScope("main")}
+          className={`px-3 py-2 rounded-md text-sm border ${scope === "main" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
+        >
+          মূল হিসাব (ওনার বাদে)
+        </button>
+        <button
+          onClick={() => setScope("all")}
+          className={`px-3 py-2 rounded-md text-sm border ${scope === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
+        >
+          সব (একত্রে)
+        </button>
+        {(owners as { id: string; name: string }[]).map((o) => (
+          <button
+            key={o.id}
+            onClick={() => setScope(o.id)}
+            className={`px-3 py-2 rounded-md text-sm border ${scope === o.id ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
+          >
+            {o.name}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs text-muted-foreground">From</label>
