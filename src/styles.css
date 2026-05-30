@@ -156,6 +156,23 @@ html.light { color-scheme: light; }
     color: var(--color-foreground);
     min-height: 100vh;
   }
+  html.light body {
+    background:
+      /* embossed watermark — scattered faint color blooms */
+      radial-gradient(ellipse 140px 90px at 8% 12%, oklch(0.55 0.18 275 / 0.045), transparent 100%),
+      radial-gradient(ellipse 100px 160px at 92% 8%, oklch(0.65 0.14 180 / 0.04), transparent 100%),
+      radial-gradient(ellipse 120px 80px at 75% 35%, oklch(0.60 0.16 320 / 0.035), transparent 100%),
+      radial-gradient(ellipse 160px 110px at 25% 65%, oklch(0.55 0.12 145 / 0.04), transparent 100%),
+      radial-gradient(ellipse 90px 140px at 88% 72%, oklch(0.60 0.14 30 / 0.035), transparent 100%),
+      radial-gradient(ellipse 130px 70px at 45% 88%, oklch(0.55 0.16 250 / 0.04), transparent 100%),
+      radial-gradient(ellipse 110px 100px at 62% 18%, oklch(0.65 0.12 200 / 0.03), transparent 100%),
+      radial-gradient(ellipse 80px 130px at 15% 45%, oklch(0.60 0.10 280 / 0.035), transparent 100%),
+      /* fine grain texture for paper feel */
+      repeating-linear-gradient(90deg, oklch(0 0 0 / 0.012) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(0deg, oklch(0 0 0 / 0.012) 0 1px, transparent 1px 3px),
+      /* warm base */
+      var(--color-background);
+  }
   input::placeholder, textarea::placeholder {
     color: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
   }
