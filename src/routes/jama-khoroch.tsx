@@ -16,12 +16,13 @@ import { Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { LookupSelect } from "@/components/LookupSelect";
 import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
+import { OwnerSelect } from "@/components/OwnerSelect";
 import { SearchFilters, MiniDashboard, matchesFilters, emptyFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/jama-khoroch")({ component: Page });
 
-type JRow = { id: string; income_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number };
-type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number };
+type JRow = { id: string; income_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
+type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
 
 function Page() {
   const { t, lang } = useT();
