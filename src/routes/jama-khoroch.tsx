@@ -65,7 +65,7 @@ function Page() {
     queryFn: async () => {
       const { data } = await supabase
         .from("trips")
-        .select("id,trip_date,vehicle_no,jama_1,jama_2,dena_1,dena_2")
+        .select("id,trip_date,vehicle_no,fare_1,fare_2")
         .order("trip_date", { ascending: false })
         .limit(1000);
       return (data ?? []) as TripRow[];
