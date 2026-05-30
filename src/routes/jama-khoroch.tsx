@@ -25,7 +25,7 @@ type TripRow = {
   id: string;
   trip_date: string;
   vehicle_no: string;
-  jama_1: number; jama_2: number; dena_1: number; dena_2: number;
+  fare_1: number; fare_2: number;
 };
 type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
 
@@ -65,7 +65,7 @@ function Page() {
     queryFn: async () => {
       const { data } = await supabase
         .from("trips")
-        .select("id,trip_date,vehicle_no,jama_1,jama_2,dena_1,dena_2")
+        .select("id,trip_date,vehicle_no,fare_1,fare_2")
         .order("trip_date", { ascending: false })
         .limit(1000);
       return (data ?? []) as TripRow[];
@@ -90,7 +90,7 @@ function Page() {
       ...t,
       owner_id: oid,
       owner_label: oid ? (ownerName.get(oid) ?? "—") : "মূল",
-      fare: Number(t.jama_1 || 0) + Number(t.jama_2 || 0),
+      fare: Number(t.fare_1 || 0) + Number(t.fare_2 || 0),
     };
   }), [trips, vehOwner, ownerName]);
 
