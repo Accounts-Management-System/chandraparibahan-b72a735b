@@ -5,6 +5,7 @@ import { useRole } from "@/lib/useRole";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/lib/theme";
 import {
   LayoutDashboard,
   Receipt,
@@ -20,6 +21,8 @@ import {
   Factory,
   ShieldCheck,
   BookOpen,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
@@ -82,6 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { role, isAdmin, canWrite } = useRole();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
+  const { theme, toggle: toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite));
 
@@ -127,6 +131,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="p-3 border-t space-y-2">
+          <Button variant="outline" size="sm" className="w-full" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+            {theme === "dark" ? (lang === "bn" ? "লাইট মুড" : "Light") : (lang === "bn" ? "ডার্ক মুড" : "Dark")}
+          </Button>
           <Button variant="outline" size="sm" className="w-full" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
             <Languages className="h-4 w-4 mr-2" />
             {lang === "bn" ? "English" : "বাংলা"}
@@ -155,6 +163,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="theme">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
               {lang === "bn" ? "EN" : "বাং"}
             </Button>
