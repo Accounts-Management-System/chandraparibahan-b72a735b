@@ -27,7 +27,7 @@ type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly
 const nav: NavItem[] = [
   { to: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
   { to: "/daily-accounts", icon: Receipt, key: "dailyAccounts" },
-  { to: "/jama-khoroch", icon: BookOpen, key: "jamaKhoroch" },
+  { to: "/jama-khoroch", icon: BookOpen, key: "jamaKhoroch", adminOnly: true },
   { to: "/expenses", icon: Wallet, key: "expenses" },
   { to: "/other-income", icon: Coins, key: "otherIncome" },
   { to: "/vehicles", icon: Bus, key: "vehicles" },
