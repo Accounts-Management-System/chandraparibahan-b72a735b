@@ -131,6 +131,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="p-3 border-t space-y-2">
+          <Button variant="outline" size="sm" className="w-full" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+            {theme === "dark" ? (lang === "bn" ? "লাইট মুড" : "Light") : (lang === "bn" ? "ডার্ক মুড" : "Dark")}
+          </Button>
           <Button variant="outline" size="sm" className="w-full" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
             <Languages className="h-4 w-4 mr-2" />
             {lang === "bn" ? "English" : "বাংলা"}
