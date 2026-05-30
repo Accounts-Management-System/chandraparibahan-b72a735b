@@ -163,6 +163,11 @@ function Page() {
           <TabsContent value="jama" className="space-y-3">
             <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true }} />
             <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
+            <div className="flex justify-end mb-2">
+              <Button onClick={() => setOpenJ(true)}>
+                <Plus className="h-4 w-4 mr-2" />{t("addJama")}
+              </Button>
+            </div>
             <DataTable
               rows={jamaFiltered}
               columns={[
