@@ -25,7 +25,7 @@ type TripRow = {
   id: string;
   trip_date: string;
   vehicle_no: string;
-  jama_1: number; jama_2: number; dena_1: number; dena_2: number;
+  fare_1: number; fare_2: number;
 };
 type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
 
