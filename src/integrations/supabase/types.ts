@@ -172,6 +172,7 @@ export type Database = {
           expense_date: string
           head: string | null
           id: string
+          owner_id: string | null
           updated_at: string
           vehicle_no: string | null
         }
@@ -183,6 +184,7 @@ export type Database = {
           expense_date?: string
           head?: string | null
           id?: string
+          owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
         }
@@ -194,10 +196,19 @@ export type Database = {
           expense_date?: string
           head?: string | null
           id?: string
+          owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       other_incomes: {
         Row: {
@@ -208,6 +219,7 @@ export type Database = {
           head: string | null
           id: string
           income_date: string
+          owner_id: string | null
           updated_at: string
           vehicle_no: string | null
         }
@@ -219,6 +231,7 @@ export type Database = {
           head?: string | null
           id?: string
           income_date?: string
+          owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
         }
@@ -230,10 +243,19 @@ export type Database = {
           head?: string | null
           id?: string
           income_date?: string
+          owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "other_incomes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       owners: {
         Row: {
