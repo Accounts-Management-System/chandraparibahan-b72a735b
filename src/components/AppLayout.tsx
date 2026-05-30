@@ -5,6 +5,7 @@ import { useRole } from "@/lib/useRole";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/lib/theme";
 import {
   LayoutDashboard,
   Receipt,
@@ -20,6 +21,8 @@ import {
   Factory,
   ShieldCheck,
   BookOpen,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
