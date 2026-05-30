@@ -179,6 +179,7 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
   const [description, setDescription] = useState(editing?.description ?? "");
   const [category, setCategory] = useState(editing?.category ?? "");
   const [head, setHead] = useState(editing?.head ?? "");
+  const [ownerId, setOwnerId] = useState(editing?.owner_id ?? "");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,12 +197,14 @@ function JamaDialog({ open, onOpenChange, editing }: { open: boolean; onOpenChan
               head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
+              owner_id: ownerId || null,
             });
           }}
         >
           <Input type="date" name="d" defaultValue={editing?.income_date ?? today} required className="h-11" />
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} />
           <HeadSelect category={category} value={head} onChange={setHead} />
+          <OwnerSelect value={ownerId} onChange={setOwnerId} />
           <select value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} className="w-full h-11 rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {(vehicles as { vehicle_no: string }[]).map((v) => (
