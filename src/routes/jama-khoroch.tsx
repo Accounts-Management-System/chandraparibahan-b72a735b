@@ -231,6 +231,7 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
   const [category, setCategory] = useState(editing?.category ?? "");
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
+  const [ownerId, setOwnerId] = useState(editing?.owner_id ?? "");
 
   const save = useMutation({
     mutationFn: async (form: any) => {
@@ -261,12 +262,14 @@ function ExpenseDialog({ open, onOpenChange, editing }: { open: boolean; onOpenC
               head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
+              owner_id: ownerId || null,
             });
           }}
         >
           <Input type="date" name="d" defaultValue={editing?.expense_date ?? today} required className="h-11" />
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
+          <OwnerSelect value={ownerId} onChange={setOwnerId} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
           <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
