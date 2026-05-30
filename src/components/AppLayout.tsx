@@ -85,6 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { role, isAdmin, canWrite } = useRole();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
+  const { theme, toggle: toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite));
 
