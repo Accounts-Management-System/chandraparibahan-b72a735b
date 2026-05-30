@@ -90,7 +90,7 @@ function Page() {
       ...t,
       owner_id: oid,
       owner_label: oid ? (ownerName.get(oid) ?? "—") : "মূল",
-      fare: Number(t.jama_1 || 0) + Number(t.jama_2 || 0),
+      fare: Number(t.fare_1 || 0) + Number(t.fare_2 || 0),
     };
   }), [trips, vehOwner, ownerName]);
 
