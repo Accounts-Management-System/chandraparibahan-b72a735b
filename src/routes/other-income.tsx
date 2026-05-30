@@ -24,6 +24,7 @@ type Row = {
   description: string | null;
   vehicle_no: string | null;
   amount: number;
+  owner_id: string | null;
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
