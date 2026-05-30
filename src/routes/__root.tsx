@@ -77,9 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Chandra Paribahan — Management System" },
       { name: "description", content: "Chandra Paribahan transport management system: daily accounts, expenses, vehicles, contacts and reports." },
-      { property: "og:title", content: "Chandra Paribahan" },
-      { property: "og:description", content: "Transport management system." },
+      { property: "og:title", content: "Chandra Paribahan — Management System" },
+      { property: "og:description", content: "Chandra Paribahan transport management system: daily accounts, expenses, vehicles, contacts and reports." },
       { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Chandra Paribahan — Management System" },
+      { name: "twitter:description", content: "Chandra Paribahan transport management system: daily accounts, expenses, vehicles, contacts and reports." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0e1de4e6-cea1-4b3d-b9a0-1e4f8a655a4f" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0e1de4e6-cea1-4b3d-b9a0-1e4f8a655a4f" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
