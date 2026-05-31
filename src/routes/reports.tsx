@@ -7,7 +7,8 @@ import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, FileDown } from "lucide-react";
+import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/reports")({ component: Page });
 
