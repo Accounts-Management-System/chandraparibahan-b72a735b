@@ -85,7 +85,24 @@ function DailyAccountsPage() {
         </div>
 
         <SearchFilters value={filters} onChange={setFilters} show={{ date: true, vehicle: true }} />
-        <MiniDashboard tripCount={filtered.length} totalAmount={totalJama} lang={lang} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="rounded-lg border border-border/50 bg-card/60 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("total")}</div>
+            <div className="text-2xl font-bold mt-1">{fmtNum(filtered.length, lang)}</div>
+          </div>
+          <div className="rounded-lg border border-border/50 bg-card/60 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("jamaTotal")}</div>
+            <div className="text-2xl font-bold mt-1 text-emerald-400">{fmtNum(totalJama, lang)}</div>
+          </div>
+          <div className="rounded-lg border border-border/50 bg-card/60 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("denaTotal")}</div>
+            <div className="text-2xl font-bold mt-1 text-rose-400">{fmtNum(totalDena, lang)}</div>
+          </div>
+          <div className="rounded-lg border border-border/50 bg-card/60 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("balance")}</div>
+            <div className="text-2xl font-bold mt-1 text-primary">{fmtNum(totalBalance, lang)}</div>
+          </div>
+        </div>
 
         <DataTable<Trip>
           rows={isLoading ? [] : filtered}
