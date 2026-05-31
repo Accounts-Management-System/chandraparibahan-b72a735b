@@ -267,16 +267,16 @@ function Page() {
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
-              onEdit={(r) => {
+              onEdit={isAdmin ? (r) => {
                 if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন"); return; }
                 const oid = r.id.slice(2);
                 const oi = (otherIncomes as OIRow[]).find((x) => x.id === oid);
                 if (oi) { setEditJ(oi); setOpenJ(true); }
-              }}
-              onDelete={(r) => {
+              } : undefined}
+              onDelete={isAdmin ? (r) => {
                 if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন"); return; }
                 delOI.mutate(r.id.slice(2));
-              }}
+              } : undefined}
             />
           </TabsContent>
 
