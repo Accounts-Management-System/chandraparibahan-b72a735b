@@ -124,8 +124,21 @@ function DashboardPage() {
 
         {/* Per-trip chart */}
         <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
-            {t("tripChart")}
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+              {t("tripChart")}
+            </div>
+            <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
+              {(["balance", "debit", "deposit"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setChartMode(m)}
+                  className={`px-3 py-1 rounded transition-colors ${chartMode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {m === "balance" ? t("chartBalance") : m === "debit" ? t("chartDebit") : t("chartDeposit")}
+                </button>
+              ))}
+            </div>
           </div>
           {chartData.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">{t("noData")}</p>
@@ -137,7 +150,7 @@ function DashboardPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: "oklch(0.7 0.04 270)" }} interval={0} angle={-30} textAnchor="end" height={50} />
                   <YAxis tick={{ fontSize: 10, fill: "oklch(0.7 0.04 270)" }} />
                   <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="jama" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="value" fill={chartColor} radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
