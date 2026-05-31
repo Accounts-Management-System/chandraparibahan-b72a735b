@@ -9,13 +9,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, KeyRound } from "lucide-react";
 import { useRole } from "@/lib/useRole";
+import { useServerFn } from "@tanstack/react-start";
+import { createOwnerLogin, resetUserPin } from "@/lib/admin.functions";
 import { SearchFilters, MiniDashboard, emptyFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/owners")({ component: Page });
 
-type Owner = { id: string; name: string };
+type Owner = { id: string; name: string; login_id: string | null; auth_user_id: string | null };
 type Veh = { id: string; vehicle_no: string; owner_id: string | null };
 type Trip = { trip_date: string; vehicle_no: string; fare_1: number; fare_2: number };
 
@@ -29,15 +31,20 @@ type FareRow = {
 
 function Page() {
   const { t, lang } = useT();
-  const { canWrite } = useRole();
+  const { canWrite, isAdmin } = useRole();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Owner | null>(null);
+  const [loginFor, setLoginFor] = useState<Owner | null>(null);
+  const [resetFor, setResetFor] = useState<Owner | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
+
+  const doCreateLogin = useServerFn(createOwnerLogin);
+  const doResetPin = useServerFn(resetUserPin);
 
   const { data: owners = [], isLoading } = useQuery({
     queryKey: ["owners"],
-    queryFn: async () => ((await supabase.from("owners").select("id,name").order("name")).data ?? []) as Owner[],
+    queryFn: async () => ((await supabase.from("owners").select("id,name,login_id,auth_user_id").order("name")).data ?? []) as Owner[],
   });
   const { data: vehicles = [] } = useQuery({
     queryKey: ["vehicles-with-owner"],
@@ -106,6 +113,24 @@ function Page() {
             columns={[
               { key: "name", header: t("name") },
               { key: "id", header: t("vehicles"), render: (r) => vehicles.filter((v) => v.owner_id === r.id).map((v) => v.vehicle_no).join(", ") || "—" },
+              { key: "login_id", header: t("loginId"), render: (r) => r.login_id ?? "—" },
+              {
+                key: "actions2",
+                header: t("actions"),
+                render: (r) => isAdmin ? (
+                  <div className="flex gap-1">
+                    {r.auth_user_id ? (
+                      <Button size="sm" variant="ghost" onClick={() => setResetFor(r)}>
+                        <KeyRound className="h-3 w-3 mr-1" />{t("resetPin")}
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="ghost" onClick={() => setLoginFor(r)}>
+                        {t("createLogin")}
+                      </Button>
+                    )}
+                  </div>
+                ) : null,
+              },
             ]}
             onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
             onDelete={canWrite ? (r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); } : undefined}
@@ -113,7 +138,75 @@ function Page() {
           />
         )}
       </div>
+
       <OwnerDialog open={open} onOpenChange={setOpen} editing={editing} />
+
+      {/* Create Login */}
+      <Dialog open={!!loginFor} onOpenChange={(v) => !v && setLoginFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t("createLogin")} — {loginFor?.name}</DialogTitle></DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              try {
+                await doCreateLogin({
+                  data: {
+                    ownerId: loginFor!.id,
+                    loginId: String(f.get("loginId") || ""),
+                    pin: String(f.get("pin") || ""),
+                  },
+                });
+                toast.success(t("saved"));
+                setLoginFor(null);
+                qc.invalidateQueries({ queryKey: ["owners"] });
+              } catch (err: any) {
+                toast.error(err.message);
+              }
+            }}
+          >
+            <Input name="loginId" placeholder={t("loginId")} required minLength={3} className="h-11" />
+            <Input name="pin" placeholder={t("pin" as any)} required minLength={4} className="h-11" />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setLoginFor(null)}>{t("cancel")}</Button>
+              <Button type="submit">{t("submit")}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset PIN */}
+      <Dialog open={!!resetFor} onOpenChange={(v) => !v && setResetFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t("resetPin")} — {resetFor?.name}</DialogTitle></DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              try {
+                await doResetPin({
+                  data: {
+                    authUserId: resetFor!.auth_user_id!,
+                    pin: String(f.get("pin") || ""),
+                  },
+                });
+                toast.success(t("pinSet"));
+                setResetFor(null);
+              } catch (err: any) {
+                toast.error(err.message);
+              }
+            }}
+          >
+            <Input name="pin" placeholder={t("newPin")} required minLength={4} className="h-11" />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setResetFor(null)}>{t("cancel")}</Button>
+              <Button type="submit">{t("submit")}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
