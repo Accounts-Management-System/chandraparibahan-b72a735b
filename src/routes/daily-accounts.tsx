@@ -9,8 +9,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, FileDown } from "lucide-react";
 import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
+import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
@@ -79,9 +80,26 @@ function DailyAccountsPage() {
             <h1 className="text-2xl font-bold">{t("dailyAccounts")}</h1>
             <p className="text-sm text-muted-foreground">{t("brand")}</p>
           </div>
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" />{t("add")}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => exportPdf({
+              title: t("dailyAccounts"),
+              subtitle: `${t("total")}: ${fmtNum(filtered.length, lang)} · ${t("jamaTotal")}: ${fmtNum(totalJama, lang)} · ${t("denaTotal")}: ${fmtNum(totalDena, lang)} · ${t("balance")}: ${fmtNum(totalBalance, lang)}`,
+              headers: [t("serial"), t("date"), t("vehicleNo"), t("jamaTotal"), t("denaTotal"), t("balance"), t("fareTotal"), t("supervisor")],
+              rows: filtered.map((r) => [
+                fmtNum(r.serial_no, lang), fmtDate(r.trip_date, lang), r.vehicle_no,
+                fmtNum(Number(r.jama_1) + Number(r.jama_2), lang),
+                fmtNum(Number(r.dena_1) + Number(r.dena_2), lang),
+                fmtNum(Number(r.jama_1) + Number(r.jama_2) - Number(r.dena_1) - Number(r.dena_2), lang),
+                fmtNum(Number(r.fare_1) + Number(r.fare_2), lang),
+                r.supervisor ?? "-",
+              ]),
+            })}>
+              <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
+            </Button>
+            <Button onClick={() => { setEditing(null); setOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />{t("add")}
+            </Button>
+          </div>
         </div>
 
         <SearchFilters value={filters} onChange={setFilters} show={{ date: true, vehicle: true }} />

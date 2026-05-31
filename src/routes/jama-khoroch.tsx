@@ -10,10 +10,11 @@ import {
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, FileDown } from "lucide-react";
 import { useRole } from "@/lib/useRole";
+import { exportPdf } from "@/lib/exportPdf";
 import { LookupSelect } from "@/components/LookupSelect";
 import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
 import { OwnerSelect } from "@/components/OwnerSelect";
@@ -50,6 +51,7 @@ function Page() {
   const [editE, setEditE] = useState<ERow | null>(null);
   const [openE, setOpenE] = useState(false);
   const [openJ, setOpenJ] = useState(false);
+  const [editJ, setEditJ] = useState<OIRow | null>(null);
   const [ownerScope, setOwnerScope] = useState<string>("main"); // "main" | "all" | owner.id
 
   const { data: owners = [] } = useQuery({
@@ -171,6 +173,27 @@ function Page() {
     mutationFn: async (id: string) => { const { error } = await supabase.from("expenses").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-khoroch"] }); toast.success(t("deleted")); },
   });
+  const delOI = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from("other_incomes").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-other-incomes"] }); toast.success(t("deleted")); },
+  });
+
+  const exportJamaPdf = () => {
+    exportPdf({
+      title: `${t("jamaKhoroch")} — ${t("jama")}`,
+      subtitle: `${t("total")}: ${fmtNum(totalJ, lang)}`,
+      headers: [t("date"), t("owner"), t("category"), t("head"), t("vehicleNo"), t("description"), t("amount")],
+      rows: jamaFiltered.map((r) => [fmtDate(r.date, lang), r.owner_label, r.category ?? "—", r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(r.amount, lang)]),
+    });
+  };
+  const exportKhorochPdf = () => {
+    exportPdf({
+      title: `${t("jamaKhoroch")} — ${t("khoroch")}`,
+      subtitle: `${t("total")}: ${fmtNum(totalE, lang)}`,
+      headers: [t("date"), t("owner"), t("category"), t("head"), t("vehicleNo"), t("description"), t("amount")],
+      rows: khorochFiltered.map((r) => [fmtDate(r.expense_date, lang), r.owner_id ? (ownerName.get(r.owner_id) ?? "—") : "—", r.category ?? "—", r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(Number(r.amount || 0), lang)]),
+    });
+  };
 
   if (loading) {
     return <AppLayout><p className="text-muted-foreground">{t("loading")}</p></AppLayout>;
@@ -214,8 +237,11 @@ function Page() {
           <TabsContent value="jama" className="space-y-3">
             <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
             <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
-            <div className="flex justify-end mb-2">
-              <Button onClick={() => setOpenJ(true)}>
+            <div className="flex justify-end gap-2 mb-2">
+              <Button variant="outline" onClick={exportJamaPdf}>
+                <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
+              </Button>
+              <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addJama")}
               </Button>
             </div>
@@ -230,13 +256,26 @@ function Page() {
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
+              onEdit={(r) => {
+                if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন"); return; }
+                const oid = r.id.slice(2);
+                const oi = (otherIncomes as OIRow[]).find((x) => x.id === oid);
+                if (oi) { setEditJ(oi); setOpenJ(true); }
+              }}
+              onDelete={(r) => {
+                if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন"); return; }
+                delOI.mutate(r.id.slice(2));
+              }}
             />
           </TabsContent>
 
           <TabsContent value="khoroch" className="space-y-3">
             <SearchFilters value={eFilters} onChange={setEFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
             <MiniDashboard lang={lang} totalAmount={totalE} showTrips={false} showCount tripCount={khorochFiltered.length} countLabel={t("total")} />
-            <div className="flex justify-end mb-2">
+            <div className="flex justify-end gap-2 mb-2">
+              <Button variant="outline" onClick={exportKhorochPdf}>
+                <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
+              </Button>
               <Button onClick={() => { setEditE(null); setOpenE(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addExpense")}
               </Button>
@@ -260,7 +299,7 @@ function Page() {
       </div>
 
       <ExpenseDialog open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
-      <IncomeDialog open={openJ} onOpenChange={setOpenJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
+      <IncomeDialog open={openJ} onOpenChange={setOpenJ} editing={editJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
     </AppLayout>
   );
 }
@@ -343,15 +382,26 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   );
 }
 
-function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; defaultOwnerId: string }) {
+function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; editing: OIRow | null; defaultOwnerId: string }) {
   const { t } = useT();
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const [category, setCategory] = useState("");
-  const [head, setHead] = useState("");
-  const [description, setDescription] = useState("");
-  const [ownerId, setOwnerId] = useState(defaultOwnerId);
+  const [category, setCategory] = useState(editing?.category ?? "");
+  const [head, setHead] = useState(editing?.head ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
+
+  // Reset state when dialog opens with a different editing target
+  useEffect(() => {
+    if (open) {
+      setCategory(editing?.category ?? "");
+      setHead(editing?.head ?? "");
+      setDescription(editing?.description ?? "");
+      setOwnerId(editing?.owner_id ?? defaultOwnerId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing?.id]);
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ["income-vehicles", ownerId],
@@ -369,8 +419,13 @@ function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; o
   const save = useMutation({
     mutationFn: async (form: any) => {
       if (!form.owner_id) throw new Error("ওনার নির্বাচন করুন");
-      const { error } = await supabase.from("other_incomes").insert(form);
-      if (error) throw error;
+      if (editing) {
+        const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("other_incomes").insert(form);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["jk-other-incomes"] });
@@ -384,7 +439,7 @@ function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; o
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{t("addJama")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? t("edit") : t("addJama")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
         <form
           className="space-y-3"
           onSubmit={(e) => {
@@ -401,21 +456,21 @@ function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; o
             });
           }}
         >
-          <Input type="date" name="d" defaultValue={today} required className="h-11" />
+          <Input type="date" name="d" defaultValue={editing?.income_date ?? today} required className="h-11" />
           <OwnerSelect value={ownerId} onChange={(v) => setOwnerId(v)} />
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
-          <select name="v" className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
+          <select name="v" defaultValue={editing?.vehicle_no ?? ""} className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {filteredVehicles.map((v) => (
               <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>
             ))}
           </select>
-          <Input type="number" step="any" name="a" placeholder={t("amount")} required className="h-11" />
+          <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit" disabled={save.isPending}>{t("submit")}</Button>
+            <Button type="submit" disabled={save.isPending}>{editing ? t("update") : t("submit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
