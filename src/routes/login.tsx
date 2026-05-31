@@ -40,8 +40,17 @@ function LoginPage() {
         if (error) throw error;
         toast.success(t("signupCheckEmail"));
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const candidates = email.includes("@")
+          ? [email]
+          : [`${email.toLowerCase()}@owners.local`, `${email.toLowerCase()}@shareholders.local`];
+        let lastErr: any = null;
+        let ok = false;
+        for (const e2 of candidates) {
+          const { error } = await supabase.auth.signInWithPassword({ email: e2, password });
+          if (!error) { ok = true; break; }
+          lastErr = error;
+        }
+        if (!ok) throw lastErr ?? new Error("Login failed");
         toast.success(t("loginSuccess"));
         navigate({ to: "/dashboard" });
       }
@@ -70,12 +79,13 @@ function LoginPage() {
             <div>
               <Label className="text-white text-xs">{t("email")}</Label>
               <Input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="bg-white text-black"
-                autoComplete="email"
+                autoComplete="username"
+                placeholder={t("email") + " / " + t("loginId")}
               />
             </div>
             <div>
