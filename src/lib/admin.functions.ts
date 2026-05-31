@@ -75,6 +75,40 @@ export const createShareholderLogin = createServerFn({ method: "POST" })
     return { id: uid, loginId: data.loginId };
   });
 
+/** Create an owner login (login_id + pin) linked to an owners row. */
+export const createOwnerLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        ownerId: z.string().uuid(),
+        loginId: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_.-]+$/),
+        pin: z.string().min(4).max(20),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    const synthEmail = `${data.loginId.toLowerCase()}@owners.local`;
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: synthEmail,
+      password: data.pin,
+      email_confirm: true,
+      user_metadata: { owner_id: data.ownerId, login_id: data.loginId },
+    });
+    if (error) throw new Error(error.message);
+    const uid = created.user?.id;
+    if (!uid) throw new Error("Failed to create user");
+    await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: uid, role: "shareholder" });
+    await supabaseAdmin
+      .from("owners")
+      .update({ auth_user_id: uid, login_id: data.loginId })
+      .eq("id", data.ownerId);
+    return { id: uid, loginId: data.loginId };
+  });
+
 /** Reset PIN/password for an existing auth user. */
 export const resetUserPin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
