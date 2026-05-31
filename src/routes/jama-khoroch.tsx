@@ -106,20 +106,6 @@ function Page() {
     };
   }), [trips, vehOwner, ownerName]);
 
-  // Unified jama row (trip or other_income)
-  type JRow = {
-    id: string;
-    source: "trip" | "other";
-    date: string;
-    owner_id: string | null;
-    owner_label: string;
-    vehicle_no: string | null;
-    category: string | null;
-    head: string | null;
-    description: string | null;
-    amount: number;
-  };
-
   const jamaRows: JRow[] = useMemo(() => {
     const fromTrips: JRow[] = tripsWithOwner.map((t) => ({
       id: `t:${t.id}`,
