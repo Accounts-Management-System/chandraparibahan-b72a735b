@@ -137,7 +137,15 @@ function Page() {
             <h1 className="text-2xl font-bold">{t("expenses")}</h1>
             <p className="text-sm text-muted-foreground">{t("total")}: <span className="font-semibold text-rose-400">{fmtNum(total, lang)}</span></p>
           </div>
-          {canWrite && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => exportPdf({
+              title: t("expenses"),
+              subtitle: `${t("total")}: ${fmtNum(total, lang)}`,
+              headers: [t("date"), t("category"), t("head"), t("description"), t("vehicleNo"), t("amount")],
+              rows: filtered.map((r) => [fmtDate(r.expense_date, lang), r.category, r.head ?? "-", r.description ?? "-", r.vehicle_no ?? "-", fmtNum(r.amount, lang)]),
+            })}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
+            {canWrite && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>}
+          </div>
         </div>
         <SearchFilters value={filters} onChange={setFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
         <MiniDashboard tripCount={filtered.length} totalAmount={total} lang={lang} showTrips={false} showCount countLabel={t("total")} />
