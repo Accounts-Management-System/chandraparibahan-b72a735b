@@ -203,29 +203,33 @@ function Page() {
   if (loading) {
     return <AppLayout><p className="text-muted-foreground">{t("loading")}</p></AppLayout>;
   }
-  if (!isAdmin) {
+  if (!canView) {
     return (
       <AppLayout>
         <div className="rounded-lg border bg-card p-6 text-center">
           <h1 className="text-xl font-bold mb-2">{t("jamaKhoroch")}</h1>
-          <p className="text-muted-foreground">⛔ শুধু এডমিন</p>
+          <p className="text-muted-foreground">⛔ অনুমতি নেই</p>
         </div>
       </AppLayout>
     );
   }
 
+  const tripCountJ = jamaFiltered.filter((r) => r.category === "ভাড়া").length;
+
   return (
     <AppLayout>
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{t("jamaKhoroch")} <span className="text-xs text-muted-foreground font-normal">(প্রাইভেট)</span></h1>
+        <h1 className="text-2xl font-bold">{t("jamaKhoroch")} <span className="text-xs text-muted-foreground font-normal">{isAdmin ? "(প্রাইভেট)" : `(${t("guestReadOnly")})`}</span></h1>
 
-        <div className="flex flex-wrap gap-2">
-          <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label="মূল হিসাব" />
-          <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label="সব" />
-          {(owners as { id: string; name: string }[]).map((o) => (
-            <ScopeBtn key={o.id} active={ownerScope === o.id} onClick={() => setOwnerScope(o.id)} label={o.name} />
-          ))}
-        </div>
+        {isAdmin ? (
+          <div className="flex flex-wrap gap-2">
+            <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label="মূল হিসাব" />
+            <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label="সব" />
+            {(owners as { id: string; name: string }[]).map((o) => (
+              <ScopeBtn key={o.id} active={ownerScope === o.id} onClick={() => setOwnerScope(o.id)} label={o.name} />
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-3 gap-3">
           <Stat label={t("jama")} value={fmtNum(totalJ, lang)} color="text-emerald-400" />
@@ -241,11 +245,12 @@ function Page() {
 
           <TabsContent value="jama" className="space-y-3">
             <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
-            <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
+            <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={tripCountJ} countLabel={t("tripCount")} />
             <div className="flex justify-end gap-2 mb-2">
               <Button variant="outline" onClick={exportJamaPdf}>
                 <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
               </Button>
+              {isAdmin && (
               <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addJama")}
               </Button>
