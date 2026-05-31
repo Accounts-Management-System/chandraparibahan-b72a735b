@@ -254,6 +254,7 @@ function Page() {
               <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addJama")}
               </Button>
+              )}
             </div>
             <DataTable<JRow>
               rows={jamaFiltered}
