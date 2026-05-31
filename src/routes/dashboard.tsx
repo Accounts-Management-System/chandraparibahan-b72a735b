@@ -60,24 +60,31 @@ function DashboardPage() {
     },
   });
 
+  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit">("balance");
+
   const summary = useQuery({
     queryKey: ["dash-trips", date, vehicle],
     queryFn: async () => {
       let q = supabase
         .from("trips")
-        .select("vehicle_no,serial_no,jama_1,jama_2")
+        .select("vehicle_no,serial_no,jama_1,jama_2,dena_1,dena_2")
         .eq("trip_date", date)
         .order("serial_no", { ascending: true });
       if (vehicle !== "all") q = q.eq("vehicle_no", vehicle);
       const { data } = await q;
-      return (data ?? []) as { vehicle_no: string; serial_no: number | null; jama_1: number; jama_2: number }[];
+      return (data ?? []) as { vehicle_no: string; serial_no: number | null; jama_1: number; jama_2: number; dena_1: number; dena_2: number }[];
     },
   });
 
-  const chartData = (summary.data ?? []).map((r, i) => ({
-    name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
-    jama: Number(r.jama_1 || 0) + Number(r.jama_2 || 0),
-  }));
+  const chartData = (summary.data ?? []).map((r, i) => {
+    const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+    const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+    return {
+      name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
+      value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
+    };
+  });
+  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : "var(--primary)";
 
   return (
     <AppLayout>
