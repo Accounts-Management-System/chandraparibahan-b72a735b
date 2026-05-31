@@ -28,6 +28,19 @@ type TripRow = {
   fare_1: number; fare_2: number;
 };
 type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
+type OIRow = { id: string; income_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
+type JRow = {
+  id: string;
+  source: "trip" | "other";
+  date: string;
+  owner_id: string | null;
+  owner_label: string;
+  vehicle_no: string | null;
+  category: string | null;
+  head: string | null;
+  description: string | null;
+  amount: number;
+};
 
 function Page() {
   const { t, lang } = useT();
@@ -84,6 +97,16 @@ function Page() {
     },
     enabled: isAdmin,
   });
+  const { data: otherIncomes = [] } = useQuery({
+    queryKey: ["jk-other-incomes"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("other_incomes").select("*")
+        .order("income_date", { ascending: false }).limit(500);
+      return (data ?? []) as OIRow[];
+    },
+    enabled: isAdmin,
+  });
 
   const tripsWithOwner = useMemo(() => trips.map((t) => {
     const oid = vehOwner.get(t.vehicle_no) ?? null;
@@ -95,11 +118,39 @@ function Page() {
     };
   }), [trips, vehOwner, ownerName]);
 
-  const tripsScoped = useMemo(() => tripsWithOwner.filter((r) => {
+  const jamaRows: JRow[] = useMemo(() => {
+    const fromTrips: JRow[] = tripsWithOwner.map((t) => ({
+      id: `t:${t.id}`,
+      source: "trip",
+      date: t.trip_date,
+      owner_id: t.owner_id,
+      owner_label: t.owner_label,
+      vehicle_no: t.vehicle_no,
+      category: "ভাড়া",
+      head: null,
+      description: null,
+      amount: t.fare,
+    }));
+    const fromOther: JRow[] = (otherIncomes as OIRow[]).map((o) => ({
+      id: `o:${o.id}`,
+      source: "other",
+      date: o.income_date,
+      owner_id: o.owner_id,
+      owner_label: o.owner_id ? (ownerName.get(o.owner_id) ?? "—") : "মূল",
+      vehicle_no: o.vehicle_no,
+      category: o.category,
+      head: o.head,
+      description: o.description,
+      amount: Number(o.amount || 0),
+    }));
+    return [...fromTrips, ...fromOther].sort((a, b) => b.date.localeCompare(a.date));
+  }, [tripsWithOwner, otherIncomes, ownerName]);
+
+  const jamaScoped = useMemo(() => jamaRows.filter((r) => {
     if (ownerScope === "all") return true;
     if (ownerScope === "main") return !r.owner_id;
     return r.owner_id === ownerScope;
-  }), [tripsWithOwner, ownerScope]);
+  }), [jamaRows, ownerScope]);
 
   const khorochScoped = useMemo(() => khoroch.filter((r) => {
     if (ownerScope === "all") return true;
@@ -110,10 +161,10 @@ function Page() {
   const [jFilters, setJFilters] = useState<FilterState>(emptyFilters);
   const [eFilters, setEFilters] = useState<FilterState>(emptyFilters);
 
-  const jamaFiltered = tripsScoped.filter((r) => matchesFilters({ date: r.trip_date, vehicle_no: r.vehicle_no, category: null, head: null }, jFilters));
+  const jamaFiltered = jamaScoped.filter((r) => matchesFilters({ date: r.date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, jFilters));
   const khorochFiltered = khorochScoped.filter((r) => matchesFilters({ date: r.expense_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, eFilters));
 
-  const totalJ = jamaFiltered.reduce((s, r) => s + r.fare, 0);
+  const totalJ = jamaFiltered.reduce((s, r) => s + r.amount, 0);
   const totalE = khorochFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   const delE = useMutation({
@@ -161,20 +212,23 @@ function Page() {
           </TabsList>
 
           <TabsContent value="jama" className="space-y-3">
-            <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true }} />
+            <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
             <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
             <div className="flex justify-end mb-2">
               <Button onClick={() => setOpenJ(true)}>
                 <Plus className="h-4 w-4 mr-2" />{t("addJama")}
               </Button>
             </div>
-            <DataTable
+            <DataTable<JRow>
               rows={jamaFiltered}
               columns={[
-                { key: "trip_date", header: t("date"), render: (r) => fmtDate(r.trip_date, lang) },
+                { key: "date", header: t("date"), render: (r) => fmtDate(r.date, lang) },
                 { key: "owner_label", header: t("owner") },
-                { key: "vehicle_no", header: t("vehicleNo") },
-                { key: "fare", header: t("fare"), render: (r) => fmtNum(r.fare, lang) },
+                { key: "category", header: t("category"), render: (r) => r.category ?? "—" },
+                { key: "head", header: t("head"), render: (r) => r.head ?? "—" },
+                { key: "vehicle_no", header: t("vehicleNo"), render: (r) => r.vehicle_no ?? "—" },
+                { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
+                { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
             />
           </TabsContent>
@@ -206,7 +260,7 @@ function Page() {
       </div>
 
       <ExpenseDialog open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
-      <TripDialog open={openJ} onOpenChange={setOpenJ} vehicles={vehiclesAll as { vehicle_no: string }[]} />
+      <IncomeDialog open={openJ} onOpenChange={setOpenJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
     </AppLayout>
   );
 }
@@ -289,56 +343,79 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   );
 }
 
-function TripDialog({ open, onOpenChange, vehicles }: { open: boolean; onOpenChange: (v: boolean) => void; vehicles: { vehicle_no: string }[] }) {
+function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; defaultOwnerId: string }) {
   const { t } = useT();
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
-  const [vehicle, setVehicle] = useState("");
+
+  const [category, setCategory] = useState("");
+  const [head, setHead] = useState("");
+  const [description, setDescription] = useState("");
+  const [ownerId, setOwnerId] = useState(defaultOwnerId);
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ["income-vehicles", ownerId],
+    queryFn: async () => {
+      const q = supabase.from("vehicles").select("vehicle_no,owner_id").order("vehicle_no");
+      const { data } = await q;
+      return (data ?? []) as { vehicle_no: string; owner_id: string | null }[];
+    },
+  });
+  const filteredVehicles = useMemo(
+    () => (ownerId ? vehicles.filter((v) => v.owner_id === ownerId) : vehicles),
+    [vehicles, ownerId],
+  );
 
   const save = useMutation({
     mutationFn: async (form: any) => {
-      if (!form.vehicle_no) throw new Error("গাড়ি নির্বাচন করুন");
-      const { error } = await supabase.from("trips").insert(form);
+      if (!form.owner_id) throw new Error("ওনার নির্বাচন করুন");
+      const { error } = await supabase.from("other_incomes").insert(form);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-trips"] }); toast.success(t("saved")); onOpenChange(false); setVehicle(""); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["jk-other-incomes"] });
+      toast.success(t("saved"));
+      onOpenChange(false);
+      setCategory(""); setHead(""); setDescription("");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{t("addJama")}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("addJama")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
         <form
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
             const f = new FormData(e.currentTarget);
             save.mutate({
-              trip_date: f.get("d"),
-              vehicle_no: vehicle,
-              fare_1: Number(f.get("f1") || 0),
-              fare_2: Number(f.get("f2") || 0),
+              income_date: f.get("d"),
+              category: category || "জমা",
+              head: head || null,
+              description: description || null,
+              vehicle_no: (f.get("v") as string) || null,
+              amount: Number(f.get("a") || 0),
+              owner_id: ownerId || null,
             });
           }}
         >
           <Input type="date" name="d" defaultValue={today} required className="h-11" />
-          <select
-            value={vehicle}
-            onChange={(e) => setVehicle(e.target.value)}
-            required
-            className="h-11 w-full rounded-md border bg-background px-3 text-sm"
-          >
-            <option value="">{t("selectVehicle")}</option>
-            {vehicles.map((v) => (
-              <option key={v.vehicle_no} value={v.vehicle_no}>{v.vehicle_no}</option>
+          <OwnerSelect value={ownerId} onChange={(v) => setOwnerId(v)} />
+          <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
+          <HeadSelect category={category} value={head} onChange={setHead} />
+          <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
+          <select name="v" className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
+            <option value="">— {t("vehicleNo")} —</option>
+            {filteredVehicles.map((v) => (
+              <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>
             ))}
           </select>
-          <Input type="number" step="any" name="f1" placeholder={`${t("fare")} 1`} className="h-11" />
-          <Input type="number" step="any" name="f2" placeholder={`${t("fare")} 2`} className="h-11" />
+          <Input type="number" step="any" name="a" placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit">{t("submit")}</Button>
+            <Button type="submit" disabled={save.isPending}>{t("submit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
