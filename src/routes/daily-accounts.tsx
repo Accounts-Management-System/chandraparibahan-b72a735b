@@ -68,6 +68,8 @@ function DailyAccountsPage() {
     [rows, filters],
   );
   const totalJama = filtered.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+  const totalDena = filtered.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+  const totalBalance = totalJama - totalDena;
 
   return (
     <AppLayout>
