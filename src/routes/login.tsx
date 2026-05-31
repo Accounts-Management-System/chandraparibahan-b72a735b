@@ -79,12 +79,13 @@ function LoginPage() {
             <div>
               <Label className="text-white text-xs">{t("email")}</Label>
               <Input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="bg-white text-black"
-                autoComplete="email"
+                autoComplete="username"
+                placeholder={t("email") + " / " + t("loginId")}
               />
             </div>
             <div>
