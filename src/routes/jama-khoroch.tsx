@@ -84,6 +84,16 @@ function Page() {
     },
     enabled: isAdmin,
   });
+  const { data: otherIncomes = [] } = useQuery({
+    queryKey: ["jk-other-incomes"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("other_incomes").select("*")
+        .order("income_date", { ascending: false }).limit(500);
+      return (data ?? []) as OIRow[];
+    },
+    enabled: isAdmin,
+  });
 
   const tripsWithOwner = useMemo(() => trips.map((t) => {
     const oid = vehOwner.get(t.vehicle_no) ?? null;
