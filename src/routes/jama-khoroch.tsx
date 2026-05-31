@@ -260,7 +260,7 @@ function Page() {
       </div>
 
       <ExpenseDialog open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
-      <TripDialog open={openJ} onOpenChange={setOpenJ} vehicles={vehiclesAll as { vehicle_no: string }[]} />
+      <IncomeDialog open={openJ} onOpenChange={setOpenJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
     </AppLayout>
   );
 }
