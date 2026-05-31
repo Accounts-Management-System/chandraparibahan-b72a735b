@@ -84,6 +84,20 @@ function Page() {
             <div><Label>{t("from")}</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
             <div><Label>{t("to")}</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
+            <Button variant="outline" onClick={() => {
+              const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ${t("income")}: ${fmtNum(income, lang)} · ${t("expense")}: ${fmtNum(totalExpense, lang)} · ${t("net")}: ${fmtNum(income - totalExpense, lang)}`;
+              exportPdf({
+                title: `${t("brand")} — ${t("reports")}`,
+                subtitle: sub,
+                headers: [t("serial"), t("date"), t("vehicleNo"), t("jamaTotal"), t("denaTotal"), t("balance"), t("fareTotal"), t("route"), t("supervisor")],
+                rows: data.trips.map((r: any) => {
+                  const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+                  const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+                  const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
+                  return [fmtNum(r.serial_no, lang), fmtDate(r.trip_date, lang), r.vehicle_no, fmtNum(j, lang), fmtNum(d, lang), fmtNum(j - d, lang), fmtNum(f, lang), [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-", r.supervisor ?? "-"];
+                }),
+              });
+            }}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
             <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
           </div>
         </div>
