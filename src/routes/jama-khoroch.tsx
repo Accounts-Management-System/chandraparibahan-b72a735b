@@ -46,18 +46,23 @@ type JRow = {
 function Page() {
   const { t, lang } = useT();
   const qc = useQueryClient();
-  const { isAdmin, loading } = useRole();
+  const { isAdmin, isOwner, ownerId, loading } = useRole();
+  const canView = isAdmin || isOwner;
   const [tab, setTab] = useState("jama");
   const [editE, setEditE] = useState<ERow | null>(null);
   const [openE, setOpenE] = useState(false);
   const [openJ, setOpenJ] = useState(false);
   const [editJ, setEditJ] = useState<OIRow | null>(null);
-  const [ownerScope, setOwnerScope] = useState<string>("main"); // "main" | "all" | owner.id
+  const [ownerScope, setOwnerScope] = useState<string>(isOwner && ownerId ? ownerId : "main");
+
+  useEffect(() => {
+    if (isOwner && ownerId) setOwnerScope(ownerId);
+  }, [isOwner, ownerId]);
 
   const { data: owners = [] } = useQuery({
     queryKey: ["jk-owners"],
     queryFn: async () => (await supabase.from("owners").select("id,name").order("name")).data ?? [],
-    enabled: isAdmin,
+    enabled: canView,
   });
 
   const { data: vehiclesAll = [] } = useQuery({
