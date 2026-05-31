@@ -29,6 +29,18 @@ type TripRow = {
 };
 type ERow = { id: string; expense_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
 type OIRow = { id: string; income_date: string; vehicle_no: string | null; category: string | null; head: string | null; description: string | null; amount: number; owner_id: string | null };
+type JRow = {
+  id: string;
+  source: "trip" | "other";
+  date: string;
+  owner_id: string | null;
+  owner_label: string;
+  vehicle_no: string | null;
+  category: string | null;
+  head: string | null;
+  description: string | null;
+  amount: number;
+};
 
 function Page() {
   const { t, lang } = useT();
