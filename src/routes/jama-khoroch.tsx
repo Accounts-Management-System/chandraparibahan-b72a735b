@@ -68,7 +68,7 @@ function Page() {
   const { data: vehiclesAll = [] } = useQuery({
     queryKey: ["jk-vehicles"],
     queryFn: async () => (await supabase.from("vehicles").select("vehicle_no,owner_id")).data ?? [],
-    enabled: isAdmin,
+    enabled: canView,
   });
   const vehOwner = useMemo(() => {
     const m = new Map<string, string | null>();
@@ -91,7 +91,7 @@ function Page() {
         .limit(1000);
       return (data ?? []) as TripRow[];
     },
-    enabled: isAdmin,
+    enabled: canView,
   });
   const { data: khoroch = [] } = useQuery({
     queryKey: ["jk-khoroch"],
@@ -102,7 +102,7 @@ function Page() {
         .order("expense_date", { ascending: false }).limit(500);
       return (data ?? []) as ERow[];
     },
-    enabled: isAdmin,
+    enabled: canView,
   });
   const { data: otherIncomes = [] } = useQuery({
     queryKey: ["jk-other-incomes"],
@@ -112,7 +112,7 @@ function Page() {
         .order("income_date", { ascending: false }).limit(500);
       return (data ?? []) as OIRow[];
     },
-    enabled: isAdmin,
+    enabled: canView,
   });
 
   const tripsWithOwner = useMemo(() => trips.map((t) => {
