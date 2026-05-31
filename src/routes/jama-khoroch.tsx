@@ -382,15 +382,26 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   );
 }
 
-function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; defaultOwnerId: string }) {
+function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; editing: OIRow | null; defaultOwnerId: string }) {
   const { t } = useT();
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const [category, setCategory] = useState("");
-  const [head, setHead] = useState("");
-  const [description, setDescription] = useState("");
-  const [ownerId, setOwnerId] = useState(defaultOwnerId);
+  const [category, setCategory] = useState(editing?.category ?? "");
+  const [head, setHead] = useState(editing?.head ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
+
+  // Reset state when dialog opens with a different editing target
+  useMemo(() => {
+    if (open) {
+      setCategory(editing?.category ?? "");
+      setHead(editing?.head ?? "");
+      setDescription(editing?.description ?? "");
+      setOwnerId(editing?.owner_id ?? defaultOwnerId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing?.id]);
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ["income-vehicles", ownerId],
@@ -408,8 +419,13 @@ function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; o
   const save = useMutation({
     mutationFn: async (form: any) => {
       if (!form.owner_id) throw new Error("ওনার নির্বাচন করুন");
-      const { error } = await supabase.from("other_incomes").insert(form);
-      if (error) throw error;
+      if (editing) {
+        const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("other_incomes").insert(form);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["jk-other-incomes"] });
@@ -423,7 +439,7 @@ function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; o
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{t("addJama")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? t("edit") : t("addJama")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
         <form
           className="space-y-3"
           onSubmit={(e) => {
@@ -440,21 +456,21 @@ function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; o
             });
           }}
         >
-          <Input type="date" name="d" defaultValue={today} required className="h-11" />
+          <Input type="date" name="d" defaultValue={editing?.income_date ?? today} required className="h-11" />
           <OwnerSelect value={ownerId} onChange={(v) => setOwnerId(v)} />
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
-          <select name="v" className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
+          <select name="v" defaultValue={editing?.vehicle_no ?? ""} className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {filteredVehicles.map((v) => (
               <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>
             ))}
           </select>
-          <Input type="number" step="any" name="a" placeholder={t("amount")} required className="h-11" />
+          <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit" disabled={save.isPending}>{t("submit")}</Button>
+            <Button type="submit" disabled={save.isPending}>{editing ? t("update") : t("submit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
