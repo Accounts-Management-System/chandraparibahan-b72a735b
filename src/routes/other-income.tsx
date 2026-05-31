@@ -10,9 +10,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, FileDown } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { SearchFilters, MiniDashboard, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
+import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/other-income")({ component: Page });
 
