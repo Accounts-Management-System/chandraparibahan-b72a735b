@@ -237,8 +237,11 @@ function Page() {
           <TabsContent value="jama" className="space-y-3">
             <SearchFilters value={jFilters} onChange={setJFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
             <MiniDashboard lang={lang} totalAmount={totalJ} showTrips={false} showCount tripCount={jamaFiltered.length} countLabel={t("total")} />
-            <div className="flex justify-end mb-2">
-              <Button onClick={() => setOpenJ(true)}>
+            <div className="flex justify-end gap-2 mb-2">
+              <Button variant="outline" onClick={exportJamaPdf}>
+                <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
+              </Button>
+              <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addJama")}
               </Button>
             </div>
@@ -253,13 +256,26 @@ function Page() {
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
+              onEdit={(r) => {
+                if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন"); return; }
+                const oid = r.id.slice(2);
+                const oi = (otherIncomes as OIRow[]).find((x) => x.id === oid);
+                if (oi) { setEditJ(oi); setOpenJ(true); }
+              }}
+              onDelete={(r) => {
+                if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন"); return; }
+                delOI.mutate(r.id.slice(2));
+              }}
             />
           </TabsContent>
 
           <TabsContent value="khoroch" className="space-y-3">
             <SearchFilters value={eFilters} onChange={setEFilters} show={{ date: true, vehicle: true, category: true, head: true }} />
             <MiniDashboard lang={lang} totalAmount={totalE} showTrips={false} showCount tripCount={khorochFiltered.length} countLabel={t("total")} />
-            <div className="flex justify-end mb-2">
+            <div className="flex justify-end gap-2 mb-2">
+              <Button variant="outline" onClick={exportKhorochPdf}>
+                <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
+              </Button>
               <Button onClick={() => { setEditE(null); setOpenE(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addExpense")}
               </Button>
@@ -283,7 +299,7 @@ function Page() {
       </div>
 
       <ExpenseDialog open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
-      <IncomeDialog open={openJ} onOpenChange={setOpenJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
+      <IncomeDialog open={openJ} onOpenChange={setOpenJ} editing={editJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
     </AppLayout>
   );
 }
