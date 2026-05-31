@@ -100,6 +100,7 @@ function DailyAccountsPage() {
               <Plus className="h-4 w-4 mr-2" />{t("add")}
             </Button>
           </div>
+        </div>
 
         <SearchFilters value={filters} onChange={setFilters} show={{ date: true, vehicle: true }} />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
