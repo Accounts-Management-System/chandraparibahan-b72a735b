@@ -393,7 +393,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
   const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
 
   // Reset state when dialog opens with a different editing target
-  useMemo(() => {
+  useEffect(() => {
     if (open) {
       setCategory(editing?.category ?? "");
       setHead(editing?.head ?? "");
