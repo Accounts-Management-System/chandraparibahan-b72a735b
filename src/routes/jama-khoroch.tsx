@@ -51,6 +51,7 @@ function Page() {
   const [editE, setEditE] = useState<ERow | null>(null);
   const [openE, setOpenE] = useState(false);
   const [openJ, setOpenJ] = useState(false);
+  const [editJ, setEditJ] = useState<OIRow | null>(null);
   const [ownerScope, setOwnerScope] = useState<string>("main"); // "main" | "all" | owner.id
 
   const { data: owners = [] } = useQuery({
