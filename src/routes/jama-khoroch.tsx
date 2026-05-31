@@ -106,11 +106,53 @@ function Page() {
     };
   }), [trips, vehOwner, ownerName]);
 
-  const tripsScoped = useMemo(() => tripsWithOwner.filter((r) => {
+  // Unified jama row (trip or other_income)
+  type JRow = {
+    id: string;
+    source: "trip" | "other";
+    date: string;
+    owner_id: string | null;
+    owner_label: string;
+    vehicle_no: string | null;
+    category: string | null;
+    head: string | null;
+    description: string | null;
+    amount: number;
+  };
+
+  const jamaRows: JRow[] = useMemo(() => {
+    const fromTrips: JRow[] = tripsWithOwner.map((t) => ({
+      id: `t:${t.id}`,
+      source: "trip",
+      date: t.trip_date,
+      owner_id: t.owner_id,
+      owner_label: t.owner_label,
+      vehicle_no: t.vehicle_no,
+      category: "ভাড়া",
+      head: null,
+      description: null,
+      amount: t.fare,
+    }));
+    const fromOther: JRow[] = (otherIncomes as OIRow[]).map((o) => ({
+      id: `o:${o.id}`,
+      source: "other",
+      date: o.income_date,
+      owner_id: o.owner_id,
+      owner_label: o.owner_id ? (ownerName.get(o.owner_id) ?? "—") : "মূল",
+      vehicle_no: o.vehicle_no,
+      category: o.category,
+      head: o.head,
+      description: o.description,
+      amount: Number(o.amount || 0),
+    }));
+    return [...fromTrips, ...fromOther].sort((a, b) => b.date.localeCompare(a.date));
+  }, [tripsWithOwner, otherIncomes, ownerName]);
+
+  const jamaScoped = useMemo(() => jamaRows.filter((r) => {
     if (ownerScope === "all") return true;
     if (ownerScope === "main") return !r.owner_id;
     return r.owner_id === ownerScope;
-  }), [tripsWithOwner, ownerScope]);
+  }), [jamaRows, ownerScope]);
 
   const khorochScoped = useMemo(() => khoroch.filter((r) => {
     if (ownerScope === "all") return true;
@@ -121,10 +163,10 @@ function Page() {
   const [jFilters, setJFilters] = useState<FilterState>(emptyFilters);
   const [eFilters, setEFilters] = useState<FilterState>(emptyFilters);
 
-  const jamaFiltered = tripsScoped.filter((r) => matchesFilters({ date: r.trip_date, vehicle_no: r.vehicle_no, category: null, head: null }, jFilters));
+  const jamaFiltered = jamaScoped.filter((r) => matchesFilters({ date: r.date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, jFilters));
   const khorochFiltered = khorochScoped.filter((r) => matchesFilters({ date: r.expense_date, vehicle_no: r.vehicle_no, category: r.category, head: r.head }, eFilters));
 
-  const totalJ = jamaFiltered.reduce((s, r) => s + r.fare, 0);
+  const totalJ = jamaFiltered.reduce((s, r) => s + r.amount, 0);
   const totalE = khorochFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   const delE = useMutation({
