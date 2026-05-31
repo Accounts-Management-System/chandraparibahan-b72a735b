@@ -343,56 +343,79 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   );
 }
 
-function TripDialog({ open, onOpenChange, vehicles }: { open: boolean; onOpenChange: (v: boolean) => void; vehicles: { vehicle_no: string }[] }) {
+function IncomeDialog({ open, onOpenChange, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; defaultOwnerId: string }) {
   const { t } = useT();
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
-  const [vehicle, setVehicle] = useState("");
+
+  const [category, setCategory] = useState("");
+  const [head, setHead] = useState("");
+  const [description, setDescription] = useState("");
+  const [ownerId, setOwnerId] = useState(defaultOwnerId);
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ["income-vehicles", ownerId],
+    queryFn: async () => {
+      const q = supabase.from("vehicles").select("vehicle_no,owner_id").order("vehicle_no");
+      const { data } = await q;
+      return (data ?? []) as { vehicle_no: string; owner_id: string | null }[];
+    },
+  });
+  const filteredVehicles = useMemo(
+    () => (ownerId ? vehicles.filter((v) => v.owner_id === ownerId) : vehicles),
+    [vehicles, ownerId],
+  );
 
   const save = useMutation({
     mutationFn: async (form: any) => {
-      if (!form.vehicle_no) throw new Error("গাড়ি নির্বাচন করুন");
-      const { error } = await supabase.from("trips").insert(form);
+      if (!form.owner_id) throw new Error("ওনার নির্বাচন করুন");
+      const { error } = await supabase.from("other_incomes").insert(form);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-trips"] }); toast.success(t("saved")); onOpenChange(false); setVehicle(""); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["jk-other-incomes"] });
+      toast.success(t("saved"));
+      onOpenChange(false);
+      setCategory(""); setHead(""); setDescription("");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{t("addJama")}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("addJama")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
         <form
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
             const f = new FormData(e.currentTarget);
             save.mutate({
-              trip_date: f.get("d"),
-              vehicle_no: vehicle,
-              fare_1: Number(f.get("f1") || 0),
-              fare_2: Number(f.get("f2") || 0),
+              income_date: f.get("d"),
+              category: category || "জমা",
+              head: head || null,
+              description: description || null,
+              vehicle_no: (f.get("v") as string) || null,
+              amount: Number(f.get("a") || 0),
+              owner_id: ownerId || null,
             });
           }}
         >
           <Input type="date" name="d" defaultValue={today} required className="h-11" />
-          <select
-            value={vehicle}
-            onChange={(e) => setVehicle(e.target.value)}
-            required
-            className="h-11 w-full rounded-md border bg-background px-3 text-sm"
-          >
-            <option value="">{t("selectVehicle")}</option>
-            {vehicles.map((v) => (
-              <option key={v.vehicle_no} value={v.vehicle_no}>{v.vehicle_no}</option>
+          <OwnerSelect value={ownerId} onChange={(v) => setOwnerId(v)} />
+          <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
+          <HeadSelect category={category} value={head} onChange={setHead} />
+          <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
+          <select name="v" className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
+            <option value="">— {t("vehicleNo")} —</option>
+            {filteredVehicles.map((v) => (
+              <option key={v.vehicle_no} value={v.vehicle_no} className="bg-card">{v.vehicle_no}</option>
             ))}
           </select>
-          <Input type="number" step="any" name="f1" placeholder={`${t("fare")} 1`} className="h-11" />
-          <Input type="number" step="any" name="f2" placeholder={`${t("fare")} 2`} className="h-11" />
+          <Input type="number" step="any" name="a" placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit">{t("submit")}</Button>
+            <Button type="submit" disabled={save.isPending}>{t("submit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
