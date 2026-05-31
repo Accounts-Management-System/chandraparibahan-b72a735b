@@ -259,24 +259,30 @@ export type Database = {
       }
       owners: {
         Row: {
+          auth_user_id: string | null
           created_at: string
           id: string
+          login_id: string | null
           name: string
           notes: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string
           id?: string
+          login_id?: string | null
           name: string
           notes?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string
           id?: string
+          login_id?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
