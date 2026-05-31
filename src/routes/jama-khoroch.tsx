@@ -287,9 +287,11 @@ function Page() {
               <Button variant="outline" onClick={exportKhorochPdf}>
                 <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
               </Button>
+              {isAdmin && (
               <Button onClick={() => { setEditE(null); setOpenE(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addExpense")}
               </Button>
+              )}
             </div>
             <DataTable<ERow>
               rows={khorochFiltered}
@@ -302,8 +304,8 @@ function Page() {
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
-              onEdit={(r) => { setEditE(r); setOpenE(true); }}
-              onDelete={(r) => delE.mutate(r.id)}
+              onEdit={isAdmin ? (r) => { setEditE(r); setOpenE(true); } : undefined}
+              onDelete={isAdmin ? (r) => delE.mutate(r.id) : undefined}
             />
           </TabsContent>
         </Tabs>
