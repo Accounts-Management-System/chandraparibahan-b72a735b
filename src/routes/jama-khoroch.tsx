@@ -173,6 +173,27 @@ function Page() {
     mutationFn: async (id: string) => { const { error } = await supabase.from("expenses").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-khoroch"] }); toast.success(t("deleted")); },
   });
+  const delOI = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from("other_incomes").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-other-incomes"] }); toast.success(t("deleted")); },
+  });
+
+  const exportJamaPdf = () => {
+    exportPdf({
+      title: `${t("jamaKhoroch")} — ${t("jama")}`,
+      subtitle: `${t("total")}: ${fmtNum(totalJ, lang)}`,
+      headers: [t("date"), t("owner"), t("category"), t("head"), t("vehicleNo"), t("description"), t("amount")],
+      rows: jamaFiltered.map((r) => [fmtDate(r.date, lang), r.owner_label, r.category ?? "—", r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(r.amount, lang)]),
+    });
+  };
+  const exportKhorochPdf = () => {
+    exportPdf({
+      title: `${t("jamaKhoroch")} — ${t("khoroch")}`,
+      subtitle: `${t("total")}: ${fmtNum(totalE, lang)}`,
+      headers: [t("date"), t("owner"), t("category"), t("head"), t("vehicleNo"), t("description"), t("amount")],
+      rows: khorochFiltered.map((r) => [fmtDate(r.expense_date, lang), r.owner_id ? (ownerName.get(r.owner_id) ?? "—") : "—", r.category ?? "—", r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(Number(r.amount || 0), lang)]),
+    });
+  };
 
   if (loading) {
     return <AppLayout><p className="text-muted-foreground">{t("loading")}</p></AppLayout>;
