@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { SearchFilters, MiniDashboard, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
+import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
