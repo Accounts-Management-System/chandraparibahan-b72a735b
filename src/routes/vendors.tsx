@@ -12,6 +12,7 @@ import { exportPdf } from "@/lib/exportPdf";
 export const Route = createFileRoute("/vendors")({ component: Page });
 
 type VendorRow = {
+  id: string;
   name: string;
   income: number;
   expense: number;
@@ -39,18 +40,18 @@ function Page() {
 
   const rows: VendorRow[] = useMemo(() => {
     const map = new Map<string, VendorRow>();
-    for (const v of vendors) map.set(v.value, { name: v.value, income: 0, expense: 0, payable: 0 });
+    for (const v of vendors) map.set(v.value, { id: v.id, name: v.value, income: 0, expense: 0, payable: 0 });
     for (const r of incomes) {
       const k = (r.vendor ?? "").trim();
       if (!k) continue;
-      const cur = map.get(k) ?? { name: k, income: 0, expense: 0, payable: 0 };
+      const cur = map.get(k) ?? { id: k, name: k, income: 0, expense: 0, payable: 0 };
       cur.income += Number(r.amount || 0);
       map.set(k, cur);
     }
     for (const r of expenses) {
       const k = (r.vendor ?? "").trim();
       if (!k) continue;
-      const cur = map.get(k) ?? { name: k, income: 0, expense: 0, payable: 0 };
+      const cur = map.get(k) ?? { id: k, name: k, income: 0, expense: 0, payable: 0 };
       cur.expense += Number(r.amount || 0);
       map.set(k, cur);
     }
