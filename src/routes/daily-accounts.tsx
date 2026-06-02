@@ -287,7 +287,7 @@ function TripDialog({
               </select>
             </Field>
             <Field label={t("supervisor")}>
-              <Input value={supervisor} onChange={(e) => setSupervisor(e.target.value)} className="h-10" />
+              <LookupSelect kind="supervisor" value={supervisor} onChange={setSupervisor} />
             </Field>
           </div>
 
