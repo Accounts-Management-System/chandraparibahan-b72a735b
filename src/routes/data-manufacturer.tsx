@@ -149,7 +149,10 @@ function SupervisorManager() {
   const add = useMutation({
     mutationFn: async () => {
       const v = value.trim();
-      if (!v) return;
+      if (!v) throw new Error("নাম লিখুন");
+      if (items.some((i) => i.value.toLowerCase() === v.toLowerCase())) {
+        throw new Error("এই নাম আগে থেকেই আছে");
+      }
       const { error } = await supabase.from("entry_lookups").insert({ kind: "supervisor", value: v });
       if (error) throw error;
     },
