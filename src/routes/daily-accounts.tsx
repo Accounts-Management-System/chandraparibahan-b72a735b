@@ -12,7 +12,13 @@ import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
 import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 import { exportPdf } from "@/lib/exportPdf";
-import { LookupSelect } from "@/components/LookupSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
