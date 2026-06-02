@@ -293,7 +293,16 @@ function TripDialog({
               </select>
             </Field>
             <Field label={t("supervisor")}>
-              <LookupSelect kind="supervisor" value={supervisor} onChange={setSupervisor} />
+              <Select value={supervisor || undefined} onValueChange={setSupervisor}>
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue placeholder={t("selectSupervisor")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {supervisors.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
 
