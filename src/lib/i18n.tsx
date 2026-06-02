@@ -97,6 +97,7 @@ const dict = {
   totalExpense: { bn: "মোট খরচ", en: "Total Expense" },
   calculation: { bn: "ক্যালকুলেশন", en: "Calculation" },
   selectVehicle: { bn: "গাড়ী নির্বাচন", en: "Select vehicle" },
+  selectSupervisor: { bn: "সুপারভাইজার নির্বাচন", en: "Select supervisor" },
   allVehicles: { bn: "সব গাড়ী", en: "All vehicles" },
   selectRoute: { bn: "রুট নির্বাচন", en: "Select route" },
   quickEntry: { bn: "দ্রুত এন্ট্রি", en: "Quick Entry" },
