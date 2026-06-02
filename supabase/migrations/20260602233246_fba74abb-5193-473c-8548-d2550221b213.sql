@@ -1,0 +1,2 @@
+ALTER TABLE public.entry_lookups DROP CONSTRAINT IF EXISTS entry_lookups_kind_check;
+ALTER TABLE public.entry_lookups ADD CONSTRAINT entry_lookups_kind_check CHECK (kind = ANY (ARRAY['category'::text, 'head'::text, 'description'::text, 'supervisor'::text, 'vendor'::text]));
