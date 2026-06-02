@@ -128,7 +128,58 @@ function Page() {
             )}
           </div>
         </div>
+
+        <SupervisorManager />
       </div>
     </AppLayout>
+  );
+}
+
+function SupervisorManager() {
+  const { t } = useT();
+  const qc = useQueryClient();
+  const [value, setValue] = useState("");
+
+  const { data: items = [] } = useQuery({
+    queryKey: ["entry_lookups", "supervisor"],
+    queryFn: async () =>
+      ((await supabase.from("entry_lookups").select("id,value").eq("kind", "supervisor").order("value")).data ?? []) as { id: string; value: string }[],
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      const v = value.trim();
+      if (!v) return;
+      const { error } = await supabase.from("entry_lookups").insert({ kind: "supervisor", value: v });
+      if (error) throw error;
+    },
+    onSuccess: () => { setValue(""); qc.invalidateQueries({ queryKey: ["entry_lookups", "supervisor"] }); toast.success(t("saved")); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from("entry_lookups").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["entry_lookups", "supervisor"] }),
+  });
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/70 backdrop-blur p-4 space-y-3">
+      <h2 className="font-semibold">{t("supervisor")}</h2>
+      <form onSubmit={(e) => { e.preventDefault(); add.mutate(); }} className="flex gap-2">
+        <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t("supervisor")} className="h-10" />
+        <Button type="submit" size="icon" disabled={add.isPending}><Plus className="h-4 w-4" /></Button>
+      </form>
+      <ul className="grid grid-cols-1 md:grid-cols-2 gap-1 max-h-72 overflow-y-auto">
+        {items.length === 0 && <li className="text-xs text-muted-foreground py-2">{t("noData")}</li>}
+        {items.map((s) => (
+          <li key={s.id} className="flex items-center justify-between text-sm rounded-md border border-border/40 px-3 py-2">
+            <span>{s.value}</span>
+            <Button variant="ghost" size="icon" onClick={() => { if (confirm(t("confirmDelete"))) del.mutate(s.id); }}>
+              <Trash2 className="h-4 w-4 text-rose-400" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
 import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 import { exportPdf } from "@/lib/exportPdf";
+import { LookupSelect } from "@/components/LookupSelect";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
@@ -286,7 +287,7 @@ function TripDialog({
               </select>
             </Field>
             <Field label={t("supervisor")}>
-              <Input value={supervisor} onChange={(e) => setSupervisor(e.target.value)} className="h-10" />
+              <LookupSelect kind="supervisor" value={supervisor} onChange={setSupervisor} />
             </Field>
           </div>
 

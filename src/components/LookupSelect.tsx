@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 
-export type LookupKind = "category" | "head" | "description";
+export type LookupKind = "category" | "head" | "description" | "supervisor";
 
 export function LookupSelect({
   kind,
