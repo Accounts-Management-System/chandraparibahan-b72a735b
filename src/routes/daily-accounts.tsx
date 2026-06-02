@@ -199,6 +199,18 @@ function TripDialog({
     },
   });
 
+  const { data: supervisors = [] } = useQuery({
+    queryKey: ["entry_lookups", "supervisor"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("entry_lookups")
+        .select("value")
+        .eq("kind", "supervisor")
+        .order("value");
+      return ((data ?? []) as { value: string }[]).map((r) => r.value);
+    },
+  });
+
   const applyDefaults = (source: Trip | null) => {
     setTripDate(source?.trip_date ?? today);
     const vNo = source?.vehicle_no ?? "";
