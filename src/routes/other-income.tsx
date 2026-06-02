@@ -14,6 +14,7 @@ import { Plus, FileDown } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { SearchFilters, MiniDashboard, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 import { exportPdf } from "@/lib/exportPdf";
+import { LookupSelect } from "@/components/LookupSelect";
 
 export const Route = createFileRoute("/other-income")({ component: Page });
 
@@ -26,6 +27,7 @@ type Row = {
   vehicle_no: string | null;
   amount: number;
   owner_id: string | null;
+  vendor: string | null;
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -52,6 +54,7 @@ function Page() {
   const [vehicleNo, setVehicleNo] = useState("");
   const [amount, setAmount] = useState<number | "">("");
   const [ownerId, setOwnerId] = useState("");
+  const [vendor, setVendor] = useState("");
 
   const { data: owners = [] } = useQuery({
     queryKey: ["owners-list"],
@@ -87,6 +90,7 @@ function Page() {
       setVehicleNo(editing.vehicle_no ?? "");
       setAmount(editing.amount ?? "");
       setOwnerId(editing.owner_id ?? "");
+      setVendor(editing.vendor ?? "");
     } else {
       setDate(last?.income_date ?? today);
       setCategory(last?.category ?? "");
@@ -95,12 +99,13 @@ function Page() {
       setVehicleNo(last?.vehicle_no ?? "");
       setAmount("");
       setOwnerId(last?.owner_id ?? "");
+      setVendor("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, last?.id]);
 
   const clearForm = () => {
-    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount(""); setOwnerId("");
+    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount(""); setOwnerId(""); setVendor("");
   };
 
   const del = useMutation({
@@ -117,6 +122,7 @@ function Page() {
         vehicle_no: vehicleNo || null,
         amount: Number(amount || 0),
         owner_id: ownerId || null,
+        vendor: vendor || null,
       };
       if (editing) { const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id); if (error) throw error; }
       else { const { error } = await supabase.from("other_incomes").insert(form); if (error) throw error; }
@@ -197,6 +203,9 @@ function Page() {
             </Field>
             <Field label={t("amount")}>
               <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
+            </Field>
+            <Field label={t("vendors")}>
+              <LookupSelect kind="vendor" value={vendor} onChange={setVendor} placeholder={t("vendorName")} />
             </Field>
             <DialogFooter className="col-span-2 gap-2 sm:gap-2">
               <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>
