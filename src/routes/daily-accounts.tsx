@@ -12,7 +12,13 @@ import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
 import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 import { exportPdf } from "@/lib/exportPdf";
-import { LookupSelect } from "@/components/LookupSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/daily-accounts")({
   component: DailyAccountsPage,
@@ -193,6 +199,18 @@ function TripDialog({
     },
   });
 
+  const { data: supervisors = [] } = useQuery({
+    queryKey: ["entry_lookups", "supervisor"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("entry_lookups")
+        .select("value")
+        .eq("kind", "supervisor")
+        .order("value");
+      return ((data ?? []) as { value: string }[]).map((r) => r.value);
+    },
+  });
+
   const applyDefaults = (source: Trip | null) => {
     setTripDate(source?.trip_date ?? today);
     const vNo = source?.vehicle_no ?? "";
@@ -287,7 +305,16 @@ function TripDialog({
               </select>
             </Field>
             <Field label={t("supervisor")}>
-              <LookupSelect kind="supervisor" value={supervisor} onChange={setSupervisor} />
+              <Select value={supervisor || undefined} onValueChange={setSupervisor}>
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue placeholder={t("selectSupervisor")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {supervisors.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
 
