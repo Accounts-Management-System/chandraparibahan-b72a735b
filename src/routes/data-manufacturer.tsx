@@ -130,8 +130,59 @@ function Page() {
         </div>
 
         <SupervisorManager />
+        <LookupManager kind="vendor" titleKey="vendors" />
       </div>
     </AppLayout>
+  );
+}
+
+function LookupManager({ kind, titleKey }: { kind: "vendor"; titleKey: "vendors" }) {
+  const { t } = useT();
+  const qc = useQueryClient();
+  const [value, setValue] = useState("");
+
+  const { data: items = [] } = useQuery({
+    queryKey: ["entry_lookups", kind],
+    queryFn: async () =>
+      ((await supabase.from("entry_lookups").select("id,value").eq("kind", kind).order("value")).data ?? []) as { id: string; value: string }[],
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      const v = value.trim();
+      if (!v) throw new Error("নাম লিখুন");
+      if (items.some((i) => i.value.toLowerCase() === v.toLowerCase())) throw new Error("এই নাম আগে থেকেই আছে");
+      const { error } = await supabase.from("entry_lookups").insert({ kind, value: v });
+      if (error) throw error;
+    },
+    onSuccess: () => { setValue(""); qc.invalidateQueries({ queryKey: ["entry_lookups", kind] }); toast.success(t("saved")); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from("entry_lookups").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["entry_lookups", kind] }),
+  });
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/70 backdrop-blur p-4 space-y-3">
+      <h2 className="font-semibold">{t(titleKey)}</h2>
+      <form onSubmit={(e) => { e.preventDefault(); add.mutate(); }} className="flex gap-2">
+        <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t(titleKey)} className="h-10" />
+        <Button type="submit" size="icon" disabled={add.isPending}><Plus className="h-4 w-4" /></Button>
+      </form>
+      <ul className="grid grid-cols-1 md:grid-cols-2 gap-1 max-h-72 overflow-y-auto">
+        {items.length === 0 && <li className="text-xs text-muted-foreground py-2">{t("noData")}</li>}
+        {items.map((s) => (
+          <li key={s.id} className="flex items-center justify-between text-sm rounded-md border border-border/40 px-3 py-2">
+            <span>{s.value}</span>
+            <Button variant="ghost" size="icon" onClick={() => { if (confirm(t("confirmDelete"))) del.mutate(s.id); }}>
+              <Trash2 className="h-4 w-4 text-rose-400" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
