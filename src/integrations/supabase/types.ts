@@ -175,6 +175,7 @@ export type Database = {
           owner_id: string | null
           updated_at: string
           vehicle_no: string | null
+          vendor: string | null
         }
         Insert: {
           amount?: number
@@ -187,6 +188,7 @@ export type Database = {
           owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
+          vendor?: string | null
         }
         Update: {
           amount?: number
@@ -199,6 +201,7 @@ export type Database = {
           owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
+          vendor?: string | null
         }
         Relationships: [
           {
@@ -222,6 +225,7 @@ export type Database = {
           owner_id: string | null
           updated_at: string
           vehicle_no: string | null
+          vendor: string | null
         }
         Insert: {
           amount?: number
@@ -234,6 +238,7 @@ export type Database = {
           owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
+          vendor?: string | null
         }
         Update: {
           amount?: number
@@ -246,6 +251,7 @@ export type Database = {
           owner_id?: string | null
           updated_at?: string
           vehicle_no?: string | null
+          vendor?: string | null
         }
         Relationships: [
           {

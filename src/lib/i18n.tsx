@@ -158,6 +158,10 @@ const dict = {
   searchByCategory: { bn: "ক্যাটাগরি দিয়ে সার্চ", en: "Search by Category" },
   vehicleFare: { bn: "গাড়ী ভাড়া", en: "Vehicle Fare" },
   totalAmount: { bn: "মোট পরিমাণ", en: "Total Amount" },
+  vendors: { bn: "ভেন্ডর", en: "Vendors" },
+  vendorName: { bn: "ভেন্ডরের নাম", en: "Vendor Name" },
+  payable: { bn: "পাওনা", en: "Payable" },
+  totalIncome: { bn: "মোট আয়", en: "Total Income" },
 } as const;
 
 type Key = keyof typeof dict;

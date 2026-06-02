@@ -14,6 +14,7 @@ import { Plus, FileDown } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { SearchFilters, MiniDashboard, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
 import { exportPdf } from "@/lib/exportPdf";
+import { LookupSelect } from "@/components/LookupSelect";
 
 export const Route = createFileRoute("/expenses")({ component: Page });
 
@@ -25,6 +26,7 @@ type Row = {
   description: string | null;
   vehicle_no: string | null;
   amount: number;
+  vendor: string | null;
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -51,6 +53,7 @@ function Page() {
   const [vehicleNo, setVehicleNo] = useState("");
   const [amount, setAmount] = useState<number | "">("");
   const [ownerId, setOwnerId] = useState("");
+  const [vendor, setVendor] = useState("");
 
   const { data: owners = [] } = useQuery({
     queryKey: ["owners-list"],
@@ -85,6 +88,7 @@ function Page() {
       setDescription(editing.description ?? "");
       setVehicleNo(editing.vehicle_no ?? "");
       setAmount(editing.amount ?? "");
+      setVendor(editing.vendor ?? "");
     } else {
       setDate(last?.expense_date ?? today);
       setCategory(last?.category ?? "");
@@ -92,12 +96,13 @@ function Page() {
       setDescription(last?.description ?? "");
       setVehicleNo(last?.vehicle_no ?? "");
       setAmount("");
+      setVendor("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, last?.id]);
 
   const clearForm = () => {
-    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount("");
+    setDate(today); setCategory(""); setHead(""); setDescription(""); setVehicleNo(""); setAmount(""); setVendor("");
   };
 
   const del = useMutation({
@@ -114,6 +119,7 @@ function Page() {
         description: description || null,
         vehicle_no: vehicleNo || null,
         amount: Number(amount || 0),
+        vendor: vendor || null,
       };
       if (editing) { const { error } = await supabase.from("expenses").update(form).eq("id", editing.id); if (error) throw error; }
       else { const { error } = await supabase.from("expenses").insert(form); if (error) throw error; }
@@ -196,6 +202,9 @@ function Page() {
             </Field>
             <Field label={t("amount")}>
               <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
+            </Field>
+            <Field label={t("vendors")}>
+              <LookupSelect kind="vendor" value={vendor} onChange={setVendor} placeholder={t("vendorName")} />
             </Field>
             <DialogFooter className="col-span-2 gap-2 sm:gap-2">
               <Button type="button" variant="outline" onClick={clearForm}>{t("clearForm")}</Button>

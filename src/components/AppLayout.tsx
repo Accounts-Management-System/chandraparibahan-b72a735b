@@ -23,6 +23,7 @@ import {
   BookOpen,
   Sun,
   Moon,
+  Store,
 } from "lucide-react";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
@@ -35,6 +36,7 @@ const nav: NavItem[] = [
   { to: "/other-income", icon: Coins, key: "otherIncome" },
   { to: "/vehicles", icon: Bus, key: "vehicles" },
   { to: "/owners", icon: Users, key: "owners" },
+  { to: "/vendors", icon: Store, key: "vendors" },
   { to: "/routes", icon: RouteIcon, key: "routes" },
   { to: "/data-manufacturer", icon: Factory, key: "dataManufacturer", writeOnly: true },
   { to: "/data-bank", icon: Database, key: "dataBank" },
