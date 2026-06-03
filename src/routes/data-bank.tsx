@@ -39,6 +39,8 @@ function Page() {
     queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,owner_id").order("vehicle_no")).data ?? [],
   });
 
+  const CHANDRA_ID = "674def72-609b-434c-8186-15aa3d351d28";
+
   const vehicleNosForFilter = ownerId
     ? (vehiclesAll as any[]).filter((v) => v.owner_id === ownerId).map((v) => v.vehicle_no)
     : null;
@@ -57,6 +59,12 @@ function Page() {
     return q as Promise<{ data: T[] }>;
   };
 
+  // Owner scoping for other_incomes / expenses:
+  // - owner selected → only that owner's rows
+  // - no owner selected → only Chandra Paribahan rows (owner_id = Chandra or NULL); never mix other owners' data
+  const scopeOwner = (q: any) =>
+    ownerId ? q.eq("owner_id", ownerId) : q.or(`owner_id.is.null,owner_id.eq.${CHANDRA_ID}`);
+
   const trips = useQuery({
     queryKey: ["db-trips", date, month, car, ownerId],
     queryFn: async () => {
@@ -68,7 +76,8 @@ function Page() {
   const exp = useQuery({
     queryKey: ["db-exp", date, month, car, ownerId],
     queryFn: async () => {
-      const q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
+      let q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
+      q = scopeOwner(q);
       const { data } = (await buildFilter(q, "expense_date")) as any;
       return (data ?? []) as any[];
     },
@@ -76,7 +85,8 @@ function Page() {
   const oth = useQuery({
     queryKey: ["db-oth", date, month, car, ownerId],
     queryFn: async () => {
-      const q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      let q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      q = scopeOwner(q);
       const { data } = (await buildFilter(q, "income_date")) as any;
       return (data ?? []) as any[];
     },
