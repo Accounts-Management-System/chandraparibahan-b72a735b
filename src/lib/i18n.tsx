@@ -168,7 +168,6 @@ const dict = {
   dailyIncome: { bn: "দৈনিক ইনকাম", en: "Daily Income" },
   dailyExpense: { bn: "দৈনিক খরচ", en: "Daily Expense" },
   ownerAccounts: { bn: "ওনার হিসাব", en: "Owner Accounts" },
-  totalExpense: { bn: "মোট খরচ", en: "Total Expense" },
   selectOwner: { bn: "ওনার নির্বাচন", en: "Select Owner" },
   grandTotal: { bn: "সর্বমোট", en: "Grand Total" },
 } as const;
