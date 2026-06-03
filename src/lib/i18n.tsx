@@ -163,6 +163,8 @@ const dict = {
   payable: { bn: "পাওনা", en: "Payable" },
   totalIncome: { bn: "মোট আয়", en: "Total Income" },
   chartTripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
+  paid: { bn: "পরিশোধ", en: "Paid" },
+  currentPayable: { bn: "বর্তমান পাওনা", en: "Current Payable" },
 } as const;
 
 type Key = keyof typeof dict;

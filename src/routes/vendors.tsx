@@ -72,11 +72,11 @@ function Page() {
           <div>
             <h1 className="text-2xl font-bold">{t("vendors")}</h1>
             <p className="text-sm text-muted-foreground">
-              {t("totalIncome")}: <span className="font-semibold text-emerald-400">{fmtNum(totals.income, lang)}</span>
+              {t("payable")}: <span className="font-semibold text-emerald-400">{fmtNum(totals.income, lang)}</span>
               {" · "}
-              {t("totalExpense")}: <span className="font-semibold text-rose-400">{fmtNum(totals.expense, lang)}</span>
+              {t("paid")}: <span className="font-semibold text-rose-400">{fmtNum(totals.expense, lang)}</span>
               {" · "}
-              {t("payable")}: <span className="font-semibold text-primary">{fmtNum(totals.payable, lang)}</span>
+              {t("balance")}: <span className="font-semibold text-primary">{fmtNum(totals.payable, lang)}</span>
             </p>
           </div>
           <Button
@@ -84,8 +84,8 @@ function Page() {
             onClick={() =>
               exportPdf({
                 title: t("vendors"),
-                subtitle: `${t("payable")}: ${fmtNum(totals.payable, lang)}`,
-                headers: [t("vendorName"), t("totalIncome"), t("totalExpense"), t("payable")],
+                subtitle: `${t("balance")}: ${fmtNum(totals.payable, lang)}`,
+                headers: [t("name"), t("payable"), t("paid"), t("balance")],
                 rows: rows.map((r) => [r.name, fmtNum(r.income, lang), fmtNum(r.expense, lang), fmtNum(r.payable, lang)]),
               })
             }
@@ -98,10 +98,10 @@ function Page() {
         <DataTable<VendorRow>
           rows={rows}
           columns={[
-            { key: "name", header: t("vendorName") },
-            { key: "income", header: t("totalIncome"), render: (r) => <span className="text-emerald-400">{fmtNum(r.income, lang)}</span> },
-            { key: "expense", header: t("totalExpense"), render: (r) => <span className="text-rose-400">{fmtNum(r.expense, lang)}</span> },
-            { key: "payable", header: t("payable"), render: (r) => <span className={`font-semibold ${r.payable >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{fmtNum(r.payable, lang)}</span> },
+            { key: "name", header: t("name") },
+            { key: "income", header: t("payable"), render: (r) => <span className="text-emerald-400">{fmtNum(r.income, lang)}</span> },
+            { key: "expense", header: t("paid"), render: (r) => <span className="text-rose-400">{fmtNum(r.expense, lang)}</span> },
+            { key: "payable", header: t("balance"), render: (r) => <span className={`font-semibold ${r.payable >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{fmtNum(r.payable, lang)}</span> },
           ]}
           emptyText={t("noData")}
         />
