@@ -39,6 +39,8 @@ function Page() {
     queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,owner_id").order("vehicle_no")).data ?? [],
   });
 
+  const CHANDRA_ID = "674def72-609b-434c-8186-15aa3d351d28";
+
   const vehicleNosForFilter = ownerId
     ? (vehiclesAll as any[]).filter((v) => v.owner_id === ownerId).map((v) => v.vehicle_no)
     : null;
@@ -57,6 +59,12 @@ function Page() {
     return q as Promise<{ data: T[] }>;
   };
 
+  // Owner scoping for other_incomes / expenses:
+  // - owner selected → only that owner's rows
+  // - no owner selected → only Chandra Paribahan rows (owner_id = Chandra or NULL); never mix other owners' data
+  const scopeOwner = (q: any) =>
+    ownerId ? q.eq("owner_id", ownerId) : q.or(`owner_id.is.null,owner_id.eq.${CHANDRA_ID}`);
+
   const trips = useQuery({
     queryKey: ["db-trips", date, month, car, ownerId],
     queryFn: async () => {
@@ -68,7 +76,8 @@ function Page() {
   const exp = useQuery({
     queryKey: ["db-exp", date, month, car, ownerId],
     queryFn: async () => {
-      const q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
+      let q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
+      q = scopeOwner(q);
       const { data } = (await buildFilter(q, "expense_date")) as any;
       return (data ?? []) as any[];
     },
@@ -76,7 +85,8 @@ function Page() {
   const oth = useQuery({
     queryKey: ["db-oth", date, month, car, ownerId],
     queryFn: async () => {
-      const q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      let q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      q = scopeOwner(q);
       const { data } = (await buildFilter(q, "income_date")) as any;
       return (data ?? []) as any[];
     },
@@ -140,6 +150,12 @@ function Page() {
           <Stat label={t("balance")} value={fmtNum(totalBalance, lang)} color="text-primary" />
           <Stat label={t("fareTotal")} value={fmtNum(totalFare, lang)} color="text-amber-400" />
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat label={`${t("fareTotal")} + ${t("otherIncome")}`} value={fmtNum(totalFare + totalOth, lang)} color="text-emerald-500" />
+          <Stat label={t("otherIncome")} value={fmtNum(totalOth, lang)} color="text-emerald-400" />
+          <Stat label={t("expense")} value={fmtNum(totalExp, lang)} color="text-rose-500" />
+          <Stat label={t("net")} value={fmtNum(totalFare + totalOth - totalExp, lang)} color={(totalFare + totalOth - totalExp) >= 0 ? "text-emerald-500" : "text-rose-500"} />
+        </div>
 
         <Tabs defaultValue="trips">
           <TabsList>
@@ -163,6 +179,7 @@ function Page() {
                 ["__route", t("route"), (_: any, r: any) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-"],
                 ["supervisor", t("supervisor")],
               ]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalJama, lang), fmtNum(totalDena, lang), fmtNum(totalBalance, lang), fmtNum(totalFare, lang), "", ""]}
             />
           </TabsContent>
           <TabsContent value="exp">
@@ -177,6 +194,7 @@ function Page() {
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
+              footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalExp, lang)]}
             />
           </TabsContent>
           <TabsContent value="oth">
@@ -191,6 +209,7 @@ function Page() {
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
+              footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalOth, lang)]}
             />
           </TabsContent>
         </Tabs>
@@ -208,7 +227,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   );
 }
 
-function Tbl({ rows, cols }: { rows: any[]; cols: [string, string, ((v: any, r?: any) => any)?][] }) {
+function Tbl({ rows, cols, footer }: { rows: any[]; cols: [string, string, ((v: any, r?: any) => any)?][]; footer?: (string | number)[] }) {
   const { t } = useT();
   return (
     <div className="overflow-x-auto rounded-md border bg-card/70 backdrop-blur">
@@ -224,6 +243,11 @@ function Tbl({ rows, cols }: { rows: any[]; cols: [string, string, ((v: any, r?:
             </tr>
           ))}
         </tbody>
+        {footer && rows.length > 0 && (
+          <tfoot className="bg-muted/40 font-bold border-t">
+            <tr>{footer.map((c, i) => <td key={i} className="px-3 py-2">{c}</td>)}</tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );
