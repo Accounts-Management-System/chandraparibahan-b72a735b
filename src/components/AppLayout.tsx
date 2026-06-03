@@ -24,6 +24,9 @@ import {
   Sun,
   Moon,
   Store,
+  TrendingUp,
+  TrendingDown,
+  UserCheck,
 } from "lucide-react";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
