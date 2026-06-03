@@ -407,6 +407,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
   const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
+  const [vendor, setVendor] = useState<string>((editing as any)?.vendor ?? "");
 
   // Reset state when dialog opens with a different editing target
   useEffect(() => {
@@ -415,6 +416,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
       setHead(editing?.head ?? "");
       setDescription(editing?.description ?? "");
       setOwnerId(editing?.owner_id ?? defaultOwnerId);
+      setVendor((editing as any)?.vendor ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing?.id]);
