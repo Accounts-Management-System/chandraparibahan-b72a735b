@@ -471,6 +471,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
               vehicle_no: (f.get("v") as string) || null,
               amount: Number(f.get("a") || 0),
               owner_id: ownerId || null,
+              vendor: vendor || null,
             });
           }}
         >
@@ -479,6 +480,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
+          <LookupSelect kind="vendor" value={vendor} onChange={setVendor} placeholder={t("vendorName")} />
           <select name="v" defaultValue={editing?.vehicle_no ?? ""} className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {filteredVehicles.map((v) => (
