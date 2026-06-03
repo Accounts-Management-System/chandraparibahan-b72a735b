@@ -92,14 +92,7 @@ function DashboardPage() {
           value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
         };
       });
-    const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
-    const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
-    return {
-      name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
-      value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
-    };
-  });
-  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : "var(--primary)";
+  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : chartMode === "tripCount" ? "oklch(0.75 0.15 80)" : "var(--primary)";
 
   return (
     <AppLayout>
