@@ -224,7 +224,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   );
 }
 
-function Tbl({ rows, cols }: { rows: any[]; cols: [string, string, ((v: any, r?: any) => any)?][] }) {
+function Tbl({ rows, cols, footer }: { rows: any[]; cols: [string, string, ((v: any, r?: any) => any)?][]; footer?: (string | number)[] }) {
   const { t } = useT();
   return (
     <div className="overflow-x-auto rounded-md border bg-card/70 backdrop-blur">
@@ -240,6 +240,11 @@ function Tbl({ rows, cols }: { rows: any[]; cols: [string, string, ((v: any, r?:
             </tr>
           ))}
         </tbody>
+        {footer && rows.length > 0 && (
+          <tfoot className="bg-muted/40 font-bold border-t">
+            <tr>{footer.map((c, i) => <td key={i} className="px-3 py-2">{c}</td>)}</tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );
