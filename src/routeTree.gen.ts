@@ -14,6 +14,7 @@ import { Route as VehiclesRouteImport } from './routes/vehicles'
 import { Route as RoutesRouteImport } from './routes/routes'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OwnersRouteImport } from './routes/owners'
+import { Route as OwnerAccountsRouteImport } from './routes/owner-accounts'
 import { Route as OtherIncomeRouteImport } from './routes/other-income'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JamaKhorochRouteImport } from './routes/jama-khoroch'
@@ -21,6 +22,8 @@ import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as DataManufacturerRouteImport } from './routes/data-manufacturer'
 import { Route as DataBankRouteImport } from './routes/data-bank'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DailyIncomeRouteImport } from './routes/daily-income'
+import { Route as DailyExpenseRouteImport } from './routes/daily-expense'
 import { Route as DailyAccountsRouteImport } from './routes/daily-accounts'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -49,6 +52,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const OwnersRoute = OwnersRouteImport.update({
   id: '/owners',
   path: '/owners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerAccountsRoute = OwnerAccountsRouteImport.update({
+  id: '/owner-accounts',
+  path: '/owner-accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OtherIncomeRoute = OtherIncomeRouteImport.update({
@@ -86,6 +94,16 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DailyIncomeRoute = DailyIncomeRouteImport.update({
+  id: '/daily-income',
+  path: '/daily-income',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DailyExpenseRoute = DailyExpenseRouteImport.update({
+  id: '/daily-expense',
+  path: '/daily-expense',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DailyAccountsRoute = DailyAccountsRouteImport.update({
   id: '/daily-accounts',
   path: '/daily-accounts',
@@ -112,6 +130,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
+  '/daily-expense': typeof DailyExpenseRoute
+  '/daily-income': typeof DailyIncomeRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
   '/data-manufacturer': typeof DataManufacturerRoute
@@ -119,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
+  '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
   '/routes': typeof RoutesRoute
@@ -130,6 +151,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
+  '/daily-expense': typeof DailyExpenseRoute
+  '/daily-income': typeof DailyIncomeRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
   '/data-manufacturer': typeof DataManufacturerRoute
@@ -137,6 +160,7 @@ export interface FileRoutesByTo {
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
+  '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
   '/routes': typeof RoutesRoute
@@ -149,6 +173,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
   '/daily-accounts': typeof DailyAccountsRoute
+  '/daily-expense': typeof DailyExpenseRoute
+  '/daily-income': typeof DailyIncomeRoute
   '/dashboard': typeof DashboardRoute
   '/data-bank': typeof DataBankRoute
   '/data-manufacturer': typeof DataManufacturerRoute
@@ -156,6 +182,7 @@ export interface FileRoutesById {
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
   '/other-income': typeof OtherIncomeRoute
+  '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
   '/routes': typeof RoutesRoute
@@ -169,6 +196,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contacts'
     | '/daily-accounts'
+    | '/daily-expense'
+    | '/daily-income'
     | '/dashboard'
     | '/data-bank'
     | '/data-manufacturer'
@@ -176,6 +205,7 @@ export interface FileRouteTypes {
     | '/jama-khoroch'
     | '/login'
     | '/other-income'
+    | '/owner-accounts'
     | '/owners'
     | '/reports'
     | '/routes'
@@ -187,6 +217,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contacts'
     | '/daily-accounts'
+    | '/daily-expense'
+    | '/daily-income'
     | '/dashboard'
     | '/data-bank'
     | '/data-manufacturer'
@@ -194,6 +226,7 @@ export interface FileRouteTypes {
     | '/jama-khoroch'
     | '/login'
     | '/other-income'
+    | '/owner-accounts'
     | '/owners'
     | '/reports'
     | '/routes'
@@ -205,6 +238,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contacts'
     | '/daily-accounts'
+    | '/daily-expense'
+    | '/daily-income'
     | '/dashboard'
     | '/data-bank'
     | '/data-manufacturer'
@@ -212,6 +247,7 @@ export interface FileRouteTypes {
     | '/jama-khoroch'
     | '/login'
     | '/other-income'
+    | '/owner-accounts'
     | '/owners'
     | '/reports'
     | '/routes'
@@ -224,6 +260,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ContactsRoute: typeof ContactsRoute
   DailyAccountsRoute: typeof DailyAccountsRoute
+  DailyExpenseRoute: typeof DailyExpenseRoute
+  DailyIncomeRoute: typeof DailyIncomeRoute
   DashboardRoute: typeof DashboardRoute
   DataBankRoute: typeof DataBankRoute
   DataManufacturerRoute: typeof DataManufacturerRoute
@@ -231,6 +269,7 @@ export interface RootRouteChildren {
   JamaKhorochRoute: typeof JamaKhorochRoute
   LoginRoute: typeof LoginRoute
   OtherIncomeRoute: typeof OtherIncomeRoute
+  OwnerAccountsRoute: typeof OwnerAccountsRoute
   OwnersRoute: typeof OwnersRoute
   ReportsRoute: typeof ReportsRoute
   RoutesRoute: typeof RoutesRoute
@@ -273,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/owners'
       fullPath: '/owners'
       preLoaderRoute: typeof OwnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner-accounts': {
+      id: '/owner-accounts'
+      path: '/owner-accounts'
+      fullPath: '/owner-accounts'
+      preLoaderRoute: typeof OwnerAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/other-income': {
@@ -324,6 +370,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/daily-income': {
+      id: '/daily-income'
+      path: '/daily-income'
+      fullPath: '/daily-income'
+      preLoaderRoute: typeof DailyIncomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daily-expense': {
+      id: '/daily-expense'
+      path: '/daily-expense'
+      fullPath: '/daily-expense'
+      preLoaderRoute: typeof DailyExpenseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/daily-accounts': {
       id: '/daily-accounts'
       path: '/daily-accounts'
@@ -360,6 +420,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   ContactsRoute: ContactsRoute,
   DailyAccountsRoute: DailyAccountsRoute,
+  DailyExpenseRoute: DailyExpenseRoute,
+  DailyIncomeRoute: DailyIncomeRoute,
   DashboardRoute: DashboardRoute,
   DataBankRoute: DataBankRoute,
   DataManufacturerRoute: DataManufacturerRoute,
@@ -367,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   JamaKhorochRoute: JamaKhorochRoute,
   LoginRoute: LoginRoute,
   OtherIncomeRoute: OtherIncomeRoute,
+  OwnerAccountsRoute: OwnerAccountsRoute,
   OwnersRoute: OwnersRoute,
   ReportsRoute: ReportsRoute,
   RoutesRoute: RoutesRoute,
@@ -376,13 +439,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
