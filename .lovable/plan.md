@@ -1,76 +1,30 @@
-## লক্ষ্য
+# পরিকল্পনা
 
-বর্তমান সমস্যা: Income/Expense, Vendor, Owner সব এক জায়গায় মিলে যাচ্ছে। সমাধান — ইনপুট পেজ অপরিবর্তিত রেখে **Data Bank-কে central source** বানানো, এবং সেখান থেকে কয়েকটি আলাদা **সেক্টর পেজ** তৈরি করা যেখানে প্রতিটি সেক্টর শুধু তার নিজের হিসাব দেখাবে।
+## ১. ভেন্ডর/ইনকাম/এক্সপেন্স এন্ট্রিতে Owner Tag বাধ্যতামূলক
 
-## নতুন সেক্টর পেজ (Sidebar এ আলাদা link)
+- **Other Income (`other-income.tsx`)** ও **Expense (`expenses.tsx`)** ফর্মে **Owner** ড্রপডাউন যোগ — সব ওনারের লিস্ট (Chandra সহ)। বর্তমানে `owner_id` কলাম আছে কিন্তু UI-তে select নেই।
+- প্রতিটি ইনকাম/এক্সপেন্স এন্ট্রি এখন একটা owner-এর সাথে যুক্ত হবে (Chandra = পরিবহনের নিজস্ব হিসাব)।
+- vehicle_no সিলেক্ট করলে অটো-fill: সেই গাড়ির owner_id বসবে (override করা যাবে)।
 
-### ১. দৈনিক ইনকাম (Daily Income) — `/daily-income`
-পুরা চন্দ্রা পরিবহনের ইনকাম একসাথে।
-- ফিল্টার: তারিখ from-to / মাস / গাড়ি / ওনার
-- কলাম: **তারিখ — গাড়ি নাম্বার — ভাড়া**
-- নিচে: মোট ইনকাম
+## ২. Reports পেজ — শুধু পরিবহন (Chandra)
 
-### ২. দৈনিক খরচ (Daily Expense) — `/daily-expense`
-পুরা চন্দ্রা পরিবহনের খরচ একসাথে।
-- ফিল্টার: তারিখ / মাস / গাড়ি / ওনার / ক্যাটাগরি / হেড
-- কলাম: **তারিখ — হেড — খরচ**
-- নিচে: মোট খরচ, **নেট = ইনকাম − খরচ**
+- Reports query-গুলোতে filter বসবে: `owner_id = Chandra owner id` (অথবা NULL fallback)।
+- Trips, Other Incomes, Expenses — তিনটাই Chandra-owned vehicle/entries-এ সীমাবদ্ধ।
+- ভেন্ডর জমা/খরচ যোগ-বিয়োগ করে Chandra-র net ব্যালেন্স।
+- কোনো অন্য ওনারের ডাটা এখানে আসবে না।
 
-### ৩. ওনার সেক্টর (Owner-wise) — `/owner-accounts`
-- ওনার select → তার সব গাড়ি list
-- প্রতি গাড়ির: তারিখ-ওয়াইজ ভাড়া (ইনকাম) ও খরচ (এক্সপেন্স head ধরে)
-- summary: গাড়ি-ভিত্তিক জমা / খরচ / ব্যালেন্স
-- grand total: ওনারের total জমা − total খরচ = ব্যালেন্স
+## ৩. Owner Accounts — ভেন্ডরসহ owner-wise হিসাব
 
-### ৪. ভেন্ডর / থার্ড-পার্টি সেক্টর — `/vendors` (existing, refine)
-চন্দ্রা পরিবহনের নামে আসা সব থার্ড-পার্টি হিসাব — Bank, পরিবহন বাকী, supplier ইত্যাদি (Data Manufacturer থেকে যোগ করা)।
+- Owner সিলেক্ট করলে দেখাবে:
+  - **ইনকাম**: সেই owner-এর গাড়ির trips (fare_1+2) + other_incomes (owner_id match)
+  - **এক্সপেন্স**: সেই owner-এর গাড়ির expenses + vendor expenses (owner_id match)
+  - **ভেন্ডর সেকশন**: vendor-wise breakdown (জমা − খরচ = বাকি) — শুধু সেই owner-এর
+  - **Balance** = মোট ইনকাম − মোট এক্সপেন্স
 
-**গুরুত্বপূর্ণ পরিবর্তন:** ভেন্ডর dropdown থেকে **owners বাদ** যাবে — ওনাররা শুধু Owner সেক্টরে থাকবে। ভেন্ডর শুধু Data Manufacturer থেকে যোগ করা extra entities।
+## ৪. Vendors পেজে Owner ফিল্টার
 
-- ভেন্ডর সার্চ/select → ঐ ভেন্ডরের সব income (পাওনা) ও expense (পরিশোধ) entry list
-- কলাম: **তারিখ — গাড়ি নাম্বার (যদি থাকে) — পাওনা — পরিশোধ — ব্যালেন্স**
-- প্রতি ভেন্ডরের running balance
+- Top-এ Owner dropdown (All / Chandra / অন্য ওনার): সিলেক্ট করলে শুধু সেই owner-এর ভেন্ডর entry গুলো aggregate হবে।
 
-### ৫. Data Bank (existing) — সব raw data + filter, audit-এর জন্য
+## ৫. Daily Income / Daily Expense
 
-## ইনপুট ফর্মে পরিবর্তন
-
-Income/Expense ফর্মে Vendor field আছে। সেটা থাকবে, কিন্তু dropdown-এ:
-- Owners বাদ
-- শুধু Data Manufacturer-এ create করা vendors থাকবে
-- entry-তে owner আসবে গাড়ি নাম্বার থেকে auto (vehicles.owner_id), আলাদা select লাগবে না
-
-## টেকনিক্যাল বিবরণ
-
-**নতুন routes:**
-- `src/routes/daily-income.tsx`
-- `src/routes/daily-expense.tsx`
-- `src/routes/owner-accounts.tsx`
-
-**Edit:**
-- `src/routes/vendors.tsx` — owner-vendor merge logic বাদ, শুধু `entry_lookups (kind=vendor)` থেকে list
-- `src/components/LookupSelect.tsx` (vendor kind) — owner names বাদ দেওয়া
-- `src/routes/jama-khoroch.tsx` — vendor dropdown এ owner আসবে না
-- `src/components/AppLayout.tsx` — sidebar এ ৩টা নতুন link যোগ
-- `src/lib/i18n.tsx` — নতুন label
-
-**Data source (no schema change needed):**
-- Daily Income = `trips` table (fare_1 + fare_2 sum) + `other_incomes`
-- Daily Expense = `expenses` table
-- Owner accounts = trips/expenses/incomes join vehicles → owner_id group
-- Vendor = expenses/other_incomes WHERE vendor IS NOT NULL group by vendor
-
-কোনো database migration লাগবে না — পুরো কাজ presentation layer-এ।
-
-## ফাইল list
-
-**নতুন (৩):**
-- `src/routes/daily-income.tsx`
-- `src/routes/daily-expense.tsx`
-- `src/routes/owner-accounts.tsx`
-
-**Edit (৪):**
-- `src/routes/vendors.tsx`
-- `src/components/LookupSelect.tsx`
-- `src/components/AppLayout.tsx`
-- `src/lib/i18n.tsx`
+- একই owner ফিল্টার যোগ — এখন owner দিয়ে সঠিকভাবে scoping হবে (vehicle ow
