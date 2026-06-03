@@ -1,57 +1,76 @@
-# পরিবর্তনের পরিকল্পনা
+## লক্ষ্য
 
-## ১. Data Manufacturer — Dynamic Dropdown (Category → Heads)
+বর্তমান সমস্যা: Income/Expense, Vendor, Owner সব এক জায়গায় মিলে যাচ্ছে। সমাধান — ইনপুট পেজ অপরিবর্তিত রেখে **Data Bank-কে central source** বানানো, এবং সেখান থেকে কয়েকটি আলাদা **সেক্টর পেজ** তৈরি করা যেখানে প্রতিটি সেক্টর শুধু তার নিজের হিসাব দেখাবে।
 
-বর্তমান `entry_lookups` table তিন আলাদা list রাখে (category/head/description), কিন্তু কোনো সম্পর্ক নেই। নতুন structure:
+## নতুন সেক্টর পেজ (Sidebar এ আলাদা link)
 
-- নতুন table `expense_categories` (id, name)
-- নতুন table `expense_heads` (id, category_id, name) — এক category-র অধীনে একাধিক head
-- Admin Data Manufacturer পেজে:
-  - বাঁ কলাম: Category list (Add/Delete)
-  - ডান কলাম: নির্বাচিত category-র Heads (Add/Delete, multiple একসাথে comma/newline দিয়ে paste করা যাবে)
-- Expense/Other Income ফর্মে:
-  - Category dropdown → পরিবর্তন হলে Head dropdown filter হয়
-  - Description optional text
-  - Amount
+### ১. দৈনিক ইনকাম (Daily Income) — `/daily-income`
+পুরা চন্দ্রা পরিবহনের ইনকাম একসাথে।
+- ফিল্টার: তারিখ from-to / মাস / গাড়ি / ওনার
+- কলাম: **তারিখ — গাড়ি নাম্বার — ভাড়া**
+- নিচে: মোট ইনকাম
 
-উদাহরণ: Category "বেতন" → Heads: "করিম", "রহিম", "সালাম" … → optional বিবরণ → পরিমাণ।
+### ২. দৈনিক খরচ (Daily Expense) — `/daily-expense`
+পুরা চন্দ্রা পরিবহনের খরচ একসাথে।
+- ফিল্টার: তারিখ / মাস / গাড়ি / ওনার / ক্যাটাগরি / হেড
+- কলাম: **তারিখ — হেড — খরচ**
+- নিচে: মোট খরচ, **নেট = ইনকাম − খরচ**
 
-## ২. Owners (Shareholder এর জায়গায় গ্রুপিং)
+### ৩. ওনার সেক্টর (Owner-wise) — `/owner-accounts`
+- ওনার select → তার সব গাড়ি list
+- প্রতি গাড়ির: তারিখ-ওয়াইজ ভাড়া (ইনকাম) ও খরচ (এক্সপেন্স head ধরে)
+- summary: গাড়ি-ভিত্তিক জমা / খরচ / ব্যালেন্স
+- grand total: ওনারের total জমা − total খরচ = ব্যালেন্স
 
-- নতুন table `owners` (id, name, phone, notes)
-- `vehicles` table-এ `owner_id` যোগ (এক owner-র একাধিক গাড়ি)
-- নতুন route `/owners` — Owner Add/Edit/Delete + সেই owner-র গাড়িগুলোর তালিকা
-- Vehicles পেজে Owner dropdown (গাড়ি assign)
-- Expense / Other Income ফর্মে নতুন **Owner** dropdown (vehicle no এর পাশে / আগে) — owner select করলে সেই owner-র গাড়িগুলো filter হয়ে আসবে
-- পুরনো `contacts` (shareholder) navigation থেকে সরিয়ে দেয়া হবে (table রাখা থাকবে data না হারানোর জন্য, কিন্তু sidebar এ আর দেখাবে না)
+### ৪. ভেন্ডর / থার্ড-পার্টি সেক্টর — `/vendors` (existing, refine)
+চন্দ্রা পরিবহনের নামে আসা সব থার্ড-পার্টি হিসাব — Bank, পরিবহন বাকী, supplier ইত্যাদি (Data Manufacturer থেকে যোগ করা)।
 
-## ৩. Data Bank — সব কলাম
+**গুরুত্বপূর্ণ পরিবর্তন:** ভেন্ডর dropdown থেকে **owners বাদ** যাবে — ওনাররা শুধু Owner সেক্টরে থাকবে। ভেন্ডর শুধু Data Manufacturer থেকে যোগ করা extra entities।
 
-- Expense rows: তারিখ, ওনার, গাড়ি নং, ক্যাটাগরি, হেড, বিবরণ, পরিমাণ
-- Other Income rows: একইভাবে সব কলাম
-- বর্তমান summarized view-র জায়গায় বিস্তারিত table (search/filter সহ — তারিখ, owner, গাড়ি)
+- ভেন্ডর সার্চ/select → ঐ ভেন্ডরের সব income (পাওনা) ও expense (পরিশোধ) entry list
+- কলাম: **তারিখ — গাড়ি নাম্বার (যদি থাকে) — পাওনা — পরিশোধ — ব্যালেন্স**
+- প্রতি ভেন্ডরের running balance
+
+### ৫. Data Bank (existing) — সব raw data + filter, audit-এর জন্য
+
+## ইনপুট ফর্মে পরিবর্তন
+
+Income/Expense ফর্মে Vendor field আছে। সেটা থাকবে, কিন্তু dropdown-এ:
+- Owners বাদ
+- শুধু Data Manufacturer-এ create করা vendors থাকবে
+- entry-তে owner আসবে গাড়ি নাম্বার থেকে auto (vehicles.owner_id), আলাদা select লাগবে না
 
 ## টেকনিক্যাল বিবরণ
 
-**Migration:**
-```sql
-CREATE TABLE owners (id, name, phone, notes, timestamps);
-ALTER TABLE vehicles ADD COLUMN owner_id uuid REFERENCES owners(id);
-CREATE TABLE expense_categories (id, name unique, timestamps);
-CREATE TABLE expense_heads (id, category_id REFERENCES expense_categories, name, timestamps);
--- GRANTS + RLS (read all auth, write admin/moderator)
-```
+**নতুন routes:**
+- `src/routes/daily-income.tsx`
+- `src/routes/daily-expense.tsx`
+- `src/routes/owner-accounts.tsx`
 
-**Files to edit:**
-- `supabase/migrations/...` — owners, expense_categories, expense_heads
-- `src/routes/data-manufacturer.tsx` — দুই-কলাম Category/Head UI
-- `src/routes/owners.tsx` (new) — Owner management
-- `src/routes/vehicles.tsx` — Owner dropdown যোগ
-- `src/routes/expenses.tsx` — Category→Head cascade + Owner dropdown
-- `src/routes/other-income.tsx` — একই pattern
-- `src/routes/data-bank.tsx` — সব কলাম সহ full table
-- `src/components/AppLayout.tsx` — sidebar এ Owners যোগ, Shareholder সরানো
+**Edit:**
+- `src/routes/vendors.tsx` — owner-vendor merge logic বাদ, শুধু `entry_lookups (kind=vendor)` থেকে list
+- `src/components/LookupSelect.tsx` (vendor kind) — owner names বাদ দেওয়া
+- `src/routes/jama-khoroch.tsx` — vendor dropdown এ owner আসবে না
+- `src/components/AppLayout.tsx` — sidebar এ ৩টা নতুন link যোগ
 - `src/lib/i18n.tsx` — নতুন label
-- `src/components/LookupSelect.tsx` — category/head এর জন্য নতুন CascadingSelect বানানো (পুরনোটা description এর জন্য থাকবে)
 
-পুরনো `entry_lookups` table থাকছে (description এর জন্য use হবে)।
+**Data source (no schema change needed):**
+- Daily Income = `trips` table (fare_1 + fare_2 sum) + `other_incomes`
+- Daily Expense = `expenses` table
+- Owner accounts = trips/expenses/incomes join vehicles → owner_id group
+- Vendor = expenses/other_incomes WHERE vendor IS NOT NULL group by vendor
+
+কোনো database migration লাগবে না — পুরো কাজ presentation layer-এ।
+
+## ফাইল list
+
+**নতুন (৩):**
+- `src/routes/daily-income.tsx`
+- `src/routes/daily-expense.tsx`
+- `src/routes/owner-accounts.tsx`
+
+**Edit (৪):**
+- `src/routes/vendors.tsx`
+- `src/components/LookupSelect.tsx`
+- `src/components/AppLayout.tsx`
+- `src/lib/i18n.tsx`
