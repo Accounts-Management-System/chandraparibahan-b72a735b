@@ -165,6 +165,12 @@ const dict = {
   chartTripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
   paid: { bn: "পরিশোধ", en: "Paid" },
   currentPayable: { bn: "বর্তমান পাওনা", en: "Current Payable" },
+  dailyIncome: { bn: "দৈনিক ইনকাম", en: "Daily Income" },
+  dailyExpense: { bn: "দৈনিক খরচ", en: "Daily Expense" },
+  ownerAccounts: { bn: "ওনার হিসাব", en: "Owner Accounts" },
+  totalExpense: { bn: "মোট খরচ", en: "Total Expense" },
+  selectOwner: { bn: "ওনার নির্বাচন", en: "Select Owner" },
+  grandTotal: { bn: "সর্বমোট", en: "Grand Total" },
 } as const;
 
 type Key = keyof typeof dict;
