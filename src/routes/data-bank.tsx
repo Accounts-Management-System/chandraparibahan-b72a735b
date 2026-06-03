@@ -179,6 +179,7 @@ function Page() {
                 ["__route", t("route"), (_: any, r: any) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-"],
                 ["supervisor", t("supervisor")],
               ]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalJama, lang), fmtNum(totalDena, lang), fmtNum(totalBalance, lang), fmtNum(totalFare, lang), "", ""]}
             />
           </TabsContent>
           <TabsContent value="exp">
@@ -193,6 +194,7 @@ function Page() {
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
+              footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalExp, lang)]}
             />
           </TabsContent>
           <TabsContent value="oth">
@@ -207,6 +209,7 @@ function Page() {
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
+              footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalOth, lang)]}
             />
           </TabsContent>
         </Tabs>
