@@ -162,6 +162,7 @@ const dict = {
   vendorName: { bn: "ভেন্ডরের নাম", en: "Vendor Name" },
   payable: { bn: "পাওনা", en: "Payable" },
   totalIncome: { bn: "মোট আয়", en: "Total Income" },
+  chartTripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
 } as const;
 
 type Key = keyof typeof dict;

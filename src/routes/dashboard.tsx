@@ -60,7 +60,7 @@ function DashboardPage() {
     },
   });
 
-  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit">("balance");
+  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
 
   const summary = useQuery({
     queryKey: ["dash-trips", date, vehicle],
@@ -76,15 +76,23 @@ function DashboardPage() {
     },
   });
 
-  const chartData = (summary.data ?? []).map((r, i) => {
-    const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
-    const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
-    return {
-      name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
-      value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
-    };
-  });
-  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : "var(--primary)";
+  const tripRows = summary.data ?? [];
+  const chartData = chartMode === "tripCount"
+    ? Object.entries(
+        tripRows.reduce<Record<string, number>>((acc, r) => {
+          acc[r.vehicle_no] = (acc[r.vehicle_no] || 0) + 1;
+          return acc;
+        }, {}),
+      ).map(([name, value]) => ({ name, value }))
+    : tripRows.map((r, i) => {
+        const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+        const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+        return {
+          name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
+          value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
+        };
+      });
+  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : chartMode === "tripCount" ? "oklch(0.75 0.15 80)" : "var(--primary)";
 
   return (
     <AppLayout>
@@ -129,13 +137,13 @@ function DashboardPage() {
               {t("tripChart")}
             </div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
-              {(["balance", "debit", "deposit"] as const).map((m) => (
+              {(["balance", "debit", "deposit", "tripCount"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setChartMode(m)}
                   className={`px-3 py-1 rounded transition-colors ${chartMode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  {m === "balance" ? t("chartBalance") : m === "debit" ? t("chartDebit") : t("chartDeposit")}
+                  {m === "balance" ? t("chartBalance") : m === "debit" ? t("chartDebit") : m === "deposit" ? t("chartDeposit") : t("chartTripCount")}
                 </button>
               ))}
             </div>
