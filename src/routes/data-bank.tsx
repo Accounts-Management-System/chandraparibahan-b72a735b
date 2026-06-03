@@ -150,6 +150,12 @@ function Page() {
           <Stat label={t("balance")} value={fmtNum(totalBalance, lang)} color="text-primary" />
           <Stat label={t("fareTotal")} value={fmtNum(totalFare, lang)} color="text-amber-400" />
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat label={`${t("fareTotal")} + ${t("otherIncome")}`} value={fmtNum(totalFare + totalOth, lang)} color="text-emerald-500" />
+          <Stat label={t("otherIncome")} value={fmtNum(totalOth, lang)} color="text-emerald-400" />
+          <Stat label={t("expense")} value={fmtNum(totalExp, lang)} color="text-rose-500" />
+          <Stat label={t("net")} value={fmtNum(totalFare + totalOth - totalExp, lang)} color={(totalFare + totalOth - totalExp) >= 0 ? "text-emerald-500" : "text-rose-500"} />
+        </div>
 
         <Tabs defaultValue="trips">
           <TabsList>
