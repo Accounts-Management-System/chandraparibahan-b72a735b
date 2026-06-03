@@ -54,6 +54,33 @@ function Page() {
     queryKey: ["trips-all-for-owners"],
     queryFn: async () => ((await supabase.from("trips").select("trip_date,vehicle_no,fare_1,fare_2").limit(5000)).data ?? []) as Trip[],
   });
+  const { data: ownerIncomes = [] } = useQuery({
+    queryKey: ["other_incomes-owner"],
+    queryFn: async () =>
+      ((await supabase.from("other_incomes").select("owner_id,amount").not("owner_id", "is", null).limit(5000)).data ?? []) as { owner_id: string | null; amount: number }[],
+  });
+  const { data: ownerExpenses = [] } = useQuery({
+    queryKey: ["expenses-owner"],
+    queryFn: async () =>
+      ((await supabase.from("expenses").select("owner_id,amount").not("owner_id", "is", null).limit(5000)).data ?? []) as { owner_id: string | null; amount: number }[],
+  });
+
+  const ownerBalances = useMemo(() => {
+    const m = new Map<string, { income: number; expense: number }>();
+    for (const r of ownerIncomes) {
+      if (!r.owner_id) continue;
+      const c = m.get(r.owner_id) ?? { income: 0, expense: 0 };
+      c.income += Number(r.amount || 0);
+      m.set(r.owner_id, c);
+    }
+    for (const r of ownerExpenses) {
+      if (!r.owner_id) continue;
+      const c = m.get(r.owner_id) ?? { income: 0, expense: 0 };
+      c.expense += Number(r.amount || 0);
+      m.set(r.owner_id, c);
+    }
+    return m;
+  }, [ownerIncomes, ownerExpenses]);
 
   const fareRows: FareRow[] = useMemo(() => {
     const veh = vehicles.filter((v) => {
