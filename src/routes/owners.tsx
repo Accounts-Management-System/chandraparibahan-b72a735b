@@ -141,6 +141,12 @@ function Page() {
               { key: "name", header: t("name") },
               { key: "id", header: t("vehicles"), render: (r) => vehicles.filter((v) => v.owner_id === r.id).map((v) => v.vehicle_no).join(", ") || "—" },
               { key: "login_id", header: t("loginId"), render: (r) => r.login_id ?? "—" },
+              { key: "inc", header: t("totalIncome"), render: (r) => <span className="text-emerald-400">{fmtNum(ownerBalances.get(r.id)?.income ?? 0, lang)}</span> },
+              { key: "exp", header: t("totalExpense"), render: (r) => <span className="text-rose-400">{fmtNum(ownerBalances.get(r.id)?.expense ?? 0, lang)}</span> },
+              { key: "bal", header: t("balance"), render: (r) => {
+                const b = ownerBalances.get(r.id); const v = (b?.income ?? 0) - (b?.expense ?? 0);
+                return <span className={`font-semibold ${v >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{fmtNum(v, lang)}</span>;
+              } },
               {
                 key: "actions2",
                 header: t("actions"),
