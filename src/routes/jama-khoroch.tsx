@@ -344,6 +344,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
   const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
+  const [vendor, setVendor] = useState<string>((editing as any)?.vendor ?? "");
 
   const save = useMutation({
     mutationFn: async (form: any) => {
