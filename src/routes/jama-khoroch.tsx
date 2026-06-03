@@ -377,6 +377,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
               description: description || null,
               amount: Number(f.get("a") || 0),
               owner_id: ownerId || null,
+              vendor: vendor || null,
             });
           }}
         >
@@ -385,6 +386,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
+          <LookupSelect kind="vendor" value={vendor} onChange={setVendor} placeholder={t("vendorName")} />
           <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
