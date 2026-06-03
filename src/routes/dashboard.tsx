@@ -137,13 +137,13 @@ function DashboardPage() {
               {t("tripChart")}
             </div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
-              {(["balance", "debit", "deposit"] as const).map((m) => (
+              {(["balance", "debit", "deposit", "tripCount"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setChartMode(m)}
                   className={`px-3 py-1 rounded transition-colors ${chartMode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  {m === "balance" ? t("chartBalance") : m === "debit" ? t("chartDebit") : t("chartDeposit")}
+                  {m === "balance" ? t("chartBalance") : m === "debit" ? t("chartDebit") : m === "deposit" ? t("chartDeposit") : t("chartTripCount")}
                 </button>
               ))}
             </div>
