@@ -344,6 +344,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
   const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
+  const [vendor, setVendor] = useState<string>((editing as any)?.vendor ?? "");
 
   const save = useMutation({
     mutationFn: async (form: any) => {
@@ -376,6 +377,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
               description: description || null,
               amount: Number(f.get("a") || 0),
               owner_id: ownerId || null,
+              vendor: vendor || null,
             });
           }}
         >
@@ -384,6 +386,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
+          <LookupSelect kind="vendor" value={vendor} onChange={setVendor} placeholder={t("vendorName")} />
           <Input type="number" step="any" name="a" defaultValue={editing?.amount ?? ""} placeholder={t("amount")} required className="h-11" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
@@ -404,6 +407,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
   const [head, setHead] = useState(editing?.head ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
   const [ownerId, setOwnerId] = useState(editing?.owner_id ?? defaultOwnerId);
+  const [vendor, setVendor] = useState<string>((editing as any)?.vendor ?? "");
 
   // Reset state when dialog opens with a different editing target
   useEffect(() => {
@@ -412,6 +416,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
       setHead(editing?.head ?? "");
       setDescription(editing?.description ?? "");
       setOwnerId(editing?.owner_id ?? defaultOwnerId);
+      setVendor((editing as any)?.vendor ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing?.id]);
@@ -466,6 +471,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
               vehicle_no: (f.get("v") as string) || null,
               amount: Number(f.get("a") || 0),
               owner_id: ownerId || null,
+              vendor: vendor || null,
             });
           }}
         >
@@ -474,6 +480,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
           <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
           <HeadSelect category={category} value={head} onChange={setHead} />
           <LookupSelect kind="description" value={description} onChange={setDescription} placeholder={t("description")} />
+          <LookupSelect kind="vendor" value={vendor} onChange={setVendor} placeholder={t("vendorName")} />
           <select name="v" defaultValue={editing?.vehicle_no ?? ""} className="h-11 w-full rounded-md border border-input bg-input px-3 text-sm">
             <option value="">— {t("vehicleNo")} —</option>
             {filteredVehicles.map((v) => (
