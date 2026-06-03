@@ -60,7 +60,7 @@ function DashboardPage() {
     },
   });
 
-  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit">("balance");
+  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
 
   const summary = useQuery({
     queryKey: ["dash-trips", date, vehicle],
@@ -76,7 +76,22 @@ function DashboardPage() {
     },
   });
 
-  const chartData = (summary.data ?? []).map((r, i) => {
+  const tripRows = summary.data ?? [];
+  const chartData = chartMode === "tripCount"
+    ? Object.entries(
+        tripRows.reduce<Record<string, number>>((acc, r) => {
+          acc[r.vehicle_no] = (acc[r.vehicle_no] || 0) + 1;
+          return acc;
+        }, {}),
+      ).map(([name, value]) => ({ name, value }))
+    : tripRows.map((r, i) => {
+        const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+        const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+        return {
+          name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
+          value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
+        };
+      });
     const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
     const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
     return {
