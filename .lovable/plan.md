@@ -1,30 +1,42 @@
 # পরিকল্পনা
 
-## ১. ভেন্ডর/ইনকাম/এক্সপেন্স এন্ট্রিতে Owner Tag বাধ্যতামূলক
+## ১. Reports পেজে Data Bank-এর মতো সার্চ অপশন
+- `reports.tsx` এ `SearchFilters` (date, vehicle, owner, category, head) যোগ।
+- ট্যাব ভিত্তিক (Trips / Expenses / Other Incomes) ভিউ + প্রতি ট্যাবে total footer।
+- উপরে summary cards: ইনকাম, এক্সপেন্স, নেট, ভাড়া।
 
-- **Other Income (`other-income.tsx`)** ও **Expense (`expenses.tsx`)** ফর্মে **Owner** ড্রপডাউন যোগ — সব ওনারের লিস্ট (Chandra সহ)। বর্তমানে `owner_id` কলাম আছে কিন্তু UI-তে select নেই।
-- প্রতিটি ইনকাম/এক্সপেন্স এন্ট্রি এখন একটা owner-এর সাথে যুক্ত হবে (Chandra = পরিবহনের নিজস্ব হিসাব)।
-- vehicle_no সিলেক্ট করলে অটো-fill: সেই গাড়ির owner_id বসবে (override করা যাবে)।
+## ২. Others Income স্কোপ ঠিক করা (গুরুত্বপূর্ণ)
+- **Others Income সেকশনে কেবল `other_incomes` টেবিলের ডাটাই দেখাবে** — কোনো owner-related auto-pull নেই।
+- Reports/Data Bank-এ Others Income ট্যাব = শুধু `other_incomes` raw rows (owner filter দিলে সেই owner-এর entry শুধু)।
+- কোনো ভেন্ডর/owner হিসাবের জমা এখানে যোগ হবে না।
 
-## ২. Reports পেজ — শুধু পরিবহন (Chandra)
+## ৩. Owner Accounts লজিক
+- **ইনকাম উৎস**: শুধু সেই owner-এর গাড়ির `trips` থেকে `fare_1+fare_2` ও `jama_1+jama_2`। অন্য কিছু নয়।
+- **খরচ উৎস**: সেই owner-এর গাড়ির `trips.dena_1+dena_2` + সেই owner-এর গাড়ির `expenses`।
+- **`other_incomes` থেকে কিছু আনা হবে না** owner accounts-এ।
+- Net = (fare + jama) − (dena + expenses)।
 
-- Reports query-গুলোতে filter বসবে: `owner_id = Chandra owner id` (অথবা NULL fallback)।
-- Trips, Other Incomes, Expenses — তিনটাই Chandra-owned vehicle/entries-এ সীমাবদ্ধ।
-- ভেন্ডর জমা/খরচ যোগ-বিয়োগ করে Chandra-র net ব্যালেন্স।
-- কোনো অন্য ওনারের ডাটা এখানে আসবে না।
+## ৪. Vendor পাওনা (Receivable) নতুন এন্ট্রি অপশন
+- `vendors` টেবিলে নতুন কলাম `entry_type` ('পাওনা' | 'জমা' | 'খরচ') অথবা নতুন `vendor_receivables` টেবিল যোগ।
+- প্রস্তাব: একই `vendors` টেবিলে `entry_type` enum যোগ — পাওনা (receivable), জমা (collection), খরচ (payment)।
+- Chandra (পরিবহন) vendor হিসাব:
+  - পাওনা − (পরিবহনের `other_incomes` জমা) − (পরিবহনের `expenses` যেগুলো সেই vendor-এ পরিশোধ) = বাকি।
+- প্রতি owner-এর জন্য আলাদা vendor হিসাব।
 
-## ৩. Owner Accounts — ভেন্ডরসহ owner-wise হিসাব
+## ৫. Vendor পেজে Owner নামের বাটন
+- উপরে সব owner-এর বাটন row (All + প্রতি owner)। সিলেক্ট করলে শুধু সেই owner-এর vendor entries।
+- প্রতি owner-এর আলাদা summary (মোট পাওনা / জমা / খরচ / বাকি)।
 
-- Owner সিলেক্ট করলে দেখাবে:
-  - **ইনকাম**: সেই owner-এর গাড়ির trips (fare_1+2) + other_incomes (owner_id match)
-  - **এক্সপেন্স**: সেই owner-এর গাড়ির expenses + vendor expenses (owner_id match)
-  - **ভেন্ডর সেকশন**: vendor-wise breakdown (জমা − খরচ = বাকি) — শুধু সেই owner-এর
-  - **Balance** = মোট ইনকাম − মোট এক্সপেন্স
+---
 
-## ৪. Vendors পেজে Owner ফিল্টার
+## প্রশ্ন (অনুগ্রহ করে নিশ্চিত করুন):
 
-- Top-এ Owner dropdown (All / Chandra / অন্য ওনার): সিলেক্ট করলে শুধু সেই owner-এর ভেন্ডর entry গুলো aggregate হবে।
+1. **Vendor `entry_type` স্কিমা**: `vendors` টেবিলে `entry_type` enum কলাম যোগ করব ('receivable' / 'collection' / 'payment')? নাকি আলাদা `vendor_receivables` টেবিল?
 
-## ৫. Daily Income / Daily Expense
+2. **পাওনা থেকে কী বাদ যাবে (Chandra-র ক্ষেত্রে)**:
+   - "পরিবহনের other_incomes জমা" বলতে কি Chandra owner_id-যুক্ত সব `other_incomes` rows?
+   - "দৈনিক খরচ থেকে পরিশোধ" বলতে কি `expenses` table-এ ঐ vendor-এর নামে entry, নাকি একটা নতুন vendor-link field দরকার?
 
-- একই owner ফিল্টার যোগ — এখন owner দিয়ে সঠিকভাবে scoping হবে (vehicle ow
+3. **Others Income এ আগে যেসব entry owner_id সহ আছে** — সেগুলো কি delete/migrate করব, নাকি just owner-scoped reporting থেকে বাদ দেব (raw থাকবে)?
+
+approve করলে implementation শুরু করব।
