@@ -176,20 +176,8 @@ const dict = {
   payment: { bn: "পরিশোধ", en: "Payment" },
   remaining: { bn: "বাকি", en: "Remaining" },
   note: { bn: "মন্তব্য", en: "Note" },
-  totalExpense: { bn: "মোট খরচ", en: "Total Expense" },
-  noData: { bn: "কোনো ডাটা নেই", en: "No data" },
-  net: { bn: "নেট", en: "Net" },
-  expense: { bn: "খরচ", en: "Expense" },
-  income: { bn: "আয়", en: "Income" },
-  description: { bn: "বিবরণ", en: "Description" },
-  head: { bn: "হেড", en: "Head" },
   amountReq: { bn: "পরিমান প্রয়োজন", en: "Amount required" },
   vendorReq: { bn: "ভেন্ডর প্রয়োজন", en: "Vendor required" },
-  searchByMonth: { bn: "মাস দিয়ে সার্চ", en: "Search by Month" },
-  searchByCar: { bn: "গাড়ী দিয়ে সার্চ", en: "Search by Car" },
-  searchByOwner: { bn: "ওনার দিয়ে সার্চ", en: "Search by Owner" },
-  clearForm: { bn: "ফর্ম খালি করুন", en: "Clear Form" },
-  tripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
 } as const;
 
 type Key = keyof typeof dict;
