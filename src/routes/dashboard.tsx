@@ -234,3 +234,12 @@ function DashboardPage() {
   );
 }
 
+function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="rounded-lg border bg-card/60 p-3">
+      <div className="text-[10px] uppercase text-muted-foreground mb-1">{label}</div>
+      <div className={`text-lg font-bold ${color}`}>{value}</div>
+    </div>
+  );
+}
+
