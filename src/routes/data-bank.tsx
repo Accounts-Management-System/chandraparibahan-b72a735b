@@ -100,13 +100,14 @@ function Page() {
   const expRows = exp.data ?? [];
   const othRows = oth.data ?? [];
 
-  const mainExp = useMemo(() => expRows.filter((r: any) => isMainOwner(r.owner_id)), [expRows]);
-  const mainOth = useMemo(() => othRows.filter((r: any) => isMainOwner(r.owner_id)), [othRows]);
+  const matchedOwnerId = (r: any) => r.owner_id ?? ownerVehNos.get(r.vehicle_no) ?? null;
+  const mainExp = useMemo(() => expRows.filter((r: any) => isMainOwner(matchedOwnerId(r))), [expRows, ownerVehNos]);
+  const mainOth = useMemo(() => othRows.filter((r: any) => isMainOwner(matchedOwnerId(r))), [othRows, ownerVehNos]);
 
   const ownerMatch = (oid: string | null | undefined) => Boolean(oid && oid !== CHANDRA_ID && (!ownerId || oid === ownerId));
   const jkTrips = useMemo(() => tripRows.filter((r: any) => ownerMatch(ownerVehNos.get(r.vehicle_no))), [tripRows, ownerVehNos, ownerId]);
-  const jkExp = useMemo(() => expRows.filter((r: any) => ownerMatch(r.owner_id)), [expRows, ownerId]);
-  const jkOth = useMemo(() => othRows.filter((r: any) => ownerMatch(r.owner_id)), [othRows, ownerId]);
+  const jkExp = useMemo(() => expRows.filter((r: any) => ownerMatch(matchedOwnerId(r))), [expRows, ownerVehNos, ownerId]);
+  const jkOth = useMemo(() => othRows.filter((r: any) => ownerMatch(matchedOwnerId(r))), [othRows, ownerVehNos, ownerId]);
 
   const totalDailyJama = tripRows.reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const totalDena = tripRows.reduce((s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
@@ -253,7 +254,7 @@ function Page() {
                   rows={jkOth}
                   cols={[
                     ["income_date", t("date"), (v: any) => fmtDate(v, lang)],
-                    ["owner_id", t("owner"), (v: any) => ownerName(v)],
+                    ["owner_id", t("owner"), (_: any, r: any) => ownerName(matchedOwnerId(r))],
                     ["vendor", t("vendors"), (v: any) => v ?? "—"],
                     ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
                     ["category", t("category")],
@@ -271,7 +272,7 @@ function Page() {
                   rows={jkExp}
                   cols={[
                     ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
-                    ["owner_id", t("owner"), (v: any) => ownerName(v)],
+                    ["owner_id", t("owner"), (_: any, r: any) => ownerName(matchedOwnerId(r))],
                     ["vendor", t("vendors"), (v: any) => v ?? "—"],
                     ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
                     ["category", t("category")],
