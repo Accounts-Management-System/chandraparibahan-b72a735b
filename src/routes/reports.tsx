@@ -61,18 +61,24 @@ function Page() {
 
   // ওনারদের জমা-খরচ (owner_id NOT NULL && != CHANDRA)
   const ownerVehNos = useMemo(() => {
-    const m = new Map<string, string>(); // vehicle_no -> owner_id
-    (vehiclesAll as any[]).forEach((v) => { if (v.owner_id) m.set(v.vehicle_no, v.owner_id); });
+    const m = new Map<string, string | null>(); // vehicle_no -> owner_id
+    (vehiclesAll as any[]).forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
     return m;
   }, [vehiclesAll]);
+
+  const matchedOwnerId = (r: any) => r.owner_id ?? ownerVehNos.get(r.vehicle_no) ?? null;
+  const isOwnerRow = (r: any) => {
+    const oid = matchedOwnerId(r);
+    return Boolean(oid && oid !== CHANDRA_ID && (!ownerId || oid === ownerId));
+  };
 
   const jkTrips = useMemo(() => data.trips.filter((r: any) => {
     const oid = ownerVehNos.get(r.vehicle_no);
     if (!oid || oid === CHANDRA_ID) return false;
     return ownerId ? oid === ownerId : true;
   }), [data.trips, ownerVehNos, ownerId]);
-  const jkExp = useMemo(() => data.exp.filter((r: any) => r.owner_id && r.owner_id !== CHANDRA_ID && (!ownerId || r.owner_id === ownerId)), [data.exp, ownerId]);
-  const jkOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.owner_id !== CHANDRA_ID && (!ownerId || r.owner_id === ownerId)), [data.oth, ownerId]);
+  const jkExp = useMemo(() => data.exp.filter(isOwnerRow), [data.exp, ownerVehNos, ownerId]);
+  const jkOth = useMemo(() => data.oth.filter(isOwnerRow), [data.oth, ownerVehNos, ownerId]);
 
   const jkFares = jkTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const jkExpSum = jkExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
@@ -111,7 +117,7 @@ function Page() {
       lines.push(["ভাড়া", r.trip_date, ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, "-", f].join(","));
     });
     jkOth.forEach((r: any) => lines.push(["জমা", r.income_date, ownerName(r.owner_id), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
-    jkExp.forEach((r: any) => lines.push(["খরচ", r.expense_date, ownerName(r.owner_id), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
+    jkExp.forEach((r: any) => lines.push(["খরচ", r.expense_date, ownerName(matchedOwnerId(r)), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
 
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -271,20 +277,20 @@ function Page() {
               <div>
                 <h3 className="text-sm font-semibold mb-2">জমা-খরচ জমা</h3>
                 <Section
-                  headers={[t("date"), "ওনার", t("category"), t("amount")]}
+                  headers={[t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("amount")]}
                   rows={jkOth}
-                  cells={(r: any) => [fmtDate(r.income_date, lang), ownerName(r.owner_id), r.category, fmtNum(r.amount, lang)]}
-                  footer={[t("grandTotal"), "", "", fmtNum(jkOthSum, lang)]}
+                  cells={(r: any) => [fmtDate(r.income_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category, fmtNum(r.amount, lang)]}
+                  footer={[t("grandTotal"), "", "", "", "", fmtNum(jkOthSum, lang)]}
                 />
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold mb-2">জমা-খরচ খরচ</h3>
                 <Section
-                  headers={[t("date"), "ওনার", t("category"), t("amount")]}
+                  headers={[t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("amount")]}
                   rows={jkExp}
-                  cells={(r: any) => [fmtDate(r.expense_date, lang), ownerName(r.owner_id), r.category, fmtNum(r.amount, lang)]}
-                  footer={[t("grandTotal"), "", "", fmtNum(jkExpSum, lang)]}
+                  cells={(r: any) => [fmtDate(r.expense_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category, fmtNum(r.amount, lang)]}
+                  footer={[t("grandTotal"), "", "", "", "", fmtNum(jkExpSum, lang)]}
                 />
               </div>
             </div>
