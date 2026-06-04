@@ -170,6 +170,14 @@ const dict = {
   ownerAccounts: { bn: "ওনার হিসাব", en: "Owner Accounts" },
   selectOwner: { bn: "ওনার নির্বাচন", en: "Select Owner" },
   grandTotal: { bn: "সর্বমোট", en: "Grand Total" },
+  receivable: { bn: "পাওনা", en: "Receivable" },
+  addReceivable: { bn: "পাওনা যোগ", en: "Add Receivable" },
+  collection: { bn: "জমা", en: "Collection" },
+  payment: { bn: "পরিশোধ", en: "Payment" },
+  remaining: { bn: "বাকি", en: "Remaining" },
+  note: { bn: "মন্তব্য", en: "Note" },
+  amountReq: { bn: "পরিমান প্রয়োজন", en: "Amount required" },
+  vendorReq: { bn: "ভেন্ডর প্রয়োজন", en: "Vendor required" },
 } as const;
 
 type Key = keyof typeof dict;

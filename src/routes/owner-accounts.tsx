@@ -33,10 +33,6 @@ function Page() {
     queryKey: ["oa-expenses"],
     queryFn: async () => ((await supabase.from("expenses").select("expense_date,vehicle_no,amount").limit(10000)).data ?? []) as any[],
   });
-  const { data: otherIncomes = [] } = useQuery({
-    queryKey: ["oa-oth"],
-    queryFn: async () => ((await supabase.from("other_incomes").select("income_date,vehicle_no,amount").limit(10000)).data ?? []) as any[],
-  });
 
   const inRange = (d: string) => {
     if (dateFrom && d < dateFrom) return false;
@@ -51,19 +47,18 @@ function Page() {
 
   const perVehicle = useMemo(() => {
     return ownerVehicles.map((v: any) => {
-      const fare = (trips as any[])
-        .filter((r) => r.vehicle_no === v.vehicle_no && inRange(r.trip_date))
-        .reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-      const other = (otherIncomes as any[])
-        .filter((r) => r.vehicle_no === v.vehicle_no && inRange(r.income_date))
-        .reduce((s, r) => s + Number(r.amount || 0), 0);
+      const tripRows = (trips as any[]).filter((r) => r.vehicle_no === v.vehicle_no && inRange(r.trip_date));
+      const fare = tripRows.reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+      const jama = tripRows.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+      const dena = tripRows.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
       const exp = (expenses as any[])
         .filter((r) => r.vehicle_no === v.vehicle_no && inRange(r.expense_date))
         .reduce((s, r) => s + Number(r.amount || 0), 0);
-      const income = fare + other;
-      return { id: v.id, vehicle_no: v.vehicle_no, income, expense: exp, balance: income - exp };
+      const income = fare + jama;
+      const expense = exp + dena;
+      return { id: v.id, vehicle_no: v.vehicle_no, income, expense, balance: income - expense };
     });
-  }, [ownerVehicles, trips, otherIncomes, expenses, dateFrom, dateTo]);
+  }, [ownerVehicles, trips, expenses, dateFrom, dateTo]);
 
   const totals = perVehicle.reduce(
     (s, r) => ({ income: s.income + r.income, expense: s.expense + r.expense, balance: s.balance + r.balance }),

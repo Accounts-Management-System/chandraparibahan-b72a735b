@@ -59,9 +59,7 @@ function Page() {
     return q as Promise<{ data: T[] }>;
   };
 
-  // Owner scoping for other_incomes / expenses:
-  // - owner selected → only that owner's rows
-  // - no owner selected → only Chandra Paribahan rows (owner_id = Chandra or NULL); never mix other owners' data
+  // expenses: scope to selected owner (or Chandra default when no owner)
   const scopeOwner = (q: any) =>
     ownerId ? q.eq("owner_id", ownerId) : q.or(`owner_id.is.null,owner_id.eq.${CHANDRA_ID}`);
 
@@ -82,11 +80,12 @@ function Page() {
       return (data ?? []) as any[];
     },
   });
+  // other_incomes: independent table. When an owner is selected, exclude (owner accounts don't pull from other_incomes).
   const oth = useQuery({
     queryKey: ["db-oth", date, month, car, ownerId],
     queryFn: async () => {
+      if (ownerId) return [] as any[];
       let q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
-      q = scopeOwner(q);
       const { data } = (await buildFilter(q, "income_date")) as any;
       return (data ?? []) as any[];
     },
