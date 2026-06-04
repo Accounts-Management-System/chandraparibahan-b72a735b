@@ -122,6 +122,26 @@ function DashboardPage() {
           <p className="text-sm text-muted-foreground mt-1">{t("overview")}</p>
         </div>
 
+        {/* মূল পরিবহন হিসাব */}
+        <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            মূল পরিবহন হিসাব
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MiniStat label="দৈনিক জমা" value={fmtNum(mb.dailyJama, lang)} color="text-emerald-400" />
+            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherJama, lang)} color="text-emerald-400" />
+            <MiniStat label="দৈনিক খরচ" value={fmtNum(mb.dailyExpense, lang)} color="text-rose-400" />
+            <MiniStat
+              label="ব্যালেন্স"
+              value={fmtNum(mb.balance, lang)}
+              color={mb.balance >= 0 ? "text-sky-400" : "text-rose-500"}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-3">
+            (দৈনিক জমা + অন্যান্য জমা) − দৈনিক খরচ = ব্যালেন্স
+          </p>
+        </Card>
+
         {/* Filters */}
         <Card className="p-4 border-border/50 bg-card/60 backdrop-blur">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
