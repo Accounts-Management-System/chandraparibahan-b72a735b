@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 
 export const Route = createFileRoute("/data-bank")({
@@ -19,6 +19,9 @@ export const Route = createFileRoute("/data-bank")({
       month: z.string().optional(),
     }).parse(s),
 });
+
+const CHANDRA_ID = "674def72-609b-434c-8186-15aa3d351d28";
+const isMainOwner = (oid: string | null | undefined) => !oid || oid === CHANDRA_ID;
 
 function Page() {
   const { t, lang } = useT();
@@ -39,12 +42,6 @@ function Page() {
     queryFn: async () => (await supabase.from("vehicles").select("id,vehicle_no,owner_id").order("vehicle_no")).data ?? [],
   });
 
-  const CHANDRA_ID = "674def72-609b-434c-8186-15aa3d351d28";
-
-  const vehicleNosForFilter = ownerId
-    ? (vehiclesAll as any[]).filter((v) => v.owner_id === ownerId).map((v) => v.vehicle_no)
-    : null;
-
   const buildFilter = <T extends any>(q: any, dateCol: string) => {
     if (date) q = q.eq(dateCol, date);
     else if (month) {
@@ -55,16 +52,11 @@ function Page() {
       q = q.gte(dateCol, start).lt(dateCol, end);
     }
     if (car) q = q.eq("vehicle_no", car);
-    else if (vehicleNosForFilter) q = q.in("vehicle_no", vehicleNosForFilter.length ? vehicleNosForFilter : ["__none__"]);
     return q as Promise<{ data: T[] }>;
   };
 
-  // expenses: scope to selected owner (or Chandra default when no owner)
-  const scopeOwner = (q: any) =>
-    ownerId ? q.eq("owner_id", ownerId) : q.or(`owner_id.is.null,owner_id.eq.${CHANDRA_ID}`);
-
   const trips = useQuery({
-    queryKey: ["db-trips", date, month, car, ownerId],
+    queryKey: ["db-trips", date, month, car],
     queryFn: async () => {
       const q: any = supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(500);
       const { data } = (await buildFilter(q, "trip_date")) as any;
@@ -72,20 +64,17 @@ function Page() {
     },
   });
   const exp = useQuery({
-    queryKey: ["db-exp", date, month, car, ownerId],
+    queryKey: ["db-exp", date, month, car],
     queryFn: async () => {
-      let q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
-      q = scopeOwner(q);
+      const q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(500);
       const { data } = (await buildFilter(q, "expense_date")) as any;
       return (data ?? []) as any[];
     },
   });
-  // other_incomes: independent table. When an owner is selected, exclude (owner accounts don't pull from other_incomes).
   const oth = useQuery({
-    queryKey: ["db-oth", date, month, car, ownerId],
+    queryKey: ["db-oth", date, month, car],
     queryFn: async () => {
-      if (ownerId) return [] as any[];
-      let q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
+      const q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(500);
       const { data } = (await buildFilter(q, "income_date")) as any;
       return (data ?? []) as any[];
     },
@@ -99,12 +88,37 @@ function Page() {
     return o?.name ?? "—";
   };
 
-  const totalJama = (trips.data ?? []).reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-  const totalDena = (trips.data ?? []).reduce((s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-  const totalBalance = totalJama - totalDena;
-  const totalFare = (trips.data ?? []).reduce((s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-  const totalExp = (exp.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
-  const totalOth = (oth.data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+  const ownerName = (oid: string | null | undefined) => (owners as any[]).find((o) => o.id === oid)?.name ?? "—";
+
+  const ownerVehNos = useMemo(() => {
+    const m = new Map<string, string | null>();
+    (vehiclesAll as any[]).forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
+    return m;
+  }, [vehiclesAll]);
+
+  const tripRows = trips.data ?? [];
+  const expRows = exp.data ?? [];
+  const othRows = oth.data ?? [];
+
+  const mainExp = useMemo(() => expRows.filter((r: any) => isMainOwner(r.owner_id)), [expRows]);
+  const mainOth = useMemo(() => othRows.filter((r: any) => isMainOwner(r.owner_id)), [othRows]);
+
+  const ownerMatch = (oid: string | null | undefined) => Boolean(oid && oid !== CHANDRA_ID && (!ownerId || oid === ownerId));
+  const jkTrips = useMemo(() => tripRows.filter((r: any) => ownerMatch(ownerVehNos.get(r.vehicle_no))), [tripRows, ownerVehNos, ownerId]);
+  const jkExp = useMemo(() => expRows.filter((r: any) => ownerMatch(r.owner_id)), [expRows, ownerId]);
+  const jkOth = useMemo(() => othRows.filter((r: any) => ownerMatch(r.owner_id)), [othRows, ownerId]);
+
+  const totalDailyJama = tripRows.reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+  const totalDena = tripRows.reduce((s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+  const totalFare = tripRows.reduce((s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+  const mainExpense = mainExp.reduce((s, r: any) => s + Number(r.amount || 0), 0);
+  const mainOther = mainOth.reduce((s, r: any) => s + Number(r.amount || 0), 0);
+  const mainBalance = totalDailyJama + mainOther - mainExpense;
+
+  const jkFare = jkTrips.reduce((s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+  const jkJama = jkOth.reduce((s, r: any) => s + Number(r.amount || 0), 0);
+  const jkKhoroch = jkExp.reduce((s, r: any) => s + Number(r.amount || 0), 0);
+  const jkBalance = jkFare + jkJama - jkKhoroch;
 
   const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, owner: ownerId || undefined } });
   const clear = () => { setDate(""); setMonth(""); setCar(""); setOwnerId(""); navigate({ search: {} }); };
@@ -134,7 +148,7 @@ function Page() {
             <label className="text-[10px] uppercase text-muted-foreground">{t("searchByOwner")}</label>
             <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
               <option value="">{t("all")}</option>
-              {(owners as any[]).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
+              {(owners as any[]).filter((s) => s.id !== CHANDRA_ID).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
             </select>
           </div>
           <div className="flex items-end gap-2">
@@ -143,29 +157,27 @@ function Page() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label={t("jamaTotal")} value={fmtNum(totalJama, lang)} color="text-emerald-400" />
-          <Stat label={t("denaTotal")} value={fmtNum(totalDena, lang)} color="text-rose-400" />
-          <Stat label={t("balance")} value={fmtNum(totalBalance, lang)} color="text-primary" />
-          <Stat label={t("fareTotal")} value={fmtNum(totalFare, lang)} color="text-amber-400" />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label={`${t("fareTotal")} + ${t("otherIncome")}`} value={fmtNum(totalFare + totalOth, lang)} color="text-emerald-500" />
-          <Stat label={t("otherIncome")} value={fmtNum(totalOth, lang)} color="text-emerald-400" />
-          <Stat label={t("expense")} value={fmtNum(totalExp, lang)} color="text-rose-500" />
-          <Stat label={t("net")} value={fmtNum(totalFare + totalOth - totalExp, lang)} color={(totalFare + totalOth - totalExp) >= 0 ? "text-emerald-500" : "text-rose-500"} />
-        </div>
-
-        <Tabs defaultValue="trips">
-          <TabsList>
-            <TabsTrigger value="trips">{t("dailyAccounts")}</TabsTrigger>
-            <TabsTrigger value="exp">{t("expenses")} ({fmtNum(totalExp, lang)})</TabsTrigger>
-            <TabsTrigger value="oth">{t("otherIncome")} ({fmtNum(totalOth, lang)})</TabsTrigger>
+        <Tabs defaultValue="dashboard">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
+            <TabsTrigger value="trips">দৈনিক জমা</TabsTrigger>
+            <TabsTrigger value="oth">অন্যান্য জমা</TabsTrigger>
+            <TabsTrigger value="exp">দৈনিক খরচ</TabsTrigger>
+            <TabsTrigger value="jk">জমা-খরচ (ওনার)</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Stat label="দৈনিক জমা" value={fmtNum(totalDailyJama, lang)} color="text-emerald-400" />
+              <Stat label="অন্যান্য জমা" value={fmtNum(mainOther, lang)} color="text-emerald-400" />
+              <Stat label="দৈনিক খরচ" value={fmtNum(mainExpense, lang)} color="text-rose-400" />
+              <Stat label="মূল ব্যালেন্স" value={fmtNum(mainBalance, lang)} color={mainBalance >= 0 ? "text-primary" : "text-rose-500"} />
+            </div>
+          </TabsContent>
 
           <TabsContent value="trips">
             <Tbl
-              rows={trips.data ?? []}
+              rows={tripRows}
               cols={[
                 ["serial_no", t("serial"), (v: any) => fmtNum(v, lang)],
                 ["trip_date", t("date"), (v: any) => fmtDate(v, lang)],
@@ -178,38 +190,99 @@ function Page() {
                 ["__route", t("route"), (_: any, r: any) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-"],
                 ["supervisor", t("supervisor")],
               ]}
-              footer={[t("grandTotal"), "", "", "", fmtNum(totalJama, lang), fmtNum(totalDena, lang), fmtNum(totalBalance, lang), fmtNum(totalFare, lang), "", ""]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), "", ""]}
             />
           </TabsContent>
-          <TabsContent value="exp">
-            <Tbl
-              rows={exp.data ?? []}
-              cols={[
-                ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
-                ["__owner", t("owner"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
-                ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
-                ["category", t("category")],
-                ["head", t("head")],
-                ["description", t("description")],
-                ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
-              ]}
-              footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalExp, lang)]}
-            />
-          </TabsContent>
+
           <TabsContent value="oth">
             <Tbl
-              rows={oth.data ?? []}
+              rows={mainOth}
               cols={[
                 ["income_date", t("date"), (v: any) => fmtDate(v, lang)],
-                ["__owner", t("owner"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
                 ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
                 ["category", t("category")],
                 ["head", t("head")],
                 ["description", t("description")],
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
-              footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalOth, lang)]}
+              footer={[t("grandTotal"), "", "", "", "", fmtNum(mainOther, lang)]}
             />
+          </TabsContent>
+
+          <TabsContent value="exp">
+            <Tbl
+              rows={mainExp}
+              cols={[
+                ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
+                ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
+                ["category", t("category")],
+                ["head", t("head")],
+                ["description", t("description")],
+                ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
+              ]}
+              footer={[t("grandTotal"), "", "", "", "", fmtNum(mainExpense, lang)]}
+            />
+          </TabsContent>
+
+          <TabsContent value="jk">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Stat label="গাড়ি ভাড়া" value={fmtNum(jkFare, lang)} color="text-amber-400" />
+                <Stat label="জমা" value={fmtNum(jkJama, lang)} color="text-emerald-400" />
+                <Stat label="খরচ" value={fmtNum(jkKhoroch, lang)} color="text-rose-400" />
+                <Stat label="ব্যালেন্স" value={fmtNum(jkBalance, lang)} color={jkBalance >= 0 ? "text-primary" : "text-rose-500"} />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">গাড়ি ভাড়া (দৈনিক জমা থেকে)</h3>
+                <Tbl
+                  rows={jkTrips}
+                  cols={[
+                    ["trip_date", t("date"), (v: any) => fmtDate(v, lang)],
+                    ["__owner", t("owner"), (_: any, r: any) => ownerName(ownerVehNos.get(r.vehicle_no))],
+                    ["vehicle_no", t("vehicleNo")],
+                    ["__fare", t("fareTotal"), (_: any, r: any) => fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)],
+                  ]}
+                  footer={[t("grandTotal"), "", "", fmtNum(jkFare, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">জমা-খরচ জমা</h3>
+                <Tbl
+                  rows={jkOth}
+                  cols={[
+                    ["income_date", t("date"), (v: any) => fmtDate(v, lang)],
+                    ["owner_id", t("owner"), (v: any) => ownerName(v)],
+                    ["vendor", t("vendors"), (v: any) => v ?? "—"],
+                    ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
+                    ["category", t("category")],
+                    ["head", t("head")],
+                    ["description", t("description")],
+                    ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
+                  ]}
+                  footer={[t("grandTotal"), "", "", "", "", "", "", fmtNum(jkJama, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">জমা-খরচ খরচ</h3>
+                <Tbl
+                  rows={jkExp}
+                  cols={[
+                    ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
+                    ["owner_id", t("owner"), (v: any) => ownerName(v)],
+                    ["vendor", t("vendors"), (v: any) => v ?? "—"],
+                    ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
+                    ["category", t("category")],
+                    ["head", t("head")],
+                    ["description", t("description")],
+                    ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
+                  ]}
+                  footer={[t("grandTotal"), "", "", "", "", "", "", fmtNum(jkKhoroch, lang)]}
+                />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
