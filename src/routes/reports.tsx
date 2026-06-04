@@ -117,7 +117,7 @@ function Page() {
       const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
       lines.push(["ভাড়া", r.trip_date, ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, "-", f].join(","));
     });
-    jkOth.forEach((r: any) => lines.push(["জমা", r.income_date, ownerName(r.owner_id), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
+    jkOth.forEach((r: any) => lines.push(["জমা", r.income_date, ownerName(matchedOwnerId(r)), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
     jkExp.forEach((r: any) => lines.push(["খরচ", r.expense_date, ownerName(matchedOwnerId(r)), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
 
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
