@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { useT, fmtDate } from "@/lib/i18n";
+import { useT, fmtDate, fmtNum } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -76,6 +76,26 @@ function DashboardPage() {
     },
   });
 
+  // মূল পরিবহন হিসাব (সকল ডাটা): দৈনিক জমা + অন্যান্য জমা − দৈনিক খরচ
+  const mainBalance = useQuery({
+    queryKey: ["dash-main-balance"],
+    queryFn: async () => {
+      const [tripsRes, othRes, expRes] = await Promise.all([
+        supabase.from("trips").select("jama_1,jama_2").limit(100000),
+        supabase.from("other_incomes").select("amount").limit(100000),
+        supabase.from("expenses").select("amount").limit(100000),
+      ]);
+      const dailyJama = ((tripsRes.data ?? []) as any[]).reduce(
+        (s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0),
+        0,
+      );
+      const otherJama = ((othRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const dailyExpense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      return { dailyJama, otherJama, dailyExpense, balance: dailyJama + otherJama - dailyExpense };
+    },
+  });
+  const mb = mainBalance.data ?? { dailyJama: 0, otherJama: 0, dailyExpense: 0, balance: 0 };
+
   const tripRows = summary.data ?? [];
   const chartData = chartMode === "tripCount"
     ? Object.entries(
@@ -101,6 +121,26 @@ function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">{t("dashboard")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("overview")}</p>
         </div>
+
+        {/* মূল পরিবহন হিসাব */}
+        <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            মূল পরিবহন হিসাব
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MiniStat label="দৈনিক জমা" value={fmtNum(mb.dailyJama, lang)} color="text-emerald-400" />
+            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherJama, lang)} color="text-emerald-400" />
+            <MiniStat label="দৈনিক খরচ" value={fmtNum(mb.dailyExpense, lang)} color="text-rose-400" />
+            <MiniStat
+              label="ব্যালেন্স"
+              value={fmtNum(mb.balance, lang)}
+              color={mb.balance >= 0 ? "text-sky-400" : "text-rose-500"}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-3">
+            (দৈনিক জমা + অন্যান্য জমা) − দৈনিক খরচ = ব্যালেন্স
+          </p>
+        </Card>
 
         {/* Filters */}
         <Card className="p-4 border-border/50 bg-card/60 backdrop-blur">
@@ -191,6 +231,15 @@ function DashboardPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="rounded-lg border bg-card/60 p-3">
+      <div className="text-[10px] uppercase text-muted-foreground mb-1">{label}</div>
+      <div className={`text-lg font-bold ${color}`}>{value}</div>
+    </div>
   );
 }
 
