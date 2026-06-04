@@ -76,6 +76,26 @@ function DashboardPage() {
     },
   });
 
+  // মূল পরিবহন হিসাব (সকল ডাটা): দৈনিক জমা + অন্যান্য জমা − দৈনিক খরচ
+  const mainBalance = useQuery({
+    queryKey: ["dash-main-balance"],
+    queryFn: async () => {
+      const [tripsRes, othRes, expRes] = await Promise.all([
+        supabase.from("trips").select("jama_1,jama_2").limit(100000),
+        supabase.from("other_incomes").select("amount").limit(100000),
+        supabase.from("expenses").select("amount").limit(100000),
+      ]);
+      const dailyJama = ((tripsRes.data ?? []) as any[]).reduce(
+        (s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0),
+        0,
+      );
+      const otherJama = ((othRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const dailyExpense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      return { dailyJama, otherJama, dailyExpense, balance: dailyJama + otherJama - dailyExpense };
+    },
+  });
+  const mb = mainBalance.data ?? { dailyJama: 0, otherJama: 0, dailyExpense: 0, balance: 0 };
+
   const tripRows = summary.data ?? [];
   const chartData = chartMode === "tripCount"
     ? Object.entries(
