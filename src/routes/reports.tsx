@@ -48,9 +48,17 @@ function Page() {
 
   const data = q.data ?? { trips: [], exp: [], oth: [] };
 
-  // মূল হিসাব: owner_id is null/CHANDRA
-  const mainExp = useMemo(() => data.exp.filter((r: any) => isMainOwner(r.owner_id)), [data.exp]);
-  const mainOth = useMemo(() => data.oth.filter((r: any) => isMainOwner(r.owner_id)), [data.oth]);
+  const ownerVehNos = useMemo(() => {
+    const m = new Map<string, string | null>(); // vehicle_no -> owner_id
+    (vehiclesAll as any[]).forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
+    return m;
+  }, [vehiclesAll]);
+
+  const matchedOwnerId = (r: any) => r.owner_id ?? ownerVehNos.get(r.vehicle_no) ?? null;
+
+  // মূল হিসাব: owner_id/owner vehicle ছাড়া শুধু main transportation
+  const mainExp = useMemo(() => data.exp.filter((r: any) => isMainOwner(matchedOwnerId(r))), [data.exp, ownerVehNos]);
+  const mainOth = useMemo(() => data.oth.filter((r: any) => isMainOwner(matchedOwnerId(r))), [data.oth, ownerVehNos]);
 
   const dailyJama = data.trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const dena = data.trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
@@ -59,14 +67,7 @@ function Page() {
   const mainOtherInc = mainOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const balance = dailyJama + mainOtherInc - mainExpense;
 
-  // ওনারদের জমা-খরচ (owner_id NOT NULL && != CHANDRA)
-  const ownerVehNos = useMemo(() => {
-    const m = new Map<string, string | null>(); // vehicle_no -> owner_id
-    (vehiclesAll as any[]).forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
-    return m;
-  }, [vehiclesAll]);
-
-  const matchedOwnerId = (r: any) => r.owner_id ?? ownerVehNos.get(r.vehicle_no) ?? null;
+  // ওনারদের জমা-খরচ (owner_id/owner vehicle NOT main)
   const isOwnerRow = (r: any) => {
     const oid = matchedOwnerId(r);
     return Boolean(oid && oid !== CHANDRA_ID && (!ownerId || oid === ownerId));
