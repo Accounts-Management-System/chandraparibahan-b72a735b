@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Printer, FileDown } from "lucide-react";
 import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/reports")({ component: Page });
 
 const CHANDRA_ID = "674def72-609b-434c-8186-15aa3d351d28";
+const isMainOwner = (oid: string | null | undefined) => !oid || oid === CHANDRA_ID;
 
 function Page() {
   const { t, lang } = useT();
@@ -21,7 +22,7 @@ function Page() {
   const [from, setFrom] = useState(firstOfMonth);
   const [to, setTo] = useState(today);
   const [car, setCar] = useState("");
-  const [ownerId, setOwnerId] = useState("");
+  const [ownerId, setOwnerId] = useState(""); // for জমা-খরচ tab
 
   const { data: owners = [] } = useQuery({
     queryKey: ["rp-owners"],
@@ -32,47 +33,60 @@ function Page() {
     queryFn: async () => ((await supabase.from("vehicles").select("id,vehicle_no,owner_id").order("vehicle_no")).data ?? []) as any[],
   });
 
-  const vehicleNosForFilter = ownerId
-    ? (vehiclesAll as any[]).filter((v) => v.owner_id === ownerId).map((v) => v.vehicle_no)
-    : null;
-
-  const buildFilter = (q: any, dateCol: string) => {
-    q = q.gte(dateCol, from).lte(dateCol, to);
-    if (car) q = q.eq("vehicle_no", car);
-    else if (vehicleNosForFilter) q = q.in("vehicle_no", vehicleNosForFilter.length ? vehicleNosForFilter : ["__none__"]);
-    return q;
-  };
-  const scopeOwner = (q: any) => (ownerId ? q.eq("owner_id", ownerId) : q.or(`owner_id.is.null,owner_id.eq.${CHANDRA_ID}`));
-
   const q = useQuery({
-    queryKey: ["report", from, to, car, ownerId],
+    queryKey: ["report-all", from, to, car],
     queryFn: async () => {
-      const tripsQ = buildFilter(supabase.from("trips").select("*").order("trip_date").order("serial_no"), "trip_date");
-      const expQ = buildFilter(scopeOwner(supabase.from("expenses").select("*").order("expense_date")), "expense_date");
-      // other_incomes: independent — skip when owner selected (owner accounts don't pull from other_incomes)
-      const othQ = ownerId
-        ? Promise.resolve({ data: [] as any[] })
-        : supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date");
-      const [trips, exp, oth] = await Promise.all([tripsQ, expQ, othQ]);
+      let tQ = supabase.from("trips").select("*").gte("trip_date", from).lte("trip_date", to).order("trip_date").order("serial_no");
+      if (car) tQ = tQ.eq("vehicle_no", car);
+      let eQ = supabase.from("expenses").select("*").gte("expense_date", from).lte("expense_date", to).order("expense_date");
+      if (car) eQ = eQ.eq("vehicle_no", car);
+      let oQ = supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date");
+      const [trips, exp, oth] = await Promise.all([tQ, eQ, oQ]);
       return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [] };
     },
   });
 
   const data = q.data ?? { trips: [], exp: [], oth: [] };
-  const jama = data.trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+
+  // মূল হিসাব: owner_id is null/CHANDRA
+  const mainExp = useMemo(() => data.exp.filter((r: any) => isMainOwner(r.owner_id)), [data.exp]);
+  const mainOth = useMemo(() => data.oth.filter((r: any) => isMainOwner(r.owner_id)), [data.oth]);
+
+  const dailyJama = data.trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const dena = data.trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
   const fares = data.trips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-  const expense = data.exp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const otherInc = data.oth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const income = fares + jama + otherInc;
-  const totalExpense = expense + dena;
+  const mainExpense = mainExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const mainOtherInc = mainOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const balance = dailyJama + mainOtherInc - mainExpense;
+
+  // ওনারদের জমা-খরচ (owner_id NOT NULL && != CHANDRA)
+  const ownerVehNos = useMemo(() => {
+    const m = new Map<string, string>(); // vehicle_no -> owner_id
+    (vehiclesAll as any[]).forEach((v) => { if (v.owner_id) m.set(v.vehicle_no, v.owner_id); });
+    return m;
+  }, [vehiclesAll]);
+
+  const jkTrips = useMemo(() => data.trips.filter((r: any) => {
+    const oid = ownerVehNos.get(r.vehicle_no);
+    if (!oid || oid === CHANDRA_ID) return false;
+    return ownerId ? oid === ownerId : true;
+  }), [data.trips, ownerVehNos, ownerId]);
+  const jkExp = useMemo(() => data.exp.filter((r: any) => r.owner_id && r.owner_id !== CHANDRA_ID && (!ownerId || r.owner_id === ownerId)), [data.exp, ownerId]);
+  const jkOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.owner_id !== CHANDRA_ID && (!ownerId || r.owner_id === ownerId)), [data.oth, ownerId]);
+
+  const jkFares = jkTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+  const jkExpSum = jkExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const jkOthSum = jkOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const jkBalance = jkFares + jkOthSum - jkExpSum;
+
+  const ownerName = (oid: string | null | undefined) => (owners as any[]).find((o) => o.id === oid)?.name ?? "—";
 
   const exportCsv = () => {
     const lines: string[] = [];
     lines.push("Chandra Paribahan Report");
     lines.push(`From,${from},To,${to}`);
     lines.push("");
-    lines.push("Trips");
+    lines.push("দৈনিক জমা (Trips)");
     lines.push("Serial,Date,Vehicle,Jama,Dena,Balance,Fare,Route,Supervisor");
     data.trips.forEach((r: any) => {
       const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
@@ -82,13 +96,22 @@ function Page() {
       lines.push([r.serial_no ?? "", r.trip_date, r.vehicle_no, j, d, j - d, f, rt, r.supervisor ?? ""].join(","));
     });
     lines.push("");
-    lines.push("Expenses");
-    lines.push("Date,Category,Vehicle,Amount");
-    data.exp.forEach((r: any) => lines.push([r.expense_date, r.category, r.vehicle_no ?? "", r.amount].join(",")));
-    lines.push("");
-    lines.push("Other Incomes");
+    lines.push("অন্যান্য জমা (Main)");
     lines.push("Date,Category,Amount");
-    data.oth.forEach((r: any) => lines.push([r.income_date, r.category, r.amount].join(",")));
+    mainOth.forEach((r: any) => lines.push([r.income_date, r.category, r.amount].join(",")));
+    lines.push("");
+    lines.push("দৈনিক খরচ (Main)");
+    lines.push("Date,Category,Vehicle,Amount");
+    mainExp.forEach((r: any) => lines.push([r.expense_date, r.category, r.vehicle_no ?? "", r.amount].join(",")));
+    lines.push("");
+    lines.push("জমা-খরচ (Owners)");
+    lines.push("Type,Date,Owner,Vehicle,Category,Amount");
+    jkTrips.forEach((r: any) => {
+      const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
+      lines.push(["ভাড়া", r.trip_date, ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, "-", f].join(","));
+    });
+    jkOth.forEach((r: any) => lines.push(["জমা", r.income_date, ownerName(r.owner_id), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
+    jkExp.forEach((r: any) => lines.push(["খরচ", r.expense_date, ownerName(r.owner_id), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
 
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -112,7 +135,7 @@ function Page() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
             <Button variant="outline" onClick={() => {
-              const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ${t("income")}: ${fmtNum(income, lang)} · ${t("expense")}: ${fmtNum(totalExpense, lang)} · ${t("net")}: ${fmtNum(income - totalExpense, lang)}`;
+              const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · দৈনিক জমা: ${fmtNum(dailyJama, lang)} · অন্যান্য জমা: ${fmtNum(mainOtherInc, lang)} · দৈনিক খরচ: ${fmtNum(mainExpense, lang)} · ব্যালেন্স: ${fmtNum(balance, lang)}`;
               exportPdf({
                 title: `${t("brand")} — ${t("reports")}`,
                 subtitle: sub,
@@ -147,10 +170,10 @@ function Page() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] uppercase text-muted-foreground">{t("searchByOwner")}</label>
+            <label className="text-[10px] uppercase text-muted-foreground">ওনার (জমা-খরচ)</label>
             <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
               <option value="">{t("all")}</option>
-              {(owners as any[]).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
+              {(owners as any[]).filter((o) => o.id !== CHANDRA_ID).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
             </select>
           </div>
           <div className="flex items-end">
@@ -163,21 +186,35 @@ function Page() {
           <p className="text-sm text-center">{fmtDate(from, lang)} → {fmtDate(to, lang)}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label={t("income")} value={fmtNum(income, lang)} color="text-emerald-400" />
-          <Stat label={t("expense")} value={fmtNum(totalExpense, lang)} color="text-rose-400" />
-          <Stat label={t("net")} value={fmtNum(income - totalExpense, lang)} color="text-sky-400" />
-          <Stat label={t("fareTotal")} value={fmtNum(fares, lang)} color="text-amber-400" />
-        </div>
-
-        <Tabs defaultValue="trips">
-          <TabsList>
-            <TabsTrigger value="trips">{t("dailyAccounts")} ({fmtNum(data.trips.length, lang)})</TabsTrigger>
-            <TabsTrigger value="exp">{t("expenses")} ({fmtNum(expense, lang)})</TabsTrigger>
-            <TabsTrigger value="oth">{t("otherIncome")} ({fmtNum(otherInc, lang)})</TabsTrigger>
+        <Tabs defaultValue="dashboard">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
+            <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(data.trips.length, lang)})</TabsTrigger>
+            <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(mainOtherInc, lang)})</TabsTrigger>
+            <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(mainExpense, lang)})</TabsTrigger>
+            <TabsTrigger value="jk">জমা-খরচ (ওনার)</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="trips">
+          {/* Dashboard: মূল হিসাব summary */}
+          <TabsContent value="dashboard">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
+              <Stat label="অন্যান্য জমা" value={fmtNum(mainOtherInc, lang)} color="text-emerald-400" />
+              <Stat label="দৈনিক খরচ" value={fmtNum(mainExpense, lang)} color="text-rose-400" />
+              <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">মূল হিসাব = (দৈনিক জমা + অন্যান্য জমা) − দৈনিক খরচ</p>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Stat label="গাড়ি ভাড়া (ওনার)" value={fmtNum(jkFares, lang)} color="text-amber-400" />
+              <Stat label="জমা-খরচ জমা (ওনার)" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
+              <Stat label="জমা-খরচ খরচ (ওনার)" value={fmtNum(jkExpSum, lang)} color="text-rose-400" />
+              <Stat label="ওনার ব্যালেন্স" value={fmtNum(jkBalance, lang)} color={jkBalance >= 0 ? "text-sky-400" : "text-rose-500"} />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">ওনার হিসাব = (গাড়ি ভাড়া + জমা-খরচ জমা) − জমা-খরচ খরচ</p>
+          </TabsContent>
+
+          <TabsContent value="jama">
             <Section
               headers={[t("serial"), t("date"), t("vehicleNo"), t("jamaTotal"), t("denaTotal"), t("balance"), t("fareTotal"), t("route"), t("supervisor")]}
               rows={data.trips}
@@ -187,24 +224,70 @@ function Page() {
                 const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
                 return [fmtNum(r.serial_no, lang), fmtDate(r.trip_date, lang), r.vehicle_no, fmtNum(j, lang), fmtNum(d, lang), fmtNum(j - d, lang), fmtNum(f, lang), [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-", r.supervisor ?? "-"];
               }}
-              footer={[t("grandTotal"), "", "", fmtNum(jama, lang), fmtNum(dena, lang), fmtNum(jama - dena, lang), fmtNum(fares, lang), "", ""]}
+              footer={[t("grandTotal"), "", "", fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(dailyJama - dena, lang), fmtNum(fares, lang), "", ""]}
             />
           </TabsContent>
+
+          <TabsContent value="other">
+            <Section
+              headers={[t("date"), t("category"), t("amount")]}
+              rows={mainOth}
+              cells={(r: any) => [fmtDate(r.income_date, lang), r.category, fmtNum(r.amount, lang)]}
+              footer={[t("grandTotal"), "", fmtNum(mainOtherInc, lang)]}
+            />
+          </TabsContent>
+
           <TabsContent value="exp">
             <Section
               headers={[t("date"), t("category"), t("vehicleNo"), t("amount")]}
-              rows={data.exp}
+              rows={mainExp}
               cells={(r: any) => [fmtDate(r.expense_date, lang), r.category, r.vehicle_no ?? "-", fmtNum(r.amount, lang)]}
-              footer={[t("grandTotal"), "", "", fmtNum(expense, lang)]}
+              footer={[t("grandTotal"), "", "", fmtNum(mainExpense, lang)]}
             />
           </TabsContent>
-          <TabsContent value="oth">
-            <Section
-              headers={[t("date"), t("category"), t("amount")]}
-              rows={data.oth}
-              cells={(r: any) => [fmtDate(r.income_date, lang), r.category, fmtNum(r.amount, lang)]}
-              footer={[t("grandTotal"), "", fmtNum(otherInc, lang)]}
-            />
+
+          <TabsContent value="jk">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Stat label="গাড়ি ভাড়া" value={fmtNum(jkFares, lang)} color="text-amber-400" />
+                <Stat label="জমা" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
+                <Stat label="খরচ" value={fmtNum(jkExpSum, lang)} color="text-rose-400" />
+                <Stat label="ব্যালেন্স" value={fmtNum(jkBalance, lang)} color={jkBalance >= 0 ? "text-sky-400" : "text-rose-500"} />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">গাড়ি ভাড়া (দৈনিক জমা থেকে)</h3>
+                <Section
+                  headers={[t("date"), "ওনার", t("vehicleNo"), t("fareTotal")]}
+                  rows={jkTrips}
+                  cells={(r: any) => {
+                    const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
+                    return [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(f, lang)];
+                  }}
+                  footer={[t("grandTotal"), "", "", fmtNum(jkFares, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">জমা-খরচ জমা</h3>
+                <Section
+                  headers={[t("date"), "ওনার", t("category"), t("amount")]}
+                  rows={jkOth}
+                  cells={(r: any) => [fmtDate(r.income_date, lang), ownerName(r.owner_id), r.category, fmtNum(r.amount, lang)]}
+                  footer={[t("grandTotal"), "", "", fmtNum(jkOthSum, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">জমা-খরচ খরচ</h3>
+                <Section
+                  headers={[t("date"), "ওনার", t("category"), t("amount")]}
+                  rows={jkExp}
+                  cells={(r: any) => [fmtDate(r.expense_date, lang), ownerName(r.owner_id), r.category, fmtNum(r.amount, lang)]}
+                  footer={[t("grandTotal"), "", "", fmtNum(jkExpSum, lang)]}
+                />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
