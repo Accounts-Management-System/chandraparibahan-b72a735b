@@ -57,12 +57,13 @@ function Page() {
   const matchedOwnerId = (r: any) => r.owner_id ?? ownerVehNos.get(r.vehicle_no) ?? null;
 
   // মূল হিসাব: owner_id/owner vehicle ছাড়া শুধু main transportation
+  const mainTrips = useMemo(() => data.trips.filter((r: any) => isMainOwner(ownerVehNos.get(r.vehicle_no))), [data.trips, ownerVehNos]);
   const mainExp = useMemo(() => data.exp.filter((r: any) => isMainOwner(matchedOwnerId(r))), [data.exp, ownerVehNos]);
   const mainOth = useMemo(() => data.oth.filter((r: any) => isMainOwner(matchedOwnerId(r))), [data.oth, ownerVehNos]);
 
-  const dailyJama = data.trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-  const dena = data.trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-  const fares = data.trips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+  const dailyJama = mainTrips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+  const dena = mainTrips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+  const fares = mainTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const mainExpense = mainExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const mainOtherInc = mainOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const balance = (dailyJama - dena) + mainOtherInc - mainExpense;
