@@ -120,14 +120,9 @@ function Page() {
     lines.push("Date,Category,Vehicle,Amount");
     mainExp.forEach((r: any) => lines.push([r.expense_date, r.category, r.vehicle_no ?? "", r.amount].join(",")));
     lines.push("");
-    lines.push("জমা-খরচ (Owners)");
-    lines.push("Type,Date,Owner,Vehicle,Category,Amount");
-    jkTrips.forEach((r: any) => {
-      const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
-      lines.push(["ভাড়া", r.trip_date, ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, "-", f].join(","));
-    });
-    jkOth.forEach((r: any) => lines.push(["জমা", r.income_date, ownerName(matchedOwnerId(r)), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
-    jkExp.forEach((r: any) => lines.push(["খরচ", r.expense_date, ownerName(matchedOwnerId(r)), r.vehicle_no ?? "-", r.category, r.amount].join(",")));
+    lines.push("ওনার হিসাব (গাড়ির ভাড়া)");
+    lines.push("Vehicle,Owner,Trips,Total Fare");
+    jkByVehicle.forEach((v) => lines.push([v.vno, v.owner, v.trips, v.fare].join(",")));
 
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -157,16 +152,14 @@ function Page() {
   };
 
   const exportOwnerPdf = () => {
-    const fareRows = jkTrips.map((r: any) => [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)]);
-    const othRows = jkOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category ?? "—", r.head ?? "—", fmtNum(r.amount, lang)]);
-    const expRows = jkExp.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category ?? "—", r.head ?? "—", fmtNum(r.amount, lang)]);
+    const vehRows = jkByVehicle.map((v) => [v.vno, v.owner, fmtNum(v.trips, lang), fmtNum(v.fare, lang)]);
+    const tripRows = jkTrips.map((r: any) => [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)]);
     const body =
-      `<div class="totals" style="border:0;margin:0 0 10px"><span>গাড়ি ভাড়া: ${esc(fmtNum(jkFares, lang))}</span><span>জমা: ${esc(fmtNum(jkOthSum, lang))}</span><span>খরচ: ${esc(fmtNum(jkExpSum, lang))}</span><span>ব্যালেন্স: ${esc(fmtNum(jkBalance, lang))}</span></div>` +
-      tbl("গাড়ি ভাড়া (দৈনিক জমা থেকে)", [t("date"), "ওনার", t("vehicleNo"), t("fareTotal")], fareRows, [t("grandTotal"), "", "", fmtNum(jkFares, lang)]) +
-      tbl("জমা-খরচ — জমা", [t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("head"), t("amount")], othRows, [t("grandTotal"), "", "", "", "", "", fmtNum(jkOthSum, lang)]) +
-      tbl("জমা-খরচ — খরচ", [t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("head"), t("amount")], expRows, [t("grandTotal"), "", "", "", "", "", fmtNum(jkExpSum, lang)]);
+      `<div class="totals" style="border:0;margin:0 0 10px"><span>মোট গাড়ি ভাড়া: ${esc(fmtNum(jkFares, lang))}</span><span>মোট ট্রিপ: ${esc(fmtNum(jkTrips.length, lang))}</span></div>` +
+      tbl("গাড়ি অনুযায়ী ভাড়া", [t("vehicleNo"), "ওনার", "ট্রিপ সংখ্যা", t("fareTotal")], vehRows, [t("grandTotal"), "", fmtNum(jkTrips.length, lang), fmtNum(jkFares, lang)]) +
+      tbl("ট্রিপ বিবরণ", [t("date"), "ওনার", t("vehicleNo"), t("fareTotal")], tripRows, [t("grandTotal"), "", "", fmtNum(jkFares, lang)]);
     const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ওনার: ${ownerId ? ownerName(ownerId) : "সকল"}`;
-    exportPdfHtml({ title: `${t("brand")} — জমা-খরচ (ওনার)`, subtitle: subt, body, orientation: "landscape" });
+    exportPdfHtml({ title: `${t("brand")} — ওনার হিসাব (গাড়ির ভাড়া)`, subtitle: subt, body, orientation: "landscape" });
   };
 
   const clear = () => { setCar(""); setOwnerId(""); setFrom(firstOfMonth); setTo(today); };
