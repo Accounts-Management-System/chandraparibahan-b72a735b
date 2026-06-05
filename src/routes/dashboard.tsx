@@ -133,8 +133,9 @@ function DashboardPage() {
 
         {/* মূল পরিবহন হিসাব */}
         <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
-            মূল পরিবহন হিসাব
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-between">
+            <span>মূল পরিবহন হিসাব</span>
+            <span className="text-foreground">মোট ট্রিপ: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <MiniStat label="দৈনিক জমা" value={fmtNum(mb.dailyJama, lang)} color="text-emerald-400" />
