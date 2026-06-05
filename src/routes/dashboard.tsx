@@ -76,34 +76,26 @@ function DashboardPage() {
     },
   });
 
-  // মূল পরিবহন হিসাব: ওনার গাড়ি/হিসাব বাদ
+  // মূল পরিবহন হিসাব: সব ট্রিপ; অন্যান্য জমা ও খরচ থেকে owner_id null শুধু
   const mainBalance = useQuery({
     queryKey: ["dash-main-balance"],
     queryFn: async () => {
-      const [tripsRes, othRes, expRes, vehRes] = await Promise.all([
-        supabase.from("trips").select("vehicle_no,jama_1,jama_2,dena_1,dena_2").limit(100000),
-        supabase.from("other_incomes").select("vehicle_no,owner_id,amount").limit(100000),
-        supabase.from("expenses").select("vehicle_no,owner_id,amount").limit(100000),
-        supabase.from("vehicles").select("vehicle_no,owner_id"),
+      const [tripsRes, othRes, expRes] = await Promise.all([
+        supabase.from("trips").select("vehicle_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000),
+        supabase.from("other_incomes").select("owner_id,amount").is("owner_id", null).limit(100000),
+        supabase.from("expenses").select("owner_id,amount").is("owner_id", null).limit(100000),
       ]);
-      const CHANDRA = "674def72-609b-434c-8186-15aa3d351d28";
-      const vmap = new Map<string, string | null>();
-      ((vehRes.data ?? []) as any[]).forEach((v) => vmap.set(v.vehicle_no, v.owner_id ?? null));
-      const isMain = (oid: string | null | undefined) => !oid || oid === CHANDRA;
-      const mainTrips = ((tripsRes.data ?? []) as any[]).filter((r) => isMain(vmap.get(r.vehicle_no)));
-      const dailyJama = mainTrips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-      const dena = mainTrips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const otherJama = ((othRes.data ?? []) as any[])
-        .filter((r) => isMain(r.owner_id ?? vmap.get(r.vehicle_no) ?? null))
-        .reduce((s, r) => s + Number(r.amount || 0), 0);
-      const dailyExpense = ((expRes.data ?? []) as any[])
-        .filter((r) => isMain(r.owner_id ?? vmap.get(r.vehicle_no) ?? null))
-        .reduce((s, r) => s + Number(r.amount || 0), 0);
-      const netJama = dailyJama - dena;
-      return { dailyJama, dena, netJama, otherJama, dailyExpense, balance: netJama + otherJama - dailyExpense, tripCount: mainTrips.length };
+      const trips = (tripsRes.data ?? []) as any[];
+      const dailyJama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+      const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+      const fare = trips.reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+      const otherJama = ((othRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const dailyExpense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      return { dailyJama, dena, fare, otherJama, dailyExpense, balance: (dailyJama - dena) + otherJama - dailyExpense, tripCount: trips.length };
     },
   });
-  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, netJama: 0, otherJama: 0, dailyExpense: 0, balance: 0, tripCount: 0 };
+  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, fare: 0, otherJama: 0, dailyExpense: 0, balance: 0, tripCount: 0 };
+
 
   const tripRows = summary.data ?? [];
   const chartData = chartMode === "tripCount"
