@@ -104,7 +104,7 @@ function Page() {
     lines.push("");
     lines.push("দৈনিক জমা (Trips)");
     lines.push("Serial,Date,Vehicle,Jama,Dena,Balance,Fare,Route,Supervisor");
-    data.trips.forEach((r: any) => {
+    mainTrips.forEach((r: any) => {
       const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
       const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
       const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
@@ -180,7 +180,7 @@ function Page() {
                 title: `${t("brand")} — ${t("reports")}`,
                 subtitle: sub,
                 headers: [t("serial"), t("date"), t("vehicleNo"), t("jamaTotal"), t("denaTotal"), t("balance"), t("fareTotal"), t("route"), t("supervisor")],
-                rows: data.trips.map((r: any) => {
+                rows: mainTrips.map((r: any) => {
                   const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
                   const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
                   const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
@@ -229,10 +229,10 @@ function Page() {
         <Tabs defaultValue="dashboard">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
-            <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(data.trips.length, lang)})</TabsTrigger>
+            <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(totalTripCount, lang)} ট্রিপ)</TabsTrigger>
             <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(mainOtherInc, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(mainExpense, lang)})</TabsTrigger>
-            <TabsTrigger value="jk">জমা-খরচ (ওনার)</TabsTrigger>
+            <TabsTrigger value="jk">ওনার হিসাব</TabsTrigger>
           </TabsList>
 
           {/* Dashboard: মূল হিসাব T-account */}
@@ -274,19 +274,26 @@ function Page() {
             </div>
             <p className="text-xs text-muted-foreground mt-2">মূল হিসাব = (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-              <Stat label="গাড়ি ভাড়া (ওনার)" value={fmtNum(jkFares, lang)} color="text-amber-400" />
-              <Stat label="জমা-খরচ জমা (ওনার)" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
-              <Stat label="জমা-খরচ খরচ (ওনার)" value={fmtNum(jkExpSum, lang)} color="text-rose-400" />
-              <Stat label="ওনার ব্যালেন্স" value={fmtNum(jkBalance, lang)} color={jkBalance >= 0 ? "text-sky-400" : "text-rose-500"} />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+              <Stat label="ওনারদের মোট গাড়ি ভাড়া" value={fmtNum(jkFares, lang)} color="text-amber-400" />
+              <Stat label="ওনারদের মোট ট্রিপ" value={fmtNum(jkTrips.length, lang)} color="text-sky-400" />
+              <Stat label="ওনার গাড়ি সংখ্যা" value={fmtNum(jkByVehicle.length, lang)} color="text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground mt-2">ওনার হিসাব = (গাড়ি ভাড়া + জমা-খরচ জমা) − জমা-খরচ খরচ</p>
+            <p className="text-xs text-muted-foreground mt-2">ওনার হিসাব = শুধু গাড়ি ভাড়া (পরিবহন/মূল হিসাব এখানে নেই)</p>
           </TabsContent>
 
           <TabsContent value="jama">
+            <div className="rounded-md border bg-card/60 p-3 mb-3 flex flex-wrap gap-3 text-sm">
+              <span className="font-semibold">মোট ট্রিপ: <span className="text-primary">{fmtNum(totalTripCount, lang)}</span></span>
+              <span className="text-muted-foreground">·</span>
+              <span>তারিখ অনুযায়ী:</span>
+              {tripCountByDate.map(([d, c]) => (
+                <span key={d} className="px-2 py-0.5 rounded bg-muted/60">{fmtDate(d, lang)}: {fmtNum(c, lang)}</span>
+              ))}
+            </div>
             <Section
               headers={[t("serial"), t("date"), t("vehicleNo"), t("jamaTotal"), t("denaTotal"), t("balance"), t("fareTotal"), t("route"), t("supervisor")]}
-              rows={data.trips}
+              rows={mainTrips}
               cells={(r: any) => {
                 const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
                 const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
@@ -322,15 +329,24 @@ function Page() {
                   <FileDown className="h-4 w-4 mr-2" />ওনার হিসাব PDF (Landscape)
                 </Button>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Stat label="গাড়ি ভাড়া" value={fmtNum(jkFares, lang)} color="text-amber-400" />
-                <Stat label="জমা" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
-                <Stat label="খরচ" value={fmtNum(jkExpSum, lang)} color="text-rose-400" />
-                <Stat label="ব্যালেন্স" value={fmtNum(jkBalance, lang)} color={jkBalance >= 0 ? "text-sky-400" : "text-rose-500"} />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Stat label="মোট গাড়ি ভাড়া" value={fmtNum(jkFares, lang)} color="text-amber-400" />
+                <Stat label="মোট ট্রিপ" value={fmtNum(jkTrips.length, lang)} color="text-sky-400" />
+                <Stat label="গাড়ি সংখ্যা" value={fmtNum(jkByVehicle.length, lang)} color="text-primary" />
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">গাড়ি ভাড়া (দৈনিক জমা থেকে)</h3>
+                <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া (যোগফল)</h3>
+                <Section
+                  headers={[t("vehicleNo"), "ওনার", "ট্রিপ সংখ্যা", t("fareTotal")]}
+                  rows={jkByVehicle}
+                  cells={(v: any) => [v.vno, v.owner, fmtNum(v.trips, lang), fmtNum(v.fare, lang)]}
+                  footer={[t("grandTotal"), "", fmtNum(jkTrips.length, lang), fmtNum(jkFares, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">ট্রিপ বিবরণ</h3>
                 <Section
                   headers={[t("date"), "ওনার", t("vehicleNo"), t("fareTotal")]}
                   rows={jkTrips}
@@ -339,26 +355,6 @@ function Page() {
                     return [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(f, lang)];
                   }}
                   footer={[t("grandTotal"), "", "", fmtNum(jkFares, lang)]}
-                />
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচ জমা</h3>
-                <Section
-                  headers={[t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("amount")]}
-                  rows={jkOth}
-                  cells={(r: any) => [fmtDate(r.income_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category, fmtNum(r.amount, lang)]}
-                  footer={[t("grandTotal"), "", "", "", "", fmtNum(jkOthSum, lang)]}
-                />
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচ খরচ</h3>
-                <Section
-                  headers={[t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("amount")]}
-                  rows={jkExp}
-                  cells={(r: any) => [fmtDate(r.expense_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category, fmtNum(r.amount, lang)]}
-                  footer={[t("grandTotal"), "", "", "", "", fmtNum(jkExpSum, lang)]}
                 />
               </div>
             </div>
