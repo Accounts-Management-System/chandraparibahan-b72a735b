@@ -247,4 +247,76 @@ function Page() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <Stat label="মোট গাড়ি ভাড়া" value={fmtNum(jkFare, lang)} color="text-amber-400" />
-                <Stat label="মোট ট্রিপ" value={fmtNum(
+                <Stat label="মোট ট্রিপ" value={fmtNum(jkTrips.length, lang)} color="text-sky-400" />
+                <Stat label="গাড়ি সংখ্যা" value={fmtNum(jkByVehicle.length, lang)} color="text-primary" />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া (যোগফল)</h3>
+                <Tbl
+                  rows={jkByVehicle}
+                  cols={[
+                    ["vno", t("vehicleNo")],
+                    ["owner", t("owner")],
+                    ["trips", "ট্রিপ সংখ্যা", (v: any) => fmtNum(v, lang)],
+                    ["fare", t("fareTotal"), (v: any) => fmtNum(v, lang)],
+                  ]}
+                  footer={[t("grandTotal"), "", fmtNum(jkTrips.length, lang), fmtNum(jkFare, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">ট্রিপ বিবরণ</h3>
+                <Tbl
+                  rows={jkTrips}
+                  cols={[
+                    ["trip_date", t("date"), (v: any) => fmtDate(v, lang)],
+                    ["__owner", t("owner"), (_: any, r: any) => ownerName(ownerVehNos.get(r.vehicle_no))],
+                    ["vehicle_no", t("vehicleNo")],
+                    ["__fare", t("fareTotal"), (_: any, r: any) => fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)],
+                  ]}
+                  footer={[t("grandTotal"), "", "", fmtNum(jkFare, lang)]}
+                />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AppLayout>
+  );
+}
+
+function Stat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="border bg-card/70 backdrop-blur rounded-lg p-4">
+      <div className="text-xs text-muted-foreground mb-1">{label}</div>
+      <div className={`text-xl font-bold ${color}`}>{value}</div>
+    </div>
+  );
+}
+
+function Tbl({ rows, cols, footer }: { rows: any[]; cols: [string, string, ((v: any, r?: any) => any)?][]; footer?: (string | number)[] }) {
+  const { t } = useT();
+  return (
+    <div className="overflow-x-auto rounded-md border bg-card/70 backdrop-blur">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/60">
+          <tr>{cols.map(([k, h]) => <th key={k} className="text-left px-3 py-2 font-semibold">{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && <tr><td colSpan={cols.length} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>}
+          {rows.map((r, idx) => (
+            <tr key={r.id ?? idx} className="border-t">
+              {cols.map(([k, , fmt]) => <td key={k} className="px-3 py-2">{fmt ? fmt(r[k], r) : (r[k] ?? "-")}</td>)}
+            </tr>
+          ))}
+        </tbody>
+        {footer && rows.length > 0 && (
+          <tfoot className="bg-muted/40 font-bold border-t">
+            <tr>{footer.map((c, i) => <td key={i} className="px-3 py-2">{c}</td>)}</tr>
+          </tfoot>
+        )}
+      </table>
+    </div>
+  );
+}
