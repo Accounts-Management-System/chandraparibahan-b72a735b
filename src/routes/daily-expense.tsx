@@ -18,7 +18,7 @@ function Page() {
   const { data: expenses = [] } = useQuery({
     queryKey: ["de-expenses"],
     queryFn: async () =>
-      ((await supabase.from("expenses").select("id,expense_date,vehicle_no,category,head,description,amount").order("expense_date", { ascending: false }).limit(5000)).data ?? []) as any[],
+      ((await supabase.from("expenses").select("id,expense_date,vehicle_no,category,head,description,amount,owner_id").order("expense_date", { ascending: false }).limit(5000)).data ?? []) as any[],
   });
   const { data: trips = [] } = useQuery({
     queryKey: ["de-trips"],
@@ -32,10 +32,22 @@ function Page() {
     queryKey: ["de-vehicles"],
     queryFn: async () => ((await supabase.from("vehicles").select("vehicle_no,owner_id")).data ?? []) as any[],
   });
+  const { data: ownersAll = [] } = useQuery({
+    queryKey: ["de-owners"],
+    queryFn: async () => ((await supabase.from("owners").select("id,name")).data ?? []) as any[],
+  });
+
+  const ownerVehNos = useMemo(() => {
+    const m = new Map<string, string | null>();
+    (vehiclesAll as any[]).forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
+    return m;
+  }, [vehiclesAll]);
+  const ownerName = (oid: string | null | undefined) => (ownersAll as any[]).find((o) => o.id === oid)?.name ?? "—";
+  const rowOwner = (r: any) => ownerName(r.owner_id ?? ownerVehNos.get(r.vehicle_no ?? "") ?? null);
 
   const ownerVehicleSet = useMemo(() => {
     if (!filters.ownerId) return null;
-    return new Set(vehiclesAll.filter((v: any) => v.owner_id === filters.ownerId).map((v: any) => v.vehicle_no));
+    return new Set((vehiclesAll as any[]).filter((v: any) => v.owner_id === filters.ownerId).map((v: any) => v.vehicle_no));
   }, [filters.ownerId, vehiclesAll]);
 
   const passes = (date: string, vno: string | null, category?: string | null, head?: string | null) => {
@@ -45,10 +57,10 @@ function Page() {
   };
 
   const rows = useMemo(() => {
-    return expenses
+    return (expenses as any[])
       .filter((r: any) => passes(r.expense_date, r.vehicle_no, r.category, r.head))
-      .map((r: any) => ({ id: r.id, date: r.expense_date, vehicle_no: r.vehicle_no, head: r.head, description: r.description, amount: Number(r.amount || 0) }));
-  }, [expenses, filters, ownerVehicleSet]);
+      .map((r: any) => ({ id: r.id, date: r.expense_date, vehicle_no: r.vehicle_no, owner: rowOwner(r), head: r.head, description: r.description, amount: Number(r.amount || 0) }));
+  }, [expenses, filters, ownerVehicleSet, ownerVehNos, ownersAll]);
 
   const totalExpense = rows.reduce((s, r) => s + r.amount, 0);
   const totalFare = trips.filter((r: any) => passes(r.trip_date, r.vehicle_no)).reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
