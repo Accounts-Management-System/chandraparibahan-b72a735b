@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { Download, Printer, FileDown } from "lucide-react";
-import { exportPdf } from "@/lib/exportPdf";
+import { exportPdf, exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/reports")({ component: Page });
 
@@ -65,7 +65,7 @@ function Page() {
   const fares = data.trips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const mainExpense = mainExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const mainOtherInc = mainOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const balance = dailyJama + mainOtherInc - mainExpense;
+  const balance = (dailyJama - dena) + mainOtherInc - mainExpense;
 
   // ওনারদের জমা-খরচ (owner_id/owner vehicle NOT main)
   const isOwnerRow = (r: any) => {
@@ -127,6 +127,37 @@ function Page() {
     a.download = `chandra-report-${from}_to_${to}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const tbl = (title: string, headers: string[], rows: any[][], footer?: (string | number)[]) =>
+    `<h2>${esc(title)}</h2><table><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>` +
+    `<tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>` +
+    (footer ? `<tfoot><tr>${footer.map((c) => `<td>${esc(c)}</td>`).join("")}</tr></tfoot>` : "") +
+    `</table>`;
+
+  const exportMainTAccount = () => {
+    const credits: [string, number][] = [["দৈনিক জমা", dailyJama], ["অন্যান্য জমা", mainOtherInc]];
+    const debits: [string, number][] = [["দেনা", dena], ["দৈনিক খরচ", mainExpense]];
+    const totalCr = credits.reduce((s, [, v]) => s + v, 0);
+    const totalDr = debits.reduce((s, [, v]) => s + v, 0);
+    const left = `<table><thead><tr><th>বিবরণ (ক্রেডিট / জমা)</th><th style="text-align:right">টাকা</th></tr></thead><tbody>${credits.map(([k, v]) => `<tr><td>${esc(k)}</td><td style="text-align:right">${esc(fmtNum(v, lang))}</td></tr>`).join("")}</tbody><tfoot><tr><td>মোট ক্রেডিট</td><td style="text-align:right">${esc(fmtNum(totalCr, lang))}</td></tr></tfoot></table>`;
+    const right = `<table><thead><tr><th>বিবরণ (ডেবিট / খরচ)</th><th style="text-align:right">টাকা</th></tr></thead><tbody>${debits.map(([k, v]) => `<tr><td>${esc(k)}</td><td style="text-align:right">${esc(fmtNum(v, lang))}</td></tr>`).join("")}</tbody><tfoot><tr><td>মোট ডেবিট</td><td style="text-align:right">${esc(fmtNum(totalDr, lang))}</td></tr></tfoot></table>`;
+    const body = `<div class="t-grid"><div><h3>ক্রেডিট (জমা)</h3>${left}</div><div><h3>ডেবিট (খরচ)</h3>${right}</div></div><div class="totals"><span>ব্যালেন্স (ক্রেডিট − ডেবিট)</span><span>${esc(fmtNum(balance, lang))}</span></div>`;
+    exportPdfHtml({ title: `${t("brand")} — মূল পরিবহন হিসাব`, subtitle: `${fmtDate(from, lang)} → ${fmtDate(to, lang)}`, body, orientation: "landscape" });
+  };
+
+  const exportOwnerPdf = () => {
+    const fareRows = jkTrips.map((r: any) => [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)]);
+    const othRows = jkOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category ?? "—", r.head ?? "—", fmtNum(r.amount, lang)]);
+    const expRows = jkExp.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category ?? "—", r.head ?? "—", fmtNum(r.amount, lang)]);
+    const body =
+      `<div class="totals" style="border:0;margin:0 0 10px"><span>গাড়ি ভাড়া: ${esc(fmtNum(jkFares, lang))}</span><span>জমা: ${esc(fmtNum(jkOthSum, lang))}</span><span>খরচ: ${esc(fmtNum(jkExpSum, lang))}</span><span>ব্যালেন্স: ${esc(fmtNum(jkBalance, lang))}</span></div>` +
+      tbl("গাড়ি ভাড়া (দৈনিক জমা থেকে)", [t("date"), "ওনার", t("vehicleNo"), t("fareTotal")], fareRows, [t("grandTotal"), "", "", fmtNum(jkFares, lang)]) +
+      tbl("জমা-খরচ — জমা", [t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("head"), t("amount")], othRows, [t("grandTotal"), "", "", "", "", "", fmtNum(jkOthSum, lang)]) +
+      tbl("জমা-খরচ — খরচ", [t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("head"), t("amount")], expRows, [t("grandTotal"), "", "", "", "", "", fmtNum(jkExpSum, lang)]);
+    const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ওনার: ${ownerId ? ownerName(ownerId) : "সকল"}`;
+    exportPdfHtml({ title: `${t("brand")} — জমা-খরচ (ওনার)`, subtitle: subt, body, orientation: "landscape" });
   };
 
   const clear = () => { setCar(""); setOwnerId(""); setFrom(firstOfMonth); setTo(today); };
@@ -202,17 +233,46 @@ function Page() {
             <TabsTrigger value="jk">জমা-খরচ (ওনার)</TabsTrigger>
           </TabsList>
 
-          {/* Dashboard: মূল হিসাব summary */}
+          {/* Dashboard: মূল হিসাব T-account */}
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-              <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
-              <Stat label="অন্যান্য জমা" value={fmtNum(mainOtherInc, lang)} color="text-emerald-400" />
-              <Stat label="দৈনিক খরচ" value={fmtNum(mainExpense, lang)} color="text-rose-400" />
-              <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+            <div className="flex justify-end mb-2">
+              <Button size="sm" variant="outline" onClick={exportMainTAccount}>
+                <FileDown className="h-4 w-4 mr-2" />T-হিসাব PDF (Landscape)
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground mb-3">মূল হিসাব = (দৈনিক জমা + অন্যান্য জমা) − দৈনিক খরচ</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-lg border bg-card/70 overflow-hidden">
+                <div className="bg-emerald-500/10 text-emerald-300 text-center text-sm font-semibold py-2 border-b">ক্রেডিট (জমা) — বাম</div>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b"><td className="px-3 py-2">দৈনিক জমা</td><td className="px-3 py-2 text-right text-emerald-400">{fmtNum(dailyJama, lang)}</td></tr>
+                    <tr className="border-b"><td className="px-3 py-2">অন্যান্য জমা</td><td className="px-3 py-2 text-right text-emerald-400">{fmtNum(mainOtherInc, lang)}</td></tr>
+                  </tbody>
+                  <tfoot className="bg-muted/40 font-bold">
+                    <tr><td className="px-3 py-2">মোট ক্রেডিট</td><td className="px-3 py-2 text-right">{fmtNum(dailyJama + mainOtherInc, lang)}</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className="rounded-lg border bg-card/70 overflow-hidden">
+                <div className="bg-rose-500/10 text-rose-300 text-center text-sm font-semibold py-2 border-b">ডেবিট (খরচ) — ডান</div>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b"><td className="px-3 py-2">দেনা</td><td className="px-3 py-2 text-right text-rose-400">{fmtNum(dena, lang)}</td></tr>
+                    <tr className="border-b"><td className="px-3 py-2">দৈনিক খরচ</td><td className="px-3 py-2 text-right text-rose-400">{fmtNum(mainExpense, lang)}</td></tr>
+                  </tbody>
+                  <tfoot className="bg-muted/40 font-bold">
+                    <tr><td className="px-3 py-2">মোট ডেবিট</td><td className="px-3 py-2 text-right">{fmtNum(dena + mainExpense, lang)}</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div className="mt-3 rounded-lg border bg-card/70 p-3 flex items-center justify-between font-bold">
+              <span>ব্যালেন্স (ক্রেডিট − ডেবিট)</span>
+              <span className={balance >= 0 ? "text-sky-400" : "text-rose-500"}>{fmtNum(balance, lang)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">মূল হিসাব = (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
               <Stat label="গাড়ি ভাড়া (ওনার)" value={fmtNum(jkFares, lang)} color="text-amber-400" />
               <Stat label="জমা-খরচ জমা (ওনার)" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
               <Stat label="জমা-খরচ খরচ (ওনার)" value={fmtNum(jkExpSum, lang)} color="text-rose-400" />
@@ -255,6 +315,11 @@ function Page() {
 
           <TabsContent value="jk">
             <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={exportOwnerPdf}>
+                  <FileDown className="h-4 w-4 mr-2" />ওনার হিসাব PDF (Landscape)
+                </Button>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Stat label="গাড়ি ভাড়া" value={fmtNum(jkFares, lang)} color="text-amber-400" />
                 <Stat label="জমা" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />

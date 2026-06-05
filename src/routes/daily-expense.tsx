@@ -18,7 +18,7 @@ function Page() {
   const { data: expenses = [] } = useQuery({
     queryKey: ["de-expenses"],
     queryFn: async () =>
-      ((await supabase.from("expenses").select("id,expense_date,vehicle_no,category,head,description,amount").order("expense_date", { ascending: false }).limit(5000)).data ?? []) as any[],
+      ((await supabase.from("expenses").select("id,expense_date,vehicle_no,category,head,description,amount,owner_id").order("expense_date", { ascending: false }).limit(5000)).data ?? []) as any[],
   });
   const { data: trips = [] } = useQuery({
     queryKey: ["de-trips"],
@@ -32,10 +32,22 @@ function Page() {
     queryKey: ["de-vehicles"],
     queryFn: async () => ((await supabase.from("vehicles").select("vehicle_no,owner_id")).data ?? []) as any[],
   });
+  const { data: ownersAll = [] } = useQuery({
+    queryKey: ["de-owners"],
+    queryFn: async () => ((await supabase.from("owners").select("id,name")).data ?? []) as any[],
+  });
+
+  const ownerVehNos = useMemo(() => {
+    const m = new Map<string, string | null>();
+    (vehiclesAll as any[]).forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
+    return m;
+  }, [vehiclesAll]);
+  const ownerName = (oid: string | null | undefined) => (ownersAll as any[]).find((o) => o.id === oid)?.name ?? "—";
+  const rowOwner = (r: any) => ownerName(r.owner_id ?? ownerVehNos.get(r.vehicle_no ?? "") ?? null);
 
   const ownerVehicleSet = useMemo(() => {
     if (!filters.ownerId) return null;
-    return new Set(vehiclesAll.filter((v: any) => v.owner_id === filters.ownerId).map((v: any) => v.vehicle_no));
+    return new Set((vehiclesAll as any[]).filter((v: any) => v.owner_id === filters.ownerId).map((v: any) => v.vehicle_no));
   }, [filters.ownerId, vehiclesAll]);
 
   const passes = (date: string, vno: string | null, category?: string | null, head?: string | null) => {
@@ -45,10 +57,10 @@ function Page() {
   };
 
   const rows = useMemo(() => {
-    return expenses
+    return (expenses as any[])
       .filter((r: any) => passes(r.expense_date, r.vehicle_no, r.category, r.head))
-      .map((r: any) => ({ id: r.id, date: r.expense_date, vehicle_no: r.vehicle_no, head: r.head, description: r.description, amount: Number(r.amount || 0) }));
-  }, [expenses, filters, ownerVehicleSet]);
+      .map((r: any) => ({ id: r.id, date: r.expense_date, vehicle_no: r.vehicle_no, owner: rowOwner(r), head: r.head, description: r.description, amount: Number(r.amount || 0) }));
+  }, [expenses, filters, ownerVehicleSet, ownerVehNos, ownersAll]);
 
   const totalExpense = rows.reduce((s, r) => s + r.amount, 0);
   const totalFare = trips.filter((r: any) => passes(r.trip_date, r.vehicle_no)).reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
@@ -66,8 +78,9 @@ function Page() {
               exportPdf({
                 title: t("dailyExpense"),
                 subtitle: `${t("totalExpense")}: ${fmtNum(totalExpense, lang)} | ${t("net")}: ${fmtNum(net, lang)}`,
-                headers: [t("date"), t("head"), t("vehicleNo"), t("amount")],
-                rows: rows.map((r) => [fmtDate(r.date, lang), r.head ?? "—", r.vehicle_no ?? "—", fmtNum(r.amount, lang)]),
+                headers: [t("date"), "ওনার", t("head"), t("vehicleNo"), t("description"), t("amount")],
+                rows: rows.map((r) => [fmtDate(r.date, lang), r.owner, r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(r.amount, lang)]),
+                orientation: "landscape",
               })
             }
           >
@@ -88,6 +101,7 @@ function Page() {
             <thead className="bg-muted/60">
               <tr>
                 <th className="text-left px-3 py-2">{t("date")}</th>
+                <th className="text-left px-3 py-2">ওনার</th>
                 <th className="text-left px-3 py-2">{t("head")}</th>
                 <th className="text-left px-3 py-2">{t("vehicleNo")}</th>
                 <th className="text-left px-3 py-2">{t("description")}</th>
@@ -96,11 +110,12 @@ function Page() {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
+                <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
               )}
               {rows.map((r) => (
                 <tr key={r.id} className="border-t">
                   <td className="px-3 py-2">{fmtDate(r.date, lang)}</td>
+                  <td className="px-3 py-2">{r.owner}</td>
                   <td className="px-3 py-2">{r.head ?? "—"}</td>
                   <td className="px-3 py-2">{r.vehicle_no ?? "—"}</td>
                   <td className="px-3 py-2">{r.description ?? "—"}</td>
@@ -111,7 +126,7 @@ function Page() {
             {rows.length > 0 && (
               <tfoot className="bg-muted/40 font-semibold">
                 <tr>
-                  <td className="px-3 py-2" colSpan={4}>{t("totalExpense")}</td>
+                  <td className="px-3 py-2" colSpan={5}>{t("totalExpense")}</td>
                   <td className="px-3 py-2 text-right text-rose-500">{fmtNum(totalExpense, lang)}</td>
                 </tr>
               </tfoot>
