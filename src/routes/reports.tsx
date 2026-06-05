@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { Download, Printer, FileDown } from "lucide-react";
-import { exportPdf } from "@/lib/exportPdf";
+import { exportPdf, exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/reports")({ component: Page });
 
@@ -65,7 +65,7 @@ function Page() {
   const fares = data.trips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const mainExpense = mainExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const mainOtherInc = mainOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const balance = dailyJama + mainOtherInc - mainExpense;
+  const balance = (dailyJama - dena) + mainOtherInc - mainExpense;
 
   // ওনারদের জমা-খরচ (owner_id/owner vehicle NOT main)
   const isOwnerRow = (r: any) => {
