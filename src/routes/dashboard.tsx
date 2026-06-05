@@ -76,25 +76,34 @@ function DashboardPage() {
     },
   });
 
-  // মূল পরিবহন হিসাব (সকল ডাটা): দৈনিক জমা + অন্যান্য জমা − দৈনিক খরচ
+  // মূল পরিবহন হিসাব: ওনার গাড়ি/হিসাব বাদ
   const mainBalance = useQuery({
     queryKey: ["dash-main-balance"],
     queryFn: async () => {
-      const [tripsRes, othRes, expRes] = await Promise.all([
-        supabase.from("trips").select("jama_1,jama_2,dena_1,dena_2").limit(100000),
-        supabase.from("other_incomes").select("amount").limit(100000),
-        supabase.from("expenses").select("amount").limit(100000),
+      const [tripsRes, othRes, expRes, vehRes] = await Promise.all([
+        supabase.from("trips").select("vehicle_no,jama_1,jama_2,dena_1,dena_2").limit(100000),
+        supabase.from("other_incomes").select("vehicle_no,owner_id,amount").limit(100000),
+        supabase.from("expenses").select("vehicle_no,owner_id,amount").limit(100000),
+        supabase.from("vehicles").select("vehicle_no,owner_id"),
       ]);
-      const t = (tripsRes.data ?? []) as any[];
-      const dailyJama = t.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-      const dena = t.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const otherJama = ((othRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
-      const dailyExpense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const CHANDRA = "674def72-609b-434c-8186-15aa3d351d28";
+      const vmap = new Map<string, string | null>();
+      ((vehRes.data ?? []) as any[]).forEach((v) => vmap.set(v.vehicle_no, v.owner_id ?? null));
+      const isMain = (oid: string | null | undefined) => !oid || oid === CHANDRA;
+      const mainTrips = ((tripsRes.data ?? []) as any[]).filter((r) => isMain(vmap.get(r.vehicle_no)));
+      const dailyJama = mainTrips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+      const dena = mainTrips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+      const otherJama = ((othRes.data ?? []) as any[])
+        .filter((r) => isMain(r.owner_id ?? vmap.get(r.vehicle_no) ?? null))
+        .reduce((s, r) => s + Number(r.amount || 0), 0);
+      const dailyExpense = ((expRes.data ?? []) as any[])
+        .filter((r) => isMain(r.owner_id ?? vmap.get(r.vehicle_no) ?? null))
+        .reduce((s, r) => s + Number(r.amount || 0), 0);
       const netJama = dailyJama - dena;
-      return { dailyJama, dena, netJama, otherJama, dailyExpense, balance: netJama + otherJama - dailyExpense };
+      return { dailyJama, dena, netJama, otherJama, dailyExpense, balance: netJama + otherJama - dailyExpense, tripCount: mainTrips.length };
     },
   });
-  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, netJama: 0, otherJama: 0, dailyExpense: 0, balance: 0 };
+  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, netJama: 0, otherJama: 0, dailyExpense: 0, balance: 0, tripCount: 0 };
 
   const tripRows = summary.data ?? [];
   const chartData = chartMode === "tripCount"
@@ -124,8 +133,9 @@ function DashboardPage() {
 
         {/* মূল পরিবহন হিসাব */}
         <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
-            মূল পরিবহন হিসাব
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-between">
+            <span>মূল পরিবহন হিসাব</span>
+            <span className="text-foreground">মোট ট্রিপ: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <MiniStat label="দৈনিক জমা" value={fmtNum(mb.dailyJama, lang)} color="text-emerald-400" />

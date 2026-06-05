@@ -80,14 +80,6 @@ function Page() {
     },
   });
 
-  const ownerByVehicle = (vno: string | null | undefined) => {
-    if (!vno) return "—";
-    const v = (vehiclesAll as any[]).find((x) => x.vehicle_no === vno);
-    if (!v) return "—";
-    const o = (owners as any[]).find((s) => s.id === v.owner_id);
-    return o?.name ?? "—";
-  };
-
   const ownerName = (oid: string | null | undefined) => (owners as any[]).find((o) => o.id === oid)?.name ?? "—";
 
   const ownerVehNos = useMemo(() => {
@@ -101,25 +93,44 @@ function Page() {
   const othRows = oth.data ?? [];
 
   const matchedOwnerId = (r: any) => r.owner_id ?? ownerVehNos.get(r.vehicle_no) ?? null;
+
+  // মূল হিসাব: ওনার গাড়ি/হিসাব সম্পূর্ণ বাদ
+  const mainTrips = useMemo(() => tripRows.filter((r: any) => isMainOwner(ownerVehNos.get(r.vehicle_no))), [tripRows, ownerVehNos]);
   const mainExp = useMemo(() => expRows.filter((r: any) => isMainOwner(matchedOwnerId(r))), [expRows, ownerVehNos]);
   const mainOth = useMemo(() => othRows.filter((r: any) => isMainOwner(matchedOwnerId(r))), [othRows, ownerVehNos]);
 
-  const ownerMatch = (oid: string | null | undefined) => Boolean(oid && oid !== CHANDRA_ID && (!ownerId || oid === ownerId));
-  const jkTrips = useMemo(() => tripRows.filter((r: any) => ownerMatch(ownerVehNos.get(r.vehicle_no))), [tripRows, ownerVehNos, ownerId]);
-  const jkExp = useMemo(() => expRows.filter((r: any) => ownerMatch(matchedOwnerId(r))), [expRows, ownerVehNos, ownerId]);
-  const jkOth = useMemo(() => othRows.filter((r: any) => ownerMatch(matchedOwnerId(r))), [othRows, ownerVehNos, ownerId]);
+  // ওনার হিসাব: শুধু গাড়ির ভাড়া
+  const jkTrips = useMemo(() => tripRows.filter((r: any) => {
+    const oid = ownerVehNos.get(r.vehicle_no);
+    if (!oid || oid === CHANDRA_ID) return false;
+    return ownerId ? oid === ownerId : true;
+  }), [tripRows, ownerVehNos, ownerId]);
 
-  const totalDailyJama = tripRows.reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-  const totalDena = tripRows.reduce((s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-  const totalFare = tripRows.reduce((s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+  const totalDailyJama = mainTrips.reduce((s, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+  const totalDena = mainTrips.reduce((s, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+  const totalFare = mainTrips.reduce((s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const mainExpense = mainExp.reduce((s, r: any) => s + Number(r.amount || 0), 0);
   const mainOther = mainOth.reduce((s, r: any) => s + Number(r.amount || 0), 0);
-  const mainBalance = totalDailyJama + mainOther - mainExpense;
+  const mainBalance = (totalDailyJama - totalDena) + mainOther - mainExpense;
+
+  const tripCountByDate = useMemo(() => {
+    const m = new Map<string, number>();
+    mainTrips.forEach((r: any) => m.set(r.trip_date, (m.get(r.trip_date) ?? 0) + 1));
+    return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [mainTrips]);
 
   const jkFare = jkTrips.reduce((s, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-  const jkJama = jkOth.reduce((s, r: any) => s + Number(r.amount || 0), 0);
-  const jkKhoroch = jkExp.reduce((s, r: any) => s + Number(r.amount || 0), 0);
-  const jkBalance = jkFare + jkJama - jkKhoroch;
+  const jkByVehicle = useMemo(() => {
+    const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
+    jkTrips.forEach((r: any) => {
+      const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
+      const oid = ownerVehNos.get(r.vehicle_no) ?? null;
+      const cur = m.get(r.vehicle_no) ?? { vno: r.vehicle_no, owner: ownerName(oid), trips: 0, fare: 0 };
+      cur.trips += 1; cur.fare += f;
+      m.set(r.vehicle_no, cur);
+    });
+    return Array.from(m.values()).sort((a, b) => a.vno.localeCompare(b.vno));
+  }, [jkTrips, ownerVehNos, owners]);
 
   const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, owner: ownerId || undefined } });
   const clear = () => { setDate(""); setMonth(""); setCar(""); setOwnerId(""); navigate({ search: {} }); };
@@ -161,29 +172,36 @@ function Page() {
         <Tabs defaultValue="dashboard">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
-            <TabsTrigger value="trips">দৈনিক জমা</TabsTrigger>
+            <TabsTrigger value="trips">দৈনিক জমা ({fmtNum(mainTrips.length, lang)} ট্রিপ)</TabsTrigger>
             <TabsTrigger value="oth">অন্যান্য জমা</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ</TabsTrigger>
-            <TabsTrigger value="jk">জমা-খরচ (ওনার)</TabsTrigger>
+            <TabsTrigger value="jk">ওনার হিসাব</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Stat label="দৈনিক জমা" value={fmtNum(totalDailyJama, lang)} color="text-emerald-400" />
+              <Stat label="দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
               <Stat label="অন্যান্য জমা" value={fmtNum(mainOther, lang)} color="text-emerald-400" />
               <Stat label="দৈনিক খরচ" value={fmtNum(mainExpense, lang)} color="text-rose-400" />
               <Stat label="মূল ব্যালেন্স" value={fmtNum(mainBalance, lang)} color={mainBalance >= 0 ? "text-primary" : "text-rose-500"} />
             </div>
+            <p className="text-xs text-muted-foreground mt-2">মূল হিসাব = (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ · মোট ট্রিপ: {fmtNum(mainTrips.length, lang)}</p>
           </TabsContent>
 
           <TabsContent value="trips">
+            <div className="rounded-md border bg-card/60 p-3 mb-3 flex flex-wrap gap-2 text-sm">
+              <span className="font-semibold">মোট ট্রিপ: <span className="text-primary">{fmtNum(mainTrips.length, lang)}</span></span>
+              {tripCountByDate.map(([d, c]) => (
+                <span key={d} className="px-2 py-0.5 rounded bg-muted/60">{fmtDate(d, lang)}: {fmtNum(c, lang)}</span>
+              ))}
+            </div>
             <Tbl
-              rows={tripRows}
+              rows={mainTrips}
               cols={[
                 ["serial_no", t("serial"), (v: any) => fmtNum(v, lang)],
                 ["trip_date", t("date"), (v: any) => fmtDate(v, lang)],
                 ["vehicle_no", t("vehicleNo")],
-                ["__owner", t("owner"), (_: any, r: any) => ownerByVehicle(r.vehicle_no)],
                 ["__jama", t("jamaTotal"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0), lang)],
                 ["__dena", t("denaTotal"), (_: any, r: any) => fmtNum(Number(r.dena_1 || 0) + Number(r.dena_2 || 0), lang)],
                 ["__bal", t("balance"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0) - Number(r.dena_1 || 0) - Number(r.dena_2 || 0), lang)],
@@ -191,7 +209,7 @@ function Page() {
                 ["__route", t("route"), (_: any, r: any) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-"],
                 ["supervisor", t("supervisor")],
               ]}
-              footer={[t("grandTotal"), "", "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), "", ""]}
+              footer={[t("grandTotal"), "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), "", ""]}
             />
           </TabsContent>
 
@@ -227,15 +245,28 @@ function Page() {
 
           <TabsContent value="jk">
             <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Stat label="গাড়ি ভাড়া" value={fmtNum(jkFare, lang)} color="text-amber-400" />
-                <Stat label="জমা" value={fmtNum(jkJama, lang)} color="text-emerald-400" />
-                <Stat label="খরচ" value={fmtNum(jkKhoroch, lang)} color="text-rose-400" />
-                <Stat label="ব্যালেন্স" value={fmtNum(jkBalance, lang)} color={jkBalance >= 0 ? "text-primary" : "text-rose-500"} />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Stat label="মোট গাড়ি ভাড়া" value={fmtNum(jkFare, lang)} color="text-amber-400" />
+                <Stat label="মোট ট্রিপ" value={fmtNum(jkTrips.length, lang)} color="text-sky-400" />
+                <Stat label="গাড়ি সংখ্যা" value={fmtNum(jkByVehicle.length, lang)} color="text-primary" />
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">গাড়ি ভাড়া (দৈনিক জমা থেকে)</h3>
+                <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া (যোগফল)</h3>
+                <Tbl
+                  rows={jkByVehicle}
+                  cols={[
+                    ["vno", t("vehicleNo")],
+                    ["owner", t("owner")],
+                    ["trips", "ট্রিপ সংখ্যা", (v: any) => fmtNum(v, lang)],
+                    ["fare", t("fareTotal"), (v: any) => fmtNum(v, lang)],
+                  ]}
+                  footer={[t("grandTotal"), "", fmtNum(jkTrips.length, lang), fmtNum(jkFare, lang)]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">ট্রিপ বিবরণ</h3>
                 <Tbl
                   rows={jkTrips}
                   cols={[
@@ -245,42 +276,6 @@ function Page() {
                     ["__fare", t("fareTotal"), (_: any, r: any) => fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)],
                   ]}
                   footer={[t("grandTotal"), "", "", fmtNum(jkFare, lang)]}
-                />
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচ জমা</h3>
-                <Tbl
-                  rows={jkOth}
-                  cols={[
-                    ["income_date", t("date"), (v: any) => fmtDate(v, lang)],
-                    ["owner_id", t("owner"), (_: any, r: any) => ownerName(matchedOwnerId(r))],
-                    ["vendor", t("vendors"), (v: any) => v ?? "—"],
-                    ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
-                    ["category", t("category")],
-                    ["head", t("head")],
-                    ["description", t("description")],
-                    ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
-                  ]}
-                  footer={[t("grandTotal"), "", "", "", "", "", "", fmtNum(jkJama, lang)]}
-                />
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচ খরচ</h3>
-                <Tbl
-                  rows={jkExp}
-                  cols={[
-                    ["expense_date", t("date"), (v: any) => fmtDate(v, lang)],
-                    ["owner_id", t("owner"), (_: any, r: any) => ownerName(matchedOwnerId(r))],
-                    ["vendor", t("vendors"), (v: any) => v ?? "—"],
-                    ["vehicle_no", t("vehicleNo"), (v: any) => v ?? "—"],
-                    ["category", t("category")],
-                    ["head", t("head")],
-                    ["description", t("description")],
-                    ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
-                  ]}
-                  footer={[t("grandTotal"), "", "", "", "", "", "", fmtNum(jkKhoroch, lang)]}
                 />
               </div>
             </div>
@@ -310,8 +305,8 @@ function Tbl({ rows, cols, footer }: { rows: any[]; cols: [string, string, ((v: 
         </thead>
         <tbody>
           {rows.length === 0 && <tr><td colSpan={cols.length} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>}
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t">
+          {rows.map((r, idx) => (
+            <tr key={r.id ?? idx} className="border-t">
               {cols.map(([k, , fmt]) => <td key={k} className="px-3 py-2">{fmt ? fmt(r[k], r) : (r[k] ?? "-")}</td>)}
             </tr>
           ))}
