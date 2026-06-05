@@ -67,25 +67,33 @@ function Page() {
   const mainExpense = mainExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const mainOtherInc = mainOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const balance = (dailyJama - dena) + mainOtherInc - mainExpense;
+  const totalTripCount = mainTrips.length;
+  const tripCountByDate = (() => {
+    const m = new Map<string, number>();
+    mainTrips.forEach((r: any) => m.set(r.trip_date, (m.get(r.trip_date) ?? 0) + 1));
+    return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  })();
 
-  // ওনারদের জমা-খরচ (owner_id/owner vehicle NOT main)
-  const isOwnerRow = (r: any) => {
-    const oid = matchedOwnerId(r);
-    return Boolean(oid && oid !== CHANDRA_ID && (!ownerId || oid === ownerId));
-  };
-
+  // ওনার হিসাব: শুধু গাড়ি ভাড়া (পরিবহন/মূল হিসাব আসবে না)
   const jkTrips = useMemo(() => data.trips.filter((r: any) => {
     const oid = ownerVehNos.get(r.vehicle_no);
     if (!oid || oid === CHANDRA_ID) return false;
     return ownerId ? oid === ownerId : true;
   }), [data.trips, ownerVehNos, ownerId]);
-  const jkExp = useMemo(() => data.exp.filter(isOwnerRow), [data.exp, ownerVehNos, ownerId]);
-  const jkOth = useMemo(() => data.oth.filter(isOwnerRow), [data.oth, ownerVehNos, ownerId]);
-
   const jkFares = jkTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-  const jkExpSum = jkExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const jkOthSum = jkOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const jkBalance = jkFares + jkOthSum - jkExpSum;
+  const jkBalance = jkFares;
+  const jkByVehicle = (() => {
+    const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
+    jkTrips.forEach((r: any) => {
+      const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
+      const oid = ownerVehNos.get(r.vehicle_no) ?? null;
+      const ownerNm = (owners as any[]).find((o: any) => o.id === oid)?.name ?? "—";
+      const cur = m.get(r.vehicle_no) ?? { vno: r.vehicle_no, owner: ownerNm, trips: 0, fare: 0 };
+      cur.trips += 1; cur.fare += f;
+      m.set(r.vehicle_no, cur);
+    });
+    return Array.from(m.values()).sort((a, b) => a.vno.localeCompare(b.vno));
+  })();
 
   const ownerName = (oid: string | null | undefined) => (owners as any[]).find((o) => o.id === oid)?.name ?? "—";
 
