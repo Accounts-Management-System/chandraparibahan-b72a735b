@@ -78,8 +78,9 @@ function Page() {
               exportPdf({
                 title: t("dailyExpense"),
                 subtitle: `${t("totalExpense")}: ${fmtNum(totalExpense, lang)} | ${t("net")}: ${fmtNum(net, lang)}`,
-                headers: [t("date"), t("head"), t("vehicleNo"), t("amount")],
-                rows: rows.map((r) => [fmtDate(r.date, lang), r.head ?? "—", r.vehicle_no ?? "—", fmtNum(r.amount, lang)]),
+                headers: [t("date"), "ওনার", t("head"), t("vehicleNo"), t("description"), t("amount")],
+                rows: rows.map((r) => [fmtDate(r.date, lang), r.owner, r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(r.amount, lang)]),
+                orientation: "landscape",
               })
             }
           >
@@ -100,6 +101,7 @@ function Page() {
             <thead className="bg-muted/60">
               <tr>
                 <th className="text-left px-3 py-2">{t("date")}</th>
+                <th className="text-left px-3 py-2">ওনার</th>
                 <th className="text-left px-3 py-2">{t("head")}</th>
                 <th className="text-left px-3 py-2">{t("vehicleNo")}</th>
                 <th className="text-left px-3 py-2">{t("description")}</th>
@@ -108,11 +110,12 @@ function Page() {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
+                <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
               )}
               {rows.map((r) => (
                 <tr key={r.id} className="border-t">
                   <td className="px-3 py-2">{fmtDate(r.date, lang)}</td>
+                  <td className="px-3 py-2">{r.owner}</td>
                   <td className="px-3 py-2">{r.head ?? "—"}</td>
                   <td className="px-3 py-2">{r.vehicle_no ?? "—"}</td>
                   <td className="px-3 py-2">{r.description ?? "—"}</td>
@@ -123,7 +126,7 @@ function Page() {
             {rows.length > 0 && (
               <tfoot className="bg-muted/40 font-semibold">
                 <tr>
-                  <td className="px-3 py-2" colSpan={4}>{t("totalExpense")}</td>
+                  <td className="px-3 py-2" colSpan={5}>{t("totalExpense")}</td>
                   <td className="px-3 py-2 text-right text-rose-500">{fmtNum(totalExpense, lang)}</td>
                 </tr>
               </tfoot>
