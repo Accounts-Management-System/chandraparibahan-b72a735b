@@ -129,6 +129,37 @@ function Page() {
     URL.revokeObjectURL(url);
   };
 
+  const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const tbl = (title: string, headers: string[], rows: any[][], footer?: (string | number)[]) =>
+    `<h2>${esc(title)}</h2><table><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>` +
+    `<tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>` +
+    (footer ? `<tfoot><tr>${footer.map((c) => `<td>${esc(c)}</td>`).join("")}</tr></tfoot>` : "") +
+    `</table>`;
+
+  const exportMainTAccount = () => {
+    const credits: [string, number][] = [["দৈনিক জমা", dailyJama], ["অন্যান্য জমা", mainOtherInc]];
+    const debits: [string, number][] = [["দেনা", dena], ["দৈনিক খরচ", mainExpense]];
+    const totalCr = credits.reduce((s, [, v]) => s + v, 0);
+    const totalDr = debits.reduce((s, [, v]) => s + v, 0);
+    const left = `<table><thead><tr><th>বিবরণ (ক্রেডিট / জমা)</th><th style="text-align:right">টাকা</th></tr></thead><tbody>${credits.map(([k, v]) => `<tr><td>${esc(k)}</td><td style="text-align:right">${esc(fmtNum(v, lang))}</td></tr>`).join("")}</tbody><tfoot><tr><td>মোট ক্রেডিট</td><td style="text-align:right">${esc(fmtNum(totalCr, lang))}</td></tr></tfoot></table>`;
+    const right = `<table><thead><tr><th>বিবরণ (ডেবিট / খরচ)</th><th style="text-align:right">টাকা</th></tr></thead><tbody>${debits.map(([k, v]) => `<tr><td>${esc(k)}</td><td style="text-align:right">${esc(fmtNum(v, lang))}</td></tr>`).join("")}</tbody><tfoot><tr><td>মোট ডেবিট</td><td style="text-align:right">${esc(fmtNum(totalDr, lang))}</td></tr></tfoot></table>`;
+    const body = `<div class="t-grid"><div><h3>ক্রেডিট (জমা)</h3>${left}</div><div><h3>ডেবিট (খরচ)</h3>${right}</div></div><div class="totals"><span>ব্যালেন্স (ক্রেডিট − ডেবিট)</span><span>${esc(fmtNum(balance, lang))}</span></div>`;
+    exportPdfHtml({ title: `${t("brand")} — মূল পরিবহন হিসাব`, subtitle: `${fmtDate(from, lang)} → ${fmtDate(to, lang)}`, body, orientation: "landscape" });
+  };
+
+  const exportOwnerPdf = () => {
+    const fareRows = jkTrips.map((r: any) => [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)]);
+    const othRows = jkOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category ?? "—", r.head ?? "—", fmtNum(r.amount, lang)]);
+    const expRows = jkExp.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(matchedOwnerId(r)), r.vendor ?? "—", r.vehicle_no ?? "—", r.category ?? "—", r.head ?? "—", fmtNum(r.amount, lang)]);
+    const body =
+      `<div class="totals" style="border:0;margin:0 0 10px"><span>গাড়ি ভাড়া: ${esc(fmtNum(jkFares, lang))}</span><span>জমা: ${esc(fmtNum(jkOthSum, lang))}</span><span>খরচ: ${esc(fmtNum(jkExpSum, lang))}</span><span>ব্যালেন্স: ${esc(fmtNum(jkBalance, lang))}</span></div>` +
+      tbl("গাড়ি ভাড়া (দৈনিক জমা থেকে)", [t("date"), "ওনার", t("vehicleNo"), t("fareTotal")], fareRows, [t("grandTotal"), "", "", fmtNum(jkFares, lang)]) +
+      tbl("জমা-খরচ — জমা", [t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("head"), t("amount")], othRows, [t("grandTotal"), "", "", "", "", "", fmtNum(jkOthSum, lang)]) +
+      tbl("জমা-খরচ — খরচ", [t("date"), "ওনার", t("vendors"), t("vehicleNo"), t("category"), t("head"), t("amount")], expRows, [t("grandTotal"), "", "", "", "", "", fmtNum(jkExpSum, lang)]);
+    const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ওনার: ${ownerId ? ownerName(ownerId) : "সকল"}`;
+    exportPdfHtml({ title: `${t("brand")} — জমা-খরচ (ওনার)`, subtitle: subt, body, orientation: "landscape" });
+  };
+
   const clear = () => { setCar(""); setOwnerId(""); setFrom(firstOfMonth); setTo(today); };
 
   return (
