@@ -233,17 +233,46 @@ function Page() {
             <TabsTrigger value="jk">জমা-খরচ (ওনার)</TabsTrigger>
           </TabsList>
 
-          {/* Dashboard: মূল হিসাব summary */}
+          {/* Dashboard: মূল হিসাব T-account */}
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-              <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
-              <Stat label="অন্যান্য জমা" value={fmtNum(mainOtherInc, lang)} color="text-emerald-400" />
-              <Stat label="দৈনিক খরচ" value={fmtNum(mainExpense, lang)} color="text-rose-400" />
-              <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+            <div className="flex justify-end mb-2">
+              <Button size="sm" variant="outline" onClick={exportMainTAccount}>
+                <FileDown className="h-4 w-4 mr-2" />T-হিসাব PDF (Landscape)
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground mb-3">মূল হিসাব = (দৈনিক জমা + অন্যান্য জমা) − দৈনিক খরচ</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-lg border bg-card/70 overflow-hidden">
+                <div className="bg-emerald-500/10 text-emerald-300 text-center text-sm font-semibold py-2 border-b">ক্রেডিট (জমা) — বাম</div>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b"><td className="px-3 py-2">দৈনিক জমা</td><td className="px-3 py-2 text-right text-emerald-400">{fmtNum(dailyJama, lang)}</td></tr>
+                    <tr className="border-b"><td className="px-3 py-2">অন্যান্য জমা</td><td className="px-3 py-2 text-right text-emerald-400">{fmtNum(mainOtherInc, lang)}</td></tr>
+                  </tbody>
+                  <tfoot className="bg-muted/40 font-bold">
+                    <tr><td className="px-3 py-2">মোট ক্রেডিট</td><td className="px-3 py-2 text-right">{fmtNum(dailyJama + mainOtherInc, lang)}</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className="rounded-lg border bg-card/70 overflow-hidden">
+                <div className="bg-rose-500/10 text-rose-300 text-center text-sm font-semibold py-2 border-b">ডেবিট (খরচ) — ডান</div>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b"><td className="px-3 py-2">দেনা</td><td className="px-3 py-2 text-right text-rose-400">{fmtNum(dena, lang)}</td></tr>
+                    <tr className="border-b"><td className="px-3 py-2">দৈনিক খরচ</td><td className="px-3 py-2 text-right text-rose-400">{fmtNum(mainExpense, lang)}</td></tr>
+                  </tbody>
+                  <tfoot className="bg-muted/40 font-bold">
+                    <tr><td className="px-3 py-2">মোট ডেবিট</td><td className="px-3 py-2 text-right">{fmtNum(dena + mainExpense, lang)}</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div className="mt-3 rounded-lg border bg-card/70 p-3 flex items-center justify-between font-bold">
+              <span>ব্যালেন্স (ক্রেডিট − ডেবিট)</span>
+              <span className={balance >= 0 ? "text-sky-400" : "text-rose-500"}>{fmtNum(balance, lang)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">মূল হিসাব = (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
               <Stat label="গাড়ি ভাড়া (ওনার)" value={fmtNum(jkFares, lang)} color="text-amber-400" />
               <Stat label="জমা-খরচ জমা (ওনার)" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
               <Stat label="জমা-খরচ খরচ (ওনার)" value={fmtNum(jkExpSum, lang)} color="text-rose-400" />
@@ -286,6 +315,11 @@ function Page() {
 
           <TabsContent value="jk">
             <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={exportOwnerPdf}>
+                  <FileDown className="h-4 w-4 mr-2" />ওনার হিসাব PDF (Landscape)
+                </Button>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Stat label="গাড়ি ভাড়া" value={fmtNum(jkFares, lang)} color="text-amber-400" />
                 <Stat label="জমা" value={fmtNum(jkOthSum, lang)} color="text-emerald-400" />
