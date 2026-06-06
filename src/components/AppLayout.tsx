@@ -27,6 +27,8 @@ import {
   TrendingUp,
   TrendingDown,
   UserCheck,
+  Landmark,
+  FileText,
 } from "lucide-react";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
@@ -37,6 +39,8 @@ const nav: NavItem[] = [
   { to: "/jama-khoroch", icon: BookOpen, key: "jamaKhoroch", adminOnly: true },
   { to: "/expenses", icon: Wallet, key: "expenses" },
   { to: "/other-income", icon: Coins, key: "otherIncome" },
+  { to: "/office-deposits", icon: Landmark, key: "officeDeposits" },
+  { to: "/daily-report", icon: FileText, key: "dailyReport" },
   { to: "/daily-income", icon: TrendingUp, key: "dailyIncome" },
   { to: "/daily-expense", icon: TrendingDown, key: "dailyExpense" },
   { to: "/owner-accounts", icon: UserCheck, key: "ownerAccounts" },
