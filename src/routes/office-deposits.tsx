@@ -206,12 +206,32 @@ function Page() {
             </div>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("category")}</label>
-              <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
+              <input
+                list="od-cats"
+                value={category}
+                onChange={(e) => { setCategory(e.target.value); setHead(""); }}
+                required
+                placeholder={t("selectOrType")}
+                className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm"
+              />
+              <datalist id="od-cats">
+                {catOptions.map((c) => <option key={c} value={c} />)}
+              </datalist>
             </div>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("head")}</label>
-              <HeadSelect category={category} value={head} onChange={setHead} />
+              <input
+                list="od-heads"
+                value={head}
+                onChange={(e) => setHead(e.target.value)}
+                placeholder={t("selectOrType")}
+                className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm"
+              />
+              <datalist id="od-heads">
+                {headOptions.map((h) => <option key={h} value={h} />)}
+              </datalist>
             </div>
+
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("amount")}</label>
               <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
