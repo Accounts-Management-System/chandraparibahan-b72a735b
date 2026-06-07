@@ -2,13 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { FileDown, Plus } from "lucide-react";
+import { FileDown, Plus, Search, X } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { exportPdfHtml } from "@/lib/exportPdf";
 
@@ -20,7 +27,6 @@ const DEFAULT_HEADS: Record<string, string[]> = {
   "ব্যাংক জমা": ["সঞ্চয়", "চলতি"],
   "মালিক জমা": ["অগ্রিম", "সমন্বয়"],
 };
-
 
 type Row = {
   id: string;
@@ -45,6 +51,13 @@ function Page() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | "">("");
 
+  // Search filters
+  const [fFrom, setFFrom] = useState("");
+  const [fTo, setFTo] = useState("");
+  const [fCategory, setFCategory] = useState("all");
+  const [fHead, setFHead] = useState("all");
+  const [fText, setFText] = useState("");
+
   const { data: dbCats = [] } = useQuery({
     queryKey: ["expense_categories"],
     queryFn: async () => (await supabase.from("expense_categories").select("name").order("name")).data ?? [],
@@ -53,17 +66,6 @@ function Page() {
     queryKey: ["expense_heads_all"],
     queryFn: async () => (await supabase.from("expense_heads").select("name").order("name")).data ?? [],
   });
-  const catOptions = useMemo(() => {
-    const set = new Set<string>(DEFAULT_CATEGORIES);
-    (dbCats as { name: string }[]).forEach((c) => set.add(c.name));
-    return Array.from(set);
-  }, [dbCats]);
-  const headOptions = useMemo(() => {
-    const set = new Set<string>();
-    (DEFAULT_HEADS[category] ?? []).forEach((h) => set.add(h));
-    (dbHeads as { name: string }[]).forEach((h) => set.add(h.name));
-    return Array.from(set);
-  }, [dbHeads, category]);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["office_deposits"],
@@ -77,6 +79,44 @@ function Page() {
       return (data ?? []) as unknown as Row[];
     },
   });
+
+  const catOptions = useMemo(() => {
+    const set = new Set<string>(DEFAULT_CATEGORIES);
+    (dbCats as { name: string }[]).forEach((c) => set.add(c.name));
+    rows.forEach((r) => r.category && set.add(r.category));
+    return Array.from(set);
+  }, [dbCats, rows]);
+
+  const headOptions = useMemo(() => {
+    const set = new Set<string>();
+    (DEFAULT_HEADS[category] ?? []).forEach((h) => set.add(h));
+    (dbHeads as { name: string }[]).forEach((h) => set.add(h.name));
+    rows.forEach((r) => r.head && set.add(r.head));
+    return Array.from(set);
+  }, [dbHeads, category, rows]);
+
+  const allHeadFilterOptions = useMemo(() => {
+    const set = new Set<string>();
+    Object.values(DEFAULT_HEADS).forEach((arr) => arr.forEach((h) => set.add(h)));
+    (dbHeads as { name: string }[]).forEach((h) => set.add(h.name));
+    rows.forEach((r) => r.head && set.add(r.head));
+    return Array.from(set);
+  }, [dbHeads, rows]);
+
+  const filtered = useMemo(() => {
+    return rows.filter((r) => {
+      if (fFrom && r.deposit_date < fFrom) return false;
+      if (fTo && r.deposit_date > fTo) return false;
+      if (fCategory !== "all" && r.category !== fCategory) return false;
+      if (fHead !== "all" && (r.head ?? "") !== fHead) return false;
+      if (fText) {
+        const q = fText.toLowerCase();
+        const hay = `${r.category} ${r.head ?? ""} ${r.description ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [rows, fFrom, fTo, fCategory, fHead, fText]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,10 +145,13 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["office_deposits"] });
       toast.success(t("deleted"));
     },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!category) throw new Error(t("category") + " required");
+      if (amount === "" || isNaN(Number(amount))) throw new Error(t("amount") + " required");
       const form = {
         deposit_date: date,
         category,
@@ -129,10 +172,11 @@ function Page() {
       toast.success(t("saved"));
       setOpen(false);
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message ?? "Save failed"),
   });
 
-  const total = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
+
   const exportOfficePdf = () => {
     const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const body = `
@@ -148,9 +192,13 @@ function Page() {
       <div class="office-total">অফিস কতৃক জমা মোট&nbsp;&nbsp;&nbsp; ${esc(fmtNum(total, lang))}</div>
       <table class="office">
         <thead><tr><th>সিরিয়াল</th><th>তারিখ</th><th>ক্যাটাগরী</th><th>খাত</th><th>বিবরন</th><th>পরিমান</th></tr></thead>
-        <tbody>${rows.map((r, i) => `<tr><td>${esc(fmtNum(i + 1, lang))}</td><td>${esc(fmtDate(r.deposit_date, lang))}</td><td>${esc(r.category)}</td><td>${esc(r.head ?? "")}</td><td>${esc(r.description ?? "")}</td><td class="amount">${esc(fmtNum(r.amount, lang))}</td></tr>`).join("")}</tbody>
+        <tbody>${filtered.map((r, i) => `<tr><td>${esc(fmtNum(i + 1, lang))}</td><td>${esc(fmtDate(r.deposit_date, lang))}</td><td>${esc(r.category)}</td><td>${esc(r.head ?? "")}</td><td>${esc(r.description ?? "")}</td><td class="amount">${esc(fmtNum(r.amount, lang))}</td></tr>`).join("")}</tbody>
       </table>`;
     exportPdfHtml({ title: "অফিস কতৃক জমা", body, orientation: "landscape" });
+  };
+
+  const clearFilters = () => {
+    setFFrom(""); setFTo(""); setFCategory("all"); setFHead("all"); setFText("");
   };
 
   return (
@@ -160,10 +208,7 @@ function Page() {
           <div>
             <h1 className="text-2xl font-bold">{t("officeDeposits")}</h1>
             <p className="text-sm text-muted-foreground">
-              {t("total")}: <span className="font-semibold text-emerald-400">{fmtNum(total, lang)}</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              এই জমা আলাদা হিসাব। অন্যান্য জমা বা ওনার হিসাবে যুক্ত হবে না।
+              {t("total")}: <span className="font-semibold text-emerald-500">{fmtNum(total, lang)}</span>
             </p>
           </div>
           <div className="flex gap-2">
@@ -178,13 +223,59 @@ function Page() {
           </div>
         </div>
 
+        {/* Search/Filter bar */}
+        <div className="rounded-md border bg-card p-3">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end">
+            <div>
+              <label className="text-xs text-muted-foreground">{t("from")}</label>
+              <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("to")}</label>
+              <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("category")}</label>
+              <Select value={fCategory} onValueChange={setFCategory}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("all")}</SelectItem>
+                  {catOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("head")}</label>
+              <Select value={fHead} onValueChange={setFHead}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("all")}</SelectItem>
+                  {allHeadFilterOptions.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-1">
+              <label className="text-xs text-muted-foreground">{t("search")}</label>
+              <div className="relative">
+                <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input value={fText} onChange={(e) => setFText(e.target.value)} placeholder={t("description")} className="h-9 pl-8" />
+              </div>
+            </div>
+            <div>
+              <Button variant="outline" className="h-9 w-full" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" /> {t("cancel")}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto rounded-md border bg-card">
           <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">{t("officeDeposits")}</div>
           <div className="border-b px-3 py-2 text-right font-semibold text-primary">{t("officeDeposits")} {t("total")}&nbsp;&nbsp; {fmtNum(total, lang)}</div>
           <table className="w-full text-sm">
             <thead className="bg-muted">
               <tr>
-                <th className="px-3 py-2 text-center">সিরিয়াল</th>
+                <th className="px-3 py-2 text-center">{t("serial")}</th>
                 <th className="px-3 py-2 text-center">{t("date")}</th>
                 <th className="px-3 py-2 text-center">{t("category")}</th>
                 <th className="px-3 py-2 text-center">{t("head")}</th>
@@ -194,8 +285,8 @@ function Page() {
               </tr>
             </thead>
             <tbody>
-              {(isLoading ? [] : rows).length === 0 && <tr><td colSpan={canWrite ? 7 : 6} className="py-8 text-center text-muted-foreground">{isLoading ? t("loading") : t("noData")}</td></tr>}
-              {(isLoading ? [] : rows).map((r, i) => (
+              {(isLoading ? [] : filtered).length === 0 && <tr><td colSpan={canWrite ? 7 : 6} className="py-8 text-center text-muted-foreground">{isLoading ? t("loading") : t("noData")}</td></tr>}
+              {(isLoading ? [] : filtered).map((r, i) => (
                 <tr key={r.id} className="border-t hover:bg-muted/30">
                   <td className="px-3 py-2 text-center">{fmtNum(i + 1, lang)}</td>
                   <td className="px-3 py-2 text-center">{fmtDate(r.deposit_date, lang)}</td>
@@ -226,32 +317,23 @@ function Page() {
             </div>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("category")}</label>
-              <input
-                list="od-cats"
-                value={category}
-                onChange={(e) => { setCategory(e.target.value); setHead(""); }}
-                required
-                placeholder={t("selectOrType")}
-                className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm"
-              />
-              <datalist id="od-cats">
-                {catOptions.map((c) => <option key={c} value={c} />)}
-              </datalist>
+              <Select value={category} onValueChange={(v) => { setCategory(v); setHead(""); }}>
+                <SelectTrigger className="h-10"><SelectValue placeholder={t("selectOrType")} /></SelectTrigger>
+                <SelectContent>
+                  {catOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("head")}</label>
-              <input
-                list="od-heads"
-                value={head}
-                onChange={(e) => setHead(e.target.value)}
-                placeholder={t("selectOrType")}
-                className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm"
-              />
-              <datalist id="od-heads">
-                {headOptions.map((h) => <option key={h} value={h} />)}
-              </datalist>
+              <Select value={head || "__none__"} onValueChange={(v) => setHead(v === "__none__" ? "" : v)} disabled={!category}>
+                <SelectTrigger className="h-10"><SelectValue placeholder={t("selectOrType")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">—</SelectItem>
+                  {headOptions.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
-
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("amount")}</label>
               <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
