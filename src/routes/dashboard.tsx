@@ -59,16 +59,6 @@ function DashboardPage() {
       return (data ?? []) as { vehicle_no: string; owner_id: string | null }[];
     },
   });
-  const { data: owners = [] } = useQuery({
-    queryKey: ["dash-owners"],
-    queryFn: async () => ((await supabase.from("owners").select("id,name").order("name")).data ?? []) as { id: string; name: string }[],
-  });
-
-  const ownerVehMap = useMemo(() => {
-    const m = new Map<string, string | null>();
-    vehicles.forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
-    return m;
-  }, [vehicles]);
 
   const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
 
