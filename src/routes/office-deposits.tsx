@@ -158,7 +158,7 @@ function Page() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">অফিস কতৃক জমা</h1>
+            <h1 className="text-2xl font-bold">{t("officeDeposits")}</h1>
             <p className="text-sm text-muted-foreground">
               {t("total")}: <span className="font-semibold text-emerald-400">{fmtNum(total, lang)}</span>
             </p>
@@ -179,7 +179,7 @@ function Page() {
         </div>
 
         <div className="overflow-x-auto rounded-md border bg-card">
-          <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">অফিস কতৃক জমা</div>
+          <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">{t("officeDeposits")}</div>
           <div className="border-b px-3 py-2 text-right font-semibold text-primary">অফিস কতৃক জমা মোট&nbsp;&nbsp; {fmtNum(total, lang)}</div>
           <table className="w-full text-sm">
             <thead className="bg-muted">
@@ -218,7 +218,7 @@ function Page() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>অফিস কতৃক জমা</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("officeDeposits")}</DialogTitle></DialogHeader>
           <form className="grid grid-cols-1 sm:grid-cols-2 gap-3" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("date")}</label>
