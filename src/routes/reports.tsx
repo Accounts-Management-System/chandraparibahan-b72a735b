@@ -333,6 +333,15 @@ function Page() {
             />
           </TabsContent>
 
+          <TabsContent value="office">
+            <Section
+              headers={[t("serial"), t("date"), t("category"), t("head"), t("description"), t("amount")]}
+              rows={officeRows}
+              cells={(r: any) => [fmtNum(officeRows.indexOf(r) + 1, lang), fmtDate(r.deposit_date, lang), r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]}
+              footer={[t("grandTotal"), "", "", "", "", fmtNum(officeTotal, lang)]}
+            />
+          </TabsContent>
+
           <TabsContent value="exp">
             <Section
               headers={[t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")]}

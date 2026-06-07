@@ -252,6 +252,20 @@ function Page() {
             />
           </TabsContent>
 
+          <TabsContent value="office">
+            <Tbl
+              rows={officeRows}
+              cols={[
+                ["deposit_date", t("date"), (v: any) => fmtDate(v, lang)],
+                ["category", t("category")],
+                ["head", t("head")],
+                ["description", t("description")],
+                ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
+              ]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalOffice, lang)]}
+            />
+          </TabsContent>
+
           <TabsContent value="exp">
             <Tbl
               rows={expRows}

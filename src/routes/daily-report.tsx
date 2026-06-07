@@ -304,6 +304,8 @@ function Page() {
               <thead className="bg-muted/30">
                 <tr>
                   <th className="px-2 py-1 text-left">তারিখ</th>
+                  <th className="px-2 py-1 text-left">ক্যাটাগরী</th>
+                  <th className="px-2 py-1 text-left">খাত</th>
                   <th className="px-2 py-1 text-left">বিবরন</th>
                   <th className="px-2 py-1 text-right">পরিমান</th>
                 </tr>
@@ -312,13 +314,15 @@ function Page() {
                 {officeDeposits.map((r: any) => (
                   <tr key={r.id} className="border-t">
                     <td className="px-2 py-1">{fmtDate(r.deposit_date, lang)}</td>
+                    <td className="px-2 py-1">{r.category ?? "—"}</td>
+                    <td className="px-2 py-1">{r.head ?? "—"}</td>
                     <td className="px-2 py-1">{r.description ?? "—"}</td>
                     <td className="px-2 py-1 text-right text-emerald-400">{fmtNum(r.amount, lang)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot className="bg-muted/30">
-                <tr><td colSpan={2} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOffice, lang)}</td></tr>
+                <tr><td colSpan={4} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOffice, lang)}</td></tr>
               </tfoot>
             </table>
           </div>
