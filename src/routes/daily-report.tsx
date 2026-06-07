@@ -169,7 +169,7 @@ function Page() {
             <th>সুপারভাইজার</th>
             <th>জমা</th>
             <th>দেনা</th>
-            <th>ব্যালেন্স</th>
+            <th>আয়/লস</th>
             <th>গাড়ী ভাড়া</th>
             <th>রুট</th>
             <th class="sep"></th>
