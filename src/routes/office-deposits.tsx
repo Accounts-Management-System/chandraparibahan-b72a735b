@@ -45,6 +45,26 @@ function Page() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | "">("");
 
+  const { data: dbCats = [] } = useQuery({
+    queryKey: ["expense_categories"],
+    queryFn: async () => (await supabase.from("expense_categories").select("name").order("name")).data ?? [],
+  });
+  const { data: dbHeads = [] } = useQuery({
+    queryKey: ["expense_heads_all"],
+    queryFn: async () => (await supabase.from("expense_heads").select("name").order("name")).data ?? [],
+  });
+  const catOptions = useMemo(() => {
+    const set = new Set<string>(DEFAULT_CATEGORIES);
+    (dbCats as { name: string }[]).forEach((c) => set.add(c.name));
+    return Array.from(set);
+  }, [dbCats]);
+  const headOptions = useMemo(() => {
+    const set = new Set<string>();
+    (DEFAULT_HEADS[category] ?? []).forEach((h) => set.add(h));
+    (dbHeads as { name: string }[]).forEach((h) => set.add(h.name));
+    return Array.from(set);
+  }, [dbHeads, category]);
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["office_deposits"],
     queryFn: async () => {
