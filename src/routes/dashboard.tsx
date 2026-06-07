@@ -25,7 +25,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
 
 export const Route = createFileRoute("/dashboard")({
@@ -45,12 +45,35 @@ const tiles = [
   { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
 
+function monthRange(ym: string): { from: string; to: string } | null {
+  if (!ym) return null;
+  const [y, m] = ym.split("-").map(Number);
+  if (!y || !m) return null;
+  const from = `${y}-${String(m).padStart(2, "0")}-01`;
+  const last = new Date(y, m, 0).getDate();
+  const to = `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+  return { from, to };
+}
+
 function DashboardPage() {
   const { t, lang } = useT();
   const { isAdmin, canWrite } = useRole();
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(today);
+
+  // Filters
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [month, setMonth] = useState("");
   const [vehicle, setVehicle] = useState<string>("all");
+  const [ownerId, setOwnerId] = useState<string>("all");
+
+  const effRange = useMemo(() => {
+    const mr = monthRange(month);
+    return {
+      from: mr?.from || dateFrom || "",
+      to: mr?.to || dateTo || "",
+    };
+  }, [month, dateFrom, dateTo]);
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ["vehicles-list-all"],
@@ -59,82 +82,53 @@ function DashboardPage() {
       return (data ?? []) as { vehicle_no: string; owner_id: string | null }[];
     },
   });
+  const { data: owners = [] } = useQuery({
+    queryKey: ["owners-list-dash"],
+    queryFn: async () => {
+      const { data } = await supabase.from("owners").select("id,name").order("name");
+      return (data ?? []) as { id: string; name: string }[];
+    },
+  });
 
   const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
 
-  const summary = useQuery({
-    queryKey: ["dash-trips", date, vehicle],
+  // Main filtered account
+  const mainAcc = useQuery({
+    queryKey: ["dash-main", effRange.from, effRange.to, vehicle, ownerId],
     queryFn: async () => {
-      let q = supabase
-        .from("trips")
-        .select("vehicle_no,serial_no,jama_1,jama_2,dena_1,dena_2")
-        .eq("trip_date", date)
-        .order("serial_no", { ascending: true });
-      if (vehicle !== "all") q = q.eq("vehicle_no", vehicle);
-      const { data } = await q;
-      return (data ?? []) as { vehicle_no: string; serial_no: number | null; jama_1: number; jama_2: number; dena_1: number; dena_2: number }[];
-    },
-  });
-
-  // মূল পরিবহন হিসাব: শুধু ownerless গাড়ি
-  const mainBalance = useQuery({
-    queryKey: ["dash-main-balance"],
-    queryFn: async () => {
-      const [tripsRes, officeRes, expRes, vehRes] = await Promise.all([
-        supabase.from("trips").select("vehicle_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000),
-        (supabase as any).from("office_deposits").select("amount").limit(100000),
-        supabase.from("expenses").select("owner_id,amount").is("owner_id", null).limit(100000),
-        supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000),
-      ]);
+      let tq = supabase.from("trips").select("trip_date,vehicle_no,serial_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000);
+      let oq = (supabase as any).from("office_deposits").select("deposit_date,amount").limit(100000);
+      let eq = supabase.from("expenses").select("date,owner_id,amount").limit(100000);
+      if (effRange.from) { tq = tq.gte("trip_date", effRange.from); oq = oq.gte("deposit_date", effRange.from); eq = eq.gte("date", effRange.from); }
+      if (effRange.to) { tq = tq.lte("trip_date", effRange.to); oq = oq.lte("deposit_date", effRange.to); eq = eq.lte("date", effRange.to); }
+      if (vehicle !== "all") tq = tq.eq("vehicle_no", vehicle);
+      const [tripsRes, officeRes, expRes, vehRes] = await Promise.all([tq, oq, eq, supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000)]);
       const vehMap = new Map<string, string | null>();
       ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
-      const allTrips = (tripsRes.data ?? []) as any[];
-      const mainTrips = allTrips.filter((r) => !vehMap.get(r.vehicle_no));
-      const jama = mainTrips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-      const dena = mainTrips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const office = ((officeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
-      const expense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      let trips = (tripsRes.data ?? []) as any[];
+      let expenses = (expRes.data ?? []) as any[];
+      if (ownerId === "all") {
+        trips = trips.filter((r) => !vehMap.get(r.vehicle_no));
+        expenses = expenses.filter((r) => !r.owner_id);
+      } else {
+        trips = trips.filter((r) => vehMap.get(r.vehicle_no) === ownerId);
+        expenses = expenses.filter((r) => r.owner_id === ownerId);
+      }
+      const jama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+      const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+      const office = ownerId === "all" ? ((officeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
+      const expense = expenses.reduce((s, r) => s + Number(r.amount || 0), 0);
       const incomeLoss = jama - dena;
       return {
-        jama, dena, incomeLoss, office, expense,
+        trips, jama, dena, incomeLoss, office, expense,
         balance: incomeLoss + office - expense,
-        tripCount: mainTrips.length,
+        tripCount: trips.length,
       };
     },
   });
-  const mb = mainBalance.data ?? { jama: 0, dena: 0, incomeLoss: 0, office: 0, expense: 0, balance: 0, tripCount: 0 };
+  const mb = mainAcc.data ?? { trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, office: 0, expense: 0, balance: 0, tripCount: 0 };
 
-  // প্রতি ওনারের জন্য হিসাব
-  const ownerBalances = useQuery({
-    queryKey: ["dash-owner-balances"],
-    queryFn: async () => {
-      const [tripsRes, expRes, othRes, vehRes, ownRes] = await Promise.all([
-        supabase.from("trips").select("vehicle_no,fare_1,fare_2").limit(100000),
-        supabase.from("expenses").select("owner_id,amount").not("owner_id", "is", null).limit(100000),
-        supabase.from("other_incomes").select("owner_id,amount,category").not("owner_id", "is", null).limit(100000),
-        supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000),
-        supabase.from("owners").select("id,name").order("name"),
-      ]);
-      const vehMap = new Map<string, string | null>();
-      ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
-      const trips = (tripsRes.data ?? []) as any[];
-      const exp = (expRes.data ?? []) as any[];
-      const oth = ((othRes.data ?? []) as any[]).filter((r) => r.category !== "অফিস কতৃক জমা");
-      const ownersList = ((ownRes.data ?? []) as any[]);
-      return ownersList.map((o) => {
-        const fare = trips
-          .filter((r) => vehMap.get(r.vehicle_no) === o.id)
-          .reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-        const jama = oth.filter((r) => r.owner_id === o.id).reduce((s, r) => s + Number(r.amount || 0), 0);
-        const khoroch = exp.filter((r) => r.owner_id === o.id).reduce((s, r) => s + Number(r.amount || 0), 0);
-        return { id: o.id, name: o.name, fare, jama, khoroch, balance: fare + jama - khoroch };
-      });
-    },
-  });
-  const ob = ownerBalances.data ?? [];
-
-
-  const tripRows = summary.data ?? [];
+  const tripRows = mb.trips;
   const chartData = chartMode === "tripCount"
     ? Object.entries(
         tripRows.reduce<Record<string, number>>((acc, r) => {
@@ -160,91 +154,75 @@ function DashboardPage() {
           <p className="text-sm text-muted-foreground mt-1">{t("overview")}</p>
         </div>
 
-        {/* মূল পরিবহন হিসাব */}
+        {/* Filters */}
+        <Card className="p-3 border-border/60 bg-card shadow-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase text-muted-foreground">{t("from")}</span>
+              <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setMonth(""); }} className="h-9" />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase text-muted-foreground">{t("to")}</span>
+              <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setMonth(""); }} className="h-9" />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase text-muted-foreground">{t("month")}</span>
+              <Input type="month" value={month} onChange={(e) => { setMonth(e.target.value); setDateFrom(""); setDateTo(""); }} className="h-9" />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase text-muted-foreground">{t("owner")}</span>
+              <Select value={ownerId} onValueChange={setOwnerId}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("ownerless")} ({t("filterAll")})</SelectItem>
+                  {owners.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase text-muted-foreground">{t("vehicleNo")}</span>
+              <Select value={vehicle} onValueChange={setVehicle}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("allVehicles")}</SelectItem>
+                  {vehicles.map((v) => <SelectItem key={v.vehicle_no} value={v.vehicle_no}>{v.vehicle_no}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </label>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            {effRange.from ? fmtDate(effRange.from, lang) : "—"} → {effRange.to ? fmtDate(effRange.to, lang) : "—"}
+          </p>
+        </Card>
+
+        {/* Main transport account */}
         <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="text-sm font-semibold text-muted-foreground mb-3 flex items-center justify-between border-b pb-2">
-            <span>🚌 মূল পরিবহন হিসাব (ওনার বিহীন)</span>
-            <span className="text-foreground text-xs">মোট ট্রিপ: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
+            <span>🚌 {t("mainTransportAccount")} {ownerId === "all" ? `(${t("ownerless")})` : ""}</span>
+            <span className="text-foreground text-xs">{t("totalTrips")}: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <MiniStat label="দৈনিক জমা" value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
-            <MiniStat label="দেনা" value={fmtNum(mb.dena, lang)} color="text-rose-500" />
-            <MiniStat label="আয়/লস" value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.office, lang)} color="text-emerald-500" />
-            <MiniStat label="দৈনিক খরচ" value={fmtNum(mb.expense, lang)} color="text-rose-500" />
+            <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
+            <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
+            <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
+            <MiniStat label={t("otherDeposits")} value={fmtNum(mb.office, lang)} color="text-emerald-500" />
+            <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
             <MiniStat
-              label="মুল ব্যালেন্স"
+              label={t("mainBalance")}
               value={fmtNum(mb.balance, lang)}
               color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"}
               highlight
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-            (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ = মুল ব্যালেন্স
-          </p>
-        </Card>
-
-        {/* ওনারদের হিসাব — অটো */}
-        {ob.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">👤 ওনারদের হিসাব</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {ob.map((o) => (
-                <Card key={o.id} className="p-3 border-border/60 bg-card shadow-sm">
-                  <div className="flex items-center justify-between border-b pb-2 mb-2">
-                    <span className="font-bold text-sm">{o.name}</span>
-                    <span className={`font-bold text-base ${o.balance >= 0 ? "text-sky-600" : "text-rose-600"}`}>
-                      ব্যালেন্স: {fmtNum(o.balance, lang)}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <MiniStat label="গাড়ী ভাড়া" value={fmtNum(o.fare, lang)} color="text-amber-600" />
-                    <MiniStat label="জমা-খরচ (জমা)" value={fmtNum(o.jama, lang)} color="text-emerald-500" />
-                    <MiniStat label="জমা-খরচ (খরচ)" value={fmtNum(o.khoroch, lang)} color="text-rose-500" />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-2 font-mono">
-                    গাড়ী ভাড়া + জমা − খরচ = ব্যালেন্স
-                  </p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Filters */}
-        <Card className="p-4 border-border/60 bg-card shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-11"
-            />
-            <Select value={vehicle} onValueChange={setVehicle}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder={t("selectVehicle")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("allVehicles")}</SelectItem>
-                {vehicles.map((v) => (
-                  <SelectItem key={v.vehicle_no} value={v.vehicle_no}>
-                    {v.vehicle_no}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            {fmtDate(date, lang)} · {vehicle === "all" ? t("allVehicles") : vehicle}
+            ({t("dailyJama")} − {t("dena")}) + {t("otherDeposits")} − {t("dailyExpense")} = {t("mainBalance")}
           </p>
         </Card>
 
         {/* Per-trip chart */}
         <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <div className="text-sm font-semibold text-muted-foreground">
-              {t("tripChart")}
-            </div>
+            <div className="text-sm font-semibold text-muted-foreground">{t("tripChart")}</div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
               {(["balance", "debit", "deposit", "tripCount"] as const).map((m) => (
                 <button
@@ -273,7 +251,6 @@ function DashboardPage() {
             </div>
           )}
         </Card>
-
 
         {/* Module buttons */}
         <div>
