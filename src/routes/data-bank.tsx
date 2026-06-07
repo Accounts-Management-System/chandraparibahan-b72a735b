@@ -300,7 +300,7 @@ function Page() {
                   cols={[
                     ["vno", t("vehicleNo")],
                     ["owner", t("owner")],
-                    ["trips", "ট্রিপ সংখ্যা", (v: any) => fmtNum(v, lang)],
+                    ["trips", t("tripCount"), (v: any) => fmtNum(v, lang)],
                     ["fare", t("fareTotal"), (v: any) => fmtNum(v, lang)],
                   ]}
                   footer={[t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]}
