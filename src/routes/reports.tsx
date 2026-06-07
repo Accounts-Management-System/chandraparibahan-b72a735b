@@ -12,6 +12,8 @@ import { exportPdf, exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/reports")({ component: Page });
 
+const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 function Page() {
   const { t, lang } = useT();
   const today = new Date().toISOString().slice(0, 10);
@@ -69,8 +71,8 @@ function Page() {
   // === অন্যান্য জমা: owner_id IS NULL → মূল হিসাব; owner_id সেট → ওনার হিসাব ===
   // ownerId খালি = মূল (owner_id null); সেট = সেই ওনারের
   const othRows = useMemo(() => {
-    if (!ownerId) return data.oth.filter((r: any) => !r.owner_id);
-    return data.oth.filter((r: any) => r.owner_id === ownerId);
+    if (!ownerId) return data.oth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY);
+    return data.oth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY);
   }, [data.oth, ownerId]);
   const othTotal = othRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
@@ -89,7 +91,7 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [data.trips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
+  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
   const ownerExp = useMemo(() => data.exp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [data.exp, ownerId]);
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);

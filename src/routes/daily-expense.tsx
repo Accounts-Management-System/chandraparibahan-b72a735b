@@ -11,6 +11,8 @@ import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/daily-expense")({ component: Page });
 
+const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 function Page() {
   const { t, lang } = useT();
   const [filters, setFilters] = useState<FilterState>(emptyFilters);

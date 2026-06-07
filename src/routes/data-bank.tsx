@@ -20,6 +20,8 @@ export const Route = createFileRoute("/data-bank")({
     }).parse(s),
 });
 
+const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 function Page() {
   const { t, lang } = useT();
   const search = Route.useSearch();
@@ -113,8 +115,8 @@ function Page() {
 
   // অন্যান্য জমা: owner_id null → মূল; owner filter দিলে সেই ওনারের
   const othRows = useMemo(() => ownerId
-    ? allOth.filter((r: any) => r.owner_id === ownerId)
-    : allOth.filter((r: any) => !r.owner_id), [allOth, ownerId]);
+    ? allOth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY)
+    : allOth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY), [allOth, ownerId]);
 
   // দৈনিক খরচ: একই
   const expRows = useMemo(() => ownerId
@@ -127,7 +129,7 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [allTrips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
+  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
   const ownerExp = useMemo(() => allExp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allExp, ownerId]);
 
   const totalDailyJama = tripRows.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
