@@ -142,7 +142,7 @@ function Page() {
         </thead>
         <tbody>
           <tr>
-            <td>মোট ট্রিপ<br/><b>${esc(fmtNum(totalTrips, lang))} টি</b></td>
+            <td>${esc(t("totalTrips"))}<br/><b>${esc(fmtNum(totalTrips, lang))} টি</b></td>
             <td>মোট জমা<br/><b class="green">${esc(fmtNum(totalJama, lang))}</b></td>
             <td>মোট দেনা<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
             <td>ব্যালেন্স<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
@@ -259,7 +259,7 @@ function Page() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label="মোট ট্রিপ" value={`${fmtNum(totalTrips, lang)} টি`} />
+          <Stat label={t("totalTrips")} value={`${fmtNum(totalTrips, lang)} টি`} />
           <Stat label="মোট জমা" value={fmtNum(totalJama, lang)} color="text-emerald-400" />
           <Stat label="মোট দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
           <Stat label="ব্যালেন্স (জমা−দেনা)" value={fmtNum(totalJama - totalDena, lang)} />

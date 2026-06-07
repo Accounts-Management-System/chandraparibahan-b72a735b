@@ -232,7 +232,7 @@ function Page() {
     const khorochRows = ownerExp.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]);
     const body =
       `<div class="totals" style="border:0;margin:0 0 10px"><span>গাড়ি ভাড়া: ${esc(fmtNum(ownerFares, lang))}</span><span>জমা-খরচের জমা: ${esc(fmtNum(ownerJama, lang))}</span><span>জমা-খরচের খরচ: ${esc(fmtNum(ownerKhoroch, lang))}</span></div>` +
-      tbl("গাড়ি অনুযায়ী ভাড়া", [t("vehicleNo"), t("owner"), "ট্রিপ সংখ্যা", t("fareTotal")], vehRows, [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]) +
+      tbl("গাড়ি অনুযায়ী ভাড়া", [t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")], vehRows, [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]) +
       tbl("ট্রিপ বিবরণ", [t("date"), t("owner"), t("vehicleNo"), t("fareTotal")], tripRowsArr, [t("grandTotal"), "", "", fmtNum(ownerFares, lang)]) +
       tbl("জমা-খরচের জমা", [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], jamaRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)]) +
       tbl("জমা-খরচের খরচ", [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], khorochRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerKhoroch, lang)]);
@@ -359,13 +359,13 @@ function Page() {
                 <Stat label="গাড়ি ভাড়া" value={fmtNum(ownerFares, lang)} color="text-amber-400" />
                 <Stat label="জমা-খরচের জমা" value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
                 <Stat label="জমা-খরচের খরচ" value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
-                <Stat label="মোট ট্রিপ" value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
+                <Stat label={t("totalTrips")} value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া</h3>
                 <Section
-                  headers={[t("vehicleNo"), t("owner"), "ট্রিপ সংখ্যা", t("fareTotal")]}
+                  headers={[t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")]}
                   rows={ownerByVehicle}
                   cells={(v: any) => [v.vno, v.owner, fmtNum(v.trips, lang), fmtNum(v.fare, lang)]}
                   footer={[t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]}

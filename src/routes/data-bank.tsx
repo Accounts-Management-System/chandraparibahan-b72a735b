@@ -290,7 +290,7 @@ function Page() {
                 <Stat label="গাড়ি ভাড়া" value={fmtNum(ownerFares, lang)} color="text-amber-400" />
                 <Stat label="জমা-খরচের জমা" value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
                 <Stat label="জমা-খরচের খরচ" value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
-                <Stat label="মোট ট্রিপ" value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
+                <Stat label={t("totalTrips")} value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
               </div>
 
               <div>
@@ -300,7 +300,7 @@ function Page() {
                   cols={[
                     ["vno", t("vehicleNo")],
                     ["owner", t("owner")],
-                    ["trips", "ট্রিপ সংখ্যা", (v: any) => fmtNum(v, lang)],
+                    ["trips", t("tripCount"), (v: any) => fmtNum(v, lang)],
                     ["fare", t("fareTotal"), (v: any) => fmtNum(v, lang)],
                   ]}
                   footer={[t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]}
