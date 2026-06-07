@@ -142,7 +142,7 @@ function Page() {
         </thead>
         <tbody>
           <tr>
-            <td>মোট ট্রিপ<br/><b>${esc(fmtNum(totalTrips, lang))} টি</b></td>
+            <td>${esc(t("totalTrips"))}<br/><b>${esc(fmtNum(totalTrips, lang))} টি</b></td>
             <td>মোট জমা<br/><b class="green">${esc(fmtNum(totalJama, lang))}</b></td>
             <td>মোট দেনা<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
             <td>ব্যালেন্স<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
