@@ -52,6 +52,32 @@ function Page() {
   const totalTrips = trips.length;
   const handBalance = (totalJama - totalDena) + totalOffice - totalExpense;
 
+  const dailyRows = useMemo(() => {
+    const m = new Map<string, { jama: number; dena: number; office: number; expense: number }>();
+    trips.forEach((r: any) => {
+      const cur = m.get(r.trip_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      cur.jama += Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      cur.dena += Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      m.set(r.trip_date, cur);
+    });
+    officeDeposits.forEach((r: any) => {
+      const cur = m.get(r.deposit_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      cur.office += Number(r.amount || 0);
+      m.set(r.deposit_date, cur);
+    });
+    expenses.forEach((r: any) => {
+      const cur = m.get(r.expense_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      cur.expense += Number(r.amount || 0);
+      m.set(r.expense_date, cur);
+    });
+    let running = 0;
+    return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => {
+      const transport = v.jama - v.dena;
+      running += transport + v.office - v.expense;
+      return { date, ...v, transport, balance: running };
+    });
+  }, [trips, officeDeposits, expenses]);
+
   const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   const exportLandscapePdf = () => {
@@ -88,9 +114,24 @@ function Page() {
       ? `তারিখ: ${fmtDate(from, lang)}`
       : `${fmtDate(from, lang)} → ${fmtDate(to, lang)}`;
 
+    const monthlyRows = dailyRows.map((r) => `
+      <tr>
+        <td>${esc(fmtDate(r.date, lang))}</td>
+        <td class="num">${esc(fmtNum(r.transport, lang))}</td>
+        <td class="num">${esc(fmtNum(r.office, lang))}</td>
+        <td class="num">${esc(fmtNum(r.expense, lang))}</td>
+        <td class="num">${esc(fmtNum(r.balance, lang))}</td>
+      </tr>`).join("");
+
     const body = `
-      <div class="banner">প্রতিদিনের জমা ও খরচ হিসাব</div>
+      <div class="banner green-banner">চন্দ্রা পরিবহন দৈনিক জমা খরচ হিসাব</div>
       <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: সকল গাড়ির দৈনিক জমা/দেনা, অফিস জমা ও ওনার-বিহীন দৈনিক খরচ</div>
+
+      <table class="month-report">
+        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>অফিস কতৃক জমা</th><th>দৈনিক খরচ</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
+        <tbody>${monthlyRows || `<tr><td colspan="5">${esc(t("noData"))}</td></tr>`}</tbody>
+        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOffice, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
+      </table>
 
       <table class="summary">
         <thead>
@@ -157,7 +198,12 @@ function Page() {
 
     const extraStyle = `<style>
       .banner{background:#dbeafe;border:1px solid #94a3b8;padding:8px;text-align:center;font-weight:700;font-size:16px;margin:6px 0}
+      .green-banner{background:#c6e0b4;border:3px solid #525252;font-size:22px;color:#111}
       .meta{text-align:center;font-size:11px;margin-bottom:8px}
+      table.month-report{font-size:15px;border:2px solid #525252;margin-bottom:10px}
+      table.month-report th,table.month-report td{border:2px solid #525252;text-align:center;padding:4px 8px}
+      table.month-report th{background:#d1d5db;font-size:16px}
+      table.month-report .num{text-align:right}
       table.summary{margin-bottom:6px}
       table.summary th{background:#e5e7eb}
       table.summary .head-left{text-align:center;background:#cbd5e1}
