@@ -169,7 +169,7 @@ function Page() {
             <th>সুপারভাইজার</th>
             <th>জমা</th>
             <th>দেনা</th>
-            <th>ব্যালেন্স</th>
+            <th>আয়/লস</th>
             <th>গাড়ী ভাড়া</th>
             <th>রুট</th>
             <th class="sep"></th>
@@ -281,7 +281,7 @@ function Page() {
                   <th className="px-2 py-1 text-left">সুপারভাইজার</th>
                   <th className="px-2 py-1 text-right">জমা</th>
                   <th className="px-2 py-1 text-right">দেনা</th>
-                  <th className="px-2 py-1 text-right">ব্যাল.</th>
+                  <th className="px-2 py-1 text-right">আয়/লস</th>
                   <th className="px-2 py-1 text-right">ভাড়া</th>
                   <th className="px-2 py-1 text-left">রুট</th>
                 </tr>
