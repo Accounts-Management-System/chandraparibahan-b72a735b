@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -152,19 +151,42 @@ function Page() {
           </div>
         </div>
 
-        <DataTable<Row>
-          rows={isLoading ? [] : rows}
-          columns={[
-            { key: "deposit_date", header: t("date"), render: (r) => fmtDate(r.deposit_date, lang) },
-            { key: "category", header: t("category") },
-            { key: "head", header: t("head"), render: (r) => r.head ?? "—" },
-            { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
-            { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
-          ]}
-          onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
-          onDelete={canWrite ? (r) => del.mutate(r.id) : undefined}
-          emptyText={isLoading ? t("loading") : t("noData")}
-        />
+        <div className="overflow-x-auto rounded-md border bg-card">
+          <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">অফিস কতৃক জমা</div>
+          <div className="border-b px-3 py-2 text-right font-semibold text-primary">অফিস কতৃক জমা মোট&nbsp;&nbsp; {fmtNum(total, lang)}</div>
+          <table className="w-full text-sm">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-3 py-2 text-center">সিরিয়াল</th>
+                <th className="px-3 py-2 text-center">{t("date")}</th>
+                <th className="px-3 py-2 text-center">{t("category")}</th>
+                <th className="px-3 py-2 text-center">{t("head")}</th>
+                <th className="px-3 py-2 text-center">{t("description")}</th>
+                <th className="px-3 py-2 text-right">{t("amount")}</th>
+                {canWrite && <th className="px-3 py-2 text-right">{t("actions")}</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {(isLoading ? [] : rows).length === 0 && <tr><td colSpan={canWrite ? 7 : 6} className="py-8 text-center text-muted-foreground">{isLoading ? t("loading") : t("noData")}</td></tr>}
+              {(isLoading ? [] : rows).map((r, i) => (
+                <tr key={r.id} className="border-t hover:bg-muted/30">
+                  <td className="px-3 py-2 text-center">{fmtNum(i + 1, lang)}</td>
+                  <td className="px-3 py-2 text-center">{fmtDate(r.deposit_date, lang)}</td>
+                  <td className="px-3 py-2 text-center">{r.category}</td>
+                  <td className="px-3 py-2 text-center">{r.head ?? "—"}</td>
+                  <td className="px-3 py-2 text-center">{r.description ?? "—"}</td>
+                  <td className="px-3 py-2 text-right font-semibold">{fmtNum(r.amount, lang)}</td>
+                  {canWrite && (
+                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                      <Button size="sm" variant="ghost" onClick={() => { setEditing(r); setOpen(true); }}>{t("edit")}</Button>
+                      <Button size="sm" variant="ghost" onClick={() => { if (confirm(t("confirmDelete"))) del.mutate(r.id); }}>{t("delete")}</Button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
