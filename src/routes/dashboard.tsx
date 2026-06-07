@@ -25,7 +25,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
 
 export const Route = createFileRoute("/dashboard")({
@@ -53,12 +53,22 @@ function DashboardPage() {
   const [vehicle, setVehicle] = useState<string>("all");
 
   const { data: vehicles = [] } = useQuery({
-    queryKey: ["vehicles-list"],
+    queryKey: ["vehicles-list-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("vehicles").select("vehicle_no").order("vehicle_no");
-      return (data ?? []) as { vehicle_no: string }[];
+      const { data } = await supabase.from("vehicles").select("vehicle_no,owner_id").order("vehicle_no");
+      return (data ?? []) as { vehicle_no: string; owner_id: string | null }[];
     },
   });
+  const { data: owners = [] } = useQuery({
+    queryKey: ["dash-owners"],
+    queryFn: async () => ((await supabase.from("owners").select("id,name").order("name")).data ?? []) as { id: string; name: string }[],
+  });
+
+  const ownerVehMap = useMemo(() => {
+    const m = new Map<string, string | null>();
+    vehicles.forEach((v) => m.set(v.vehicle_no, v.owner_id ?? null));
+    return m;
+  }, [vehicles]);
 
   const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
 
@@ -76,25 +86,62 @@ function DashboardPage() {
     },
   });
 
-  // মূল পরিবহন হিসাব: সব ট্রিপ + আলাদা অফিস জমা; খরচ থেকে owner_id null শুধু
+  // মূল পরিবহন হিসাব: শুধু ownerless গাড়ি
   const mainBalance = useQuery({
     queryKey: ["dash-main-balance"],
     queryFn: async () => {
-      const [tripsRes, officeRes, expRes] = await Promise.all([
+      const [tripsRes, officeRes, expRes, vehRes] = await Promise.all([
         supabase.from("trips").select("vehicle_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000),
         (supabase as any).from("office_deposits").select("amount").limit(100000),
         supabase.from("expenses").select("owner_id,amount").is("owner_id", null).limit(100000),
+        supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000),
       ]);
-      const trips = (tripsRes.data ?? []) as any[];
-      const dailyJama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-      const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const fare = trips.reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-      const officeJama = ((officeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
-      const dailyExpense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
-      return { dailyJama, dena, fare, officeJama, dailyExpense, balance: (dailyJama - dena) + officeJama - dailyExpense, tripCount: trips.length };
+      const vehMap = new Map<string, string | null>();
+      ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
+      const allTrips = (tripsRes.data ?? []) as any[];
+      const mainTrips = allTrips.filter((r) => !vehMap.get(r.vehicle_no));
+      const jama = mainTrips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+      const dena = mainTrips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+      const office = ((officeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const expense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const incomeLoss = jama - dena;
+      return {
+        jama, dena, incomeLoss, office, expense,
+        balance: incomeLoss + office - expense,
+        tripCount: mainTrips.length,
+      };
     },
   });
-  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, fare: 0, officeJama: 0, dailyExpense: 0, balance: 0, tripCount: 0 };
+  const mb = mainBalance.data ?? { jama: 0, dena: 0, incomeLoss: 0, office: 0, expense: 0, balance: 0, tripCount: 0 };
+
+  // প্রতি ওনারের জন্য হিসাব
+  const ownerBalances = useQuery({
+    queryKey: ["dash-owner-balances"],
+    queryFn: async () => {
+      const [tripsRes, expRes, othRes, vehRes, ownRes] = await Promise.all([
+        supabase.from("trips").select("vehicle_no,fare_1,fare_2").limit(100000),
+        supabase.from("expenses").select("owner_id,amount").not("owner_id", "is", null).limit(100000),
+        supabase.from("other_incomes").select("owner_id,amount,category").not("owner_id", "is", null).limit(100000),
+        supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000),
+        supabase.from("owners").select("id,name").order("name"),
+      ]);
+      const vehMap = new Map<string, string | null>();
+      ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
+      const trips = (tripsRes.data ?? []) as any[];
+      const exp = (expRes.data ?? []) as any[];
+      const oth = ((othRes.data ?? []) as any[]).filter((r) => r.category !== "অফিস কতৃক জমা");
+      const ownersList = ((ownRes.data ?? []) as any[]);
+      return ownersList.map((o) => {
+        const fare = trips
+          .filter((r) => vehMap.get(r.vehicle_no) === o.id)
+          .reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+        const jama = oth.filter((r) => r.owner_id === o.id).reduce((s, r) => s + Number(r.amount || 0), 0);
+        const khoroch = exp.filter((r) => r.owner_id === o.id).reduce((s, r) => s + Number(r.amount || 0), 0);
+        return { id: o.id, name: o.name, fare, jama, khoroch, balance: fare + jama - khoroch };
+      });
+    },
+  });
+  const ob = ownerBalances.data ?? [];
 
 
   const tripRows = summary.data ?? [];
@@ -117,36 +164,65 @@ function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("dashboard")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("overview")}</p>
         </div>
 
         {/* মূল পরিবহন হিসাব */}
-        <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-between">
-            <span>মূল পরিবহন হিসাব</span>
-            <span className="text-foreground">মোট ট্রিপ: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
+        <Card className="p-4 border-border/60 bg-card shadow-sm">
+          <div className="text-sm font-semibold text-muted-foreground mb-3 flex items-center justify-between border-b pb-2">
+            <span>🚌 মূল পরিবহন হিসাব (ওনার বিহীন)</span>
+            <span className="text-foreground text-xs">মোট ট্রিপ: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <MiniStat label="দৈনিক জমা" value={fmtNum(mb.dailyJama, lang)} color="text-emerald-400" />
-            <MiniStat label="দেনা" value={fmtNum(mb.dena, lang)} color="text-rose-400" />
-            <MiniStat label="অফিস কতৃক জমা" value={fmtNum(mb.officeJama, lang)} color="text-emerald-400" />
-            <MiniStat label="দৈনিক খরচ" value={fmtNum(mb.dailyExpense, lang)} color="text-rose-400" />
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+            <MiniStat label="দৈনিক জমা" value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
+            <MiniStat label="দেনা" value={fmtNum(mb.dena, lang)} color="text-rose-500" />
+            <MiniStat label="আয়/লস" value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
+            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.office, lang)} color="text-emerald-500" />
+            <MiniStat label="দৈনিক খরচ" value={fmtNum(mb.expense, lang)} color="text-rose-500" />
             <MiniStat
-              label="ব্যালেন্স"
+              label="মুল ব্যালেন্স"
               value={fmtNum(mb.balance, lang)}
-              color={mb.balance >= 0 ? "text-sky-400" : "text-rose-500"}
+              color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"}
+              highlight
             />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-3">
-            (দৈনিক জমা − দেনা) + অফিস কতৃক জমা − দৈনিক খরচ = ব্যালেন্স
+          <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+            (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ = মুল ব্যালেন্স
           </p>
         </Card>
 
+        {/* ওনারদের হিসাব — অটো */}
+        {ob.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">👤 ওনারদের হিসাব</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {ob.map((o) => (
+                <Card key={o.id} className="p-3 border-border/60 bg-card shadow-sm">
+                  <div className="flex items-center justify-between border-b pb-2 mb-2">
+                    <span className="font-bold text-sm">{o.name}</span>
+                    <span className={`font-bold text-base ${o.balance >= 0 ? "text-sky-600" : "text-rose-600"}`}>
+                      ব্যালেন্স: {fmtNum(o.balance, lang)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <MiniStat label="গাড়ী ভাড়া" value={fmtNum(o.fare, lang)} color="text-amber-600" />
+                    <MiniStat label="জমা-খরচ (জমা)" value={fmtNum(o.jama, lang)} color="text-emerald-500" />
+                    <MiniStat label="জমা-খরচ (খরচ)" value={fmtNum(o.khoroch, lang)} color="text-rose-500" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 font-mono">
+                    গাড়ী ভাড়া + জমা − খরচ = ব্যালেন্স
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
-        <Card className="p-4 border-border/50 bg-card/60 backdrop-blur">
+        <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               type="date"
@@ -174,9 +250,9 @@ function DashboardPage() {
         </Card>
 
         {/* Per-trip chart */}
-        <Card className="p-4 border-border/50 bg-card/70 backdrop-blur">
+        <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+            <div className="text-sm font-semibold text-muted-foreground">
               {t("tripChart")}
             </div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
@@ -197,9 +273,9 @@ function DashboardPage() {
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 0.08)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "oklch(0.7 0.04 270)" }} interval={0} angle={-30} textAnchor="end" height={50} />
-                  <YAxis tick={{ fontSize: 10, fill: "oklch(0.7 0.04 270)" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0 0 0 / 0.08)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={50} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                   <Bar dataKey="value" fill={chartColor} radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -221,9 +297,9 @@ function DashboardPage() {
                 <Link
                   key={tile.to}
                   to={tile.to}
-                  className="group relative overflow-hidden rounded-xl border border-border/60 bg-card/70 p-5 transition-all hover:border-primary/60 hover:bg-card hover:-translate-y-0.5 hover:shadow-[0_8px_30px_-8px] hover:shadow-primary/40"
+                  className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-gradient-to-br from-primary/30 to-accent/30 text-primary group-hover:from-primary group-hover:to-primary-glow group-hover:text-primary-foreground transition-all mb-3">
+                  <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="font-medium text-sm">{t(tile.key)}</div>
@@ -237,12 +313,11 @@ function DashboardPage() {
   );
 }
 
-function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
+function MiniStat({ label, value, color, highlight }: { label: string; value: string; color: string; highlight?: boolean }) {
   return (
-    <div className="rounded-lg border bg-card/60 p-3">
+    <div className={`rounded-md border p-2 ${highlight ? "bg-primary/5 border-primary/40" : "bg-muted/30"}`}>
       <div className="text-[10px] uppercase text-muted-foreground mb-1">{label}</div>
-      <div className={`text-lg font-bold ${color}`}>{value}</div>
+      <div className={`text-base md:text-lg font-bold ${color}`}>{value}</div>
     </div>
   );
 }
-
