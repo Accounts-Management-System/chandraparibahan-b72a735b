@@ -314,7 +314,7 @@ function Page() {
 
           <TabsContent value="jama">
             <Section
-              headers={[t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), t("balance"), t("fareTotal"), t("supervisor")]}
+              headers={[t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), "আয়/লস", t("fareTotal"), t("supervisor")]}
               rows={tripRows}
               cells={(r: any) => {
                 const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
