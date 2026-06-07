@@ -365,7 +365,7 @@ function Page() {
               <div>
                 <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া</h3>
                 <Section
-                  headers={[t("vehicleNo"), t("owner"), "ট্রিপ সংখ্যা", t("fareTotal")]}
+                  headers={[t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")]}
                   rows={ownerByVehicle}
                   cells={(v: any) => [v.vno, v.owner, fmtNum(v.trips, lang), fmtNum(v.fare, lang)]}
                   footer={[t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]}
