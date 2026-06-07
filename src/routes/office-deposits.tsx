@@ -180,7 +180,7 @@ function Page() {
 
         <div className="overflow-x-auto rounded-md border bg-card">
           <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">{t("officeDeposits")}</div>
-          <div className="border-b px-3 py-2 text-right font-semibold text-primary">অফিস কতৃক জমা মোট&nbsp;&nbsp; {fmtNum(total, lang)}</div>
+          <div className="border-b px-3 py-2 text-right font-semibold text-primary">{t("officeDeposits")} {t("total")}&nbsp;&nbsp; {fmtNum(total, lang)}</div>
           <table className="w-full text-sm">
             <thead className="bg-muted">
               <tr>
