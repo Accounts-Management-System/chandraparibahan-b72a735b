@@ -11,53 +11,37 @@ import { exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/daily-report")({ component: Page });
 
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
-
 function Page() {
   const { t, lang } = useT();
   const today = new Date().toISOString().slice(0, 10);
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
 
-  const { data: vehiclesAll = [] } = useQuery({
-    queryKey: ["dr-vehicles"],
-    queryFn: async () => ((await supabase.from("vehicles").select("vehicle_no,owner_id")).data ?? []) as any[],
-  });
-
   const q = useQuery({
     queryKey: ["daily-report", from, to],
     queryFn: async () => {
-      const [trips, exp, oth] = await Promise.all([
+      const [trips, exp, office] = await Promise.all([
         supabase.from("trips").select("*").gte("trip_date", from).lte("trip_date", to).order("trip_date").order("serial_no"),
         supabase.from("expenses").select("*").gte("expense_date", from).lte("expense_date", to).order("expense_date"),
-        supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date"),
+        (supabase as any).from("office_deposits").select("*").gte("deposit_date", from).lte("deposit_date", to).order("deposit_date"),
       ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [] };
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], office: (office as any).data ?? [] };
     },
   });
 
-  const data = q.data ?? { trips: [], exp: [], oth: [] };
-
-  // ওনার-যুক্ত গাড়ির সেট — এসব বাদ
-  const ownerVehicleSet = useMemo(() => {
-    const s = new Set<string>();
-    (vehiclesAll as any[]).forEach((v) => { if (v.owner_id) s.add(v.vehicle_no); });
-    return s;
-  }, [vehiclesAll]);
-
-  const isMain = (vno: string | null | undefined) => !vno || !ownerVehicleSet.has(vno);
+  const data = q.data ?? { trips: [], exp: [], office: [] };
 
   const trips = useMemo(
-    () => data.trips.filter((r: any) => isMain(r.vehicle_no)),
-    [data.trips, ownerVehicleSet],
+    () => data.trips,
+    [data.trips],
   );
   const expenses = useMemo(
-    () => data.exp.filter((r: any) => !r.owner_id && isMain(r.vehicle_no)),
-    [data.exp, ownerVehicleSet],
+    () => data.exp.filter((r: any) => !r.owner_id),
+    [data.exp],
   );
   const officeDeposits = useMemo(
-    () => data.oth.filter((r: any) => r.category === OFFICE_CATEGORY && !r.owner_id),
-    [data.oth],
+    () => data.office,
+    [data.office],
   );
 
   const totalJama = trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
@@ -106,7 +90,7 @@ function Page() {
 
     const body = `
       <div class="banner">প্রতিদিনের জমা ও খরচ হিসাব</div>
-      <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব (কোনো ওনার হিসাব এখানে নেই — সকল গাড়ির হিসাব)</div>
+      <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: সকল গাড়ির দৈনিক জমা/দেনা, অফিস জমা ও ওনার-বিহীন দৈনিক খরচ</div>
 
       <table class="summary">
         <thead>
@@ -204,7 +188,7 @@ function Page() {
           <div>
             <h1 className="text-2xl font-bold">প্রতিদিনের জমা ও খরচ হিসাব</h1>
             <p className="text-xs text-muted-foreground">
-              পরিবহন হিসাব (কোনো ওনার হিসাব এখানে নেই — সকল গাড়ির হিসাব)
+              সকল গাড়ির দৈনিক জমা/দেনা + অফিস কতৃক জমা − ওনার-বিহীন দৈনিক খরচ
             </p>
           </div>
           <div className="flex gap-2">
@@ -327,7 +311,7 @@ function Page() {
               <tbody>
                 {officeDeposits.map((r: any) => (
                   <tr key={r.id} className="border-t">
-                    <td className="px-2 py-1">{fmtDate(r.income_date, lang)}</td>
+                    <td className="px-2 py-1">{fmtDate(r.deposit_date, lang)}</td>
                     <td className="px-2 py-1">{r.description ?? "—"}</td>
                     <td className="px-2 py-1 text-right text-emerald-400">{fmtNum(r.amount, lang)}</td>
                   </tr>
