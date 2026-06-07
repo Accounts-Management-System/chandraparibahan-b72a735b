@@ -180,6 +180,17 @@ const dict = {
   note: { bn: "মন্তব্য", en: "Note" },
   amountReq: { bn: "পরিমান প্রয়োজন", en: "Amount required" },
   vendorReq: { bn: "ভেন্ডর প্রয়োজন", en: "Vendor required" },
+  mainTransportAccount: { bn: "মূল পরিবহন হিসাব", en: "Main Transport Account" },
+  ownerless: { bn: "ওনার বিহীন", en: "Ownerless" },
+  totalTrips: { bn: "মোট ট্রিপ", en: "Total Trips" },
+  dailyJama: { bn: "দৈনিক জমা", en: "Daily Jama" },
+  dena: { bn: "দেনা", en: "Dena" },
+  incomeLoss: { bn: "আয়/লস", en: "Income/Loss" },
+  otherDeposits: { bn: "অন্যান্য জমা", en: "Other Deposits" },
+  mainBalance: { bn: "মুল ব্যালেন্স", en: "Main Balance" },
+  month: { bn: "মাস", en: "Month" },
+  filterAll: { bn: "সব", en: "All" },
+  remarks: { bn: "বর্ণনা", en: "Remarks" },
 } as const;
 
 type Key = keyof typeof dict;
