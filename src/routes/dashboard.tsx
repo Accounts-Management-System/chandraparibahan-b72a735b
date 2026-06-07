@@ -25,7 +25,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRole } from "@/lib/useRole";
 
 export const Route = createFileRoute("/dashboard")({
