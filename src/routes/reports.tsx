@@ -39,12 +39,13 @@ function Page() {
       if (car) eQ = eQ.eq("vehicle_no", car);
       let oQ = supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date");
       if (car) oQ = oQ.eq("vehicle_no", car);
-      const [trips, exp, oth] = await Promise.all([tQ, eQ, oQ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [] };
+      const officeQ = (supabase as any).from("office_deposits").select("*").gte("deposit_date", from).lte("deposit_date", to).order("deposit_date");
+      const [trips, exp, oth, office] = await Promise.all([tQ, eQ, oQ, officeQ]);
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [], office: (office as any).data ?? [] };
     },
   });
 
-  const data = q.data ?? { trips: [], exp: [], oth: [] };
+  const data = q.data ?? { trips: [], exp: [], oth: [], office: [] };
 
   const ownerVehNos = useMemo(() => {
     const m = new Map<string, string | null>();
@@ -79,6 +80,8 @@ function Page() {
     return data.exp.filter((r: any) => r.owner_id === ownerId);
   }, [data.exp, ownerId]);
   const expTotal = expRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const officeRows = useMemo(() => ownerId ? [] : data.office, [data.office, ownerId]);
+  const officeTotal = officeRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
   // === ওনার হিসাব (জমা-খরচ) — journal style; কোনো বিয়োগ নয় ===
   const ownerTrips = useMemo(() => data.trips.filter((r: any) => {
@@ -122,6 +125,12 @@ function Page() {
       cur.oth += Number(r.amount || 0);
       m.set(k, cur);
     });
+    officeRows.forEach((r: any) => {
+      const k = r.deposit_date;
+      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
+      cur.oth += Number(r.amount || 0);
+      m.set(k, cur);
+    });
     expRows.forEach((r: any) => {
       const k = r.expense_date;
       const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
@@ -129,9 +138,9 @@ function Page() {
       m.set(k, cur);
     });
     return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [tripRows, othRows, expRows]);
+  }, [tripRows, othRows, officeRows, expRows]);
 
-  const balance = (dailyJama - dena) + othTotal - expTotal;
+  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (dailyJama - dena) + officeTotal - expTotal;
 
   const exportCsv = () => {
     const lines: string[] = [];
