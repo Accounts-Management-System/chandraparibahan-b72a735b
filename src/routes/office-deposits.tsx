@@ -3,17 +3,24 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FileDown, Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/office-deposits")({ component: Page });
+
+const DEFAULT_CATEGORIES = ["অফিস কতৃক জমা", "ব্যাংক জমা", "মালিক জমা", "অন্যান্য"];
+const DEFAULT_HEADS: Record<string, string[]> = {
+  "অফিস কতৃক জমা": ["নগদ", "চেক", "বিকাশ", "নগদ ডিপোজিট"],
+  "ব্যাংক জমা": ["সঞ্চয়", "চলতি"],
+  "মালিক জমা": ["অগ্রিম", "সমন্বয়"],
+};
+
 
 type Row = {
   id: string;
