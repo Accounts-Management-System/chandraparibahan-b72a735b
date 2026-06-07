@@ -88,7 +88,7 @@ const dict = {
   todaysSummary: { bn: "আজকের সারাংশ", en: "Today's Summary" },
   recentTrips: { bn: "সাম্প্রতিক ট্রিপ", en: "Recent Trips" },
   totalJama: { bn: "মোট জমা", en: "Total Deposit" },
-  tripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
+  tripCount: { bn: "গাড়ী সংখ্যা", en: "Vehicle Count" },
   tripChart: { bn: "ট্রিপ-ভিত্তিক জমা", en: "Per-Trip Deposit" },
   netIncome: { bn: "নিট ইনকাম (হাতে)", en: "Net Income (In Hand)" },
   totalDeposit: { bn: "মোট ডিপোজিট", en: "Total Deposit" },
