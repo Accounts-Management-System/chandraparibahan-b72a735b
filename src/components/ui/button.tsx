@@ -9,11 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90 [html.light_&]:bg-[linear-gradient(180deg,var(--primary),color-mix(in_oklab,var(--primary)_80%,black))] [html.light_&]:border [html.light_&]:border-[color-mix(in_oklab,var(--primary)_50%,black)] [html.light_&]:shadow-[inset_0_1px_0_oklch(1_0_0_/_0.3),0_1px_2px_oklch(0_0_0_/_0.25)] [html.light_&]:active:shadow-[inset_0_2px_4px_oklch(0_0_0_/_0.3)]",
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground [html.light_&]:bg-[linear-gradient(180deg,oklch(0.99_0_0),oklch(0.88_0.005_270))] [html.light_&]:border-[oklch(0_0_0_/_0.25)] [html.light_&]:shadow-[inset_0_1px_0_oklch(1_0_0_/_0.9),0_1px_2px_oklch(0_0_0_/_0.15)] [html.light_&]:active:shadow-[inset_0_2px_4px_oklch(0_0_0_/_0.2)] [html.light_&]:text-foreground",
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
