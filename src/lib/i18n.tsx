@@ -182,7 +182,7 @@ const dict = {
   vendorReq: { bn: "ভেন্ডর প্রয়োজন", en: "Vendor required" },
   mainTransportAccount: { bn: "মূল পরিবহন হিসাব", en: "Main Transport Account" },
   ownerless: { bn: "ওনার বিহীন", en: "Ownerless" },
-  totalTrips: { bn: "মোট ট্রিপ", en: "Total Trips" },
+  totalTrips: { bn: "গাড়ী সংখ্যা", en: "Vehicle Count" },
   dailyJama: { bn: "দৈনিক জমা", en: "Daily Jama" },
   dena: { bn: "দেনা", en: "Dena" },
   incomeLoss: { bn: "আয়/লস", en: "Income/Loss" },
