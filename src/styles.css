@@ -109,36 +109,37 @@
 }
 
 html.light {
-  --background: oklch(0.985 0.005 270);
-  --foreground: oklch(0.18 0.04 275);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 275);
+  /* Software / Ash look — light gray body, classic UI panels */
+  --background: oklch(0.93 0.005 270);
+  --foreground: oklch(0.18 0.02 270);
+  --card: oklch(0.985 0.003 270);
+  --card-foreground: oklch(0.18 0.02 270);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 275);
+  --popover-foreground: oklch(0.18 0.02 270);
 
-  --primary: oklch(0.55 0.22 275);
+  --primary: oklch(0.50 0.20 260);
   --primary-foreground: oklch(0.99 0.005 270);
-  --primary-glow: oklch(0.70 0.20 280);
+  --primary-glow: oklch(0.62 0.18 260);
 
-  --secondary: oklch(0.93 0.03 275);
-  --secondary-foreground: oklch(0.20 0.05 275);
-  --muted: oklch(0.95 0.02 275);
-  --muted-foreground: oklch(0.45 0.04 270);
-  --accent: oklch(0.90 0.05 275);
-  --accent-foreground: oklch(0.20 0.05 275);
+  --secondary: oklch(0.88 0.01 270);
+  --secondary-foreground: oklch(0.20 0.02 270);
+  --muted: oklch(0.90 0.005 270);
+  --muted-foreground: oklch(0.42 0.02 270);
+  --accent: oklch(0.85 0.02 260);
+  --accent-foreground: oklch(0.20 0.04 270);
 
-  --destructive: oklch(0.60 0.24 22);
+  --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.99 0.005 270);
 
-  --border: oklch(0 0 0 / 12%);
-  --input: oklch(0 0 0 / 8%);
-  --ring: oklch(0.55 0.22 275);
+  --border: oklch(0 0 0 / 18%);
+  --input: oklch(1 0 0 / 100%);
+  --ring: oklch(0.50 0.20 260);
 
-  --sidebar: oklch(0.97 0.01 275);
-  --sidebar-foreground: oklch(0.20 0.05 275);
-  --sidebar-accent: oklch(0.90 0.04 275);
-  --sidebar-accent-foreground: oklch(0.20 0.05 275);
-  --sidebar-border: oklch(0 0 0 / 10%);
+  --sidebar: oklch(0.96 0.005 270);
+  --sidebar-foreground: oklch(0.20 0.02 270);
+  --sidebar-accent: oklch(0.88 0.02 260);
+  --sidebar-accent-foreground: oklch(0.20 0.02 270);
+  --sidebar-border: oklch(0 0 0 / 12%);
 }
 html.light { color-scheme: light; }
 
@@ -147,7 +148,6 @@ html.light { color-scheme: light; }
   html { color-scheme: dark; }
   body {
     background:
-      /* subtle emboss texture */
       repeating-linear-gradient(45deg, oklch(1 0 0 / 0.012) 0 2px, transparent 2px 4px),
       repeating-linear-gradient(-45deg, oklch(0 0 0 / 0.04) 0 2px, transparent 2px 4px),
       radial-gradient(circle at 15% -10%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 50%),
@@ -157,23 +157,30 @@ html.light { color-scheme: light; }
     min-height: 100vh;
   }
   html.light body {
-    background:
-      /* embossed watermark — scattered faint color blooms */
-      radial-gradient(ellipse 140px 90px at 8% 12%, oklch(0.55 0.18 275 / 0.045), transparent 100%),
-      radial-gradient(ellipse 100px 160px at 92% 8%, oklch(0.65 0.14 180 / 0.04), transparent 100%),
-      radial-gradient(ellipse 120px 80px at 75% 35%, oklch(0.60 0.16 320 / 0.035), transparent 100%),
-      radial-gradient(ellipse 160px 110px at 25% 65%, oklch(0.55 0.12 145 / 0.04), transparent 100%),
-      radial-gradient(ellipse 90px 140px at 88% 72%, oklch(0.60 0.14 30 / 0.035), transparent 100%),
-      radial-gradient(ellipse 130px 70px at 45% 88%, oklch(0.55 0.16 250 / 0.04), transparent 100%),
-      radial-gradient(ellipse 110px 100px at 62% 18%, oklch(0.65 0.12 200 / 0.03), transparent 100%),
-      radial-gradient(ellipse 80px 130px at 15% 45%, oklch(0.60 0.10 280 / 0.035), transparent 100%),
-      /* fine grain texture for paper feel */
-      repeating-linear-gradient(90deg, oklch(0 0 0 / 0.012) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(0deg, oklch(0 0 0 / 0.012) 0 1px, transparent 1px 3px),
-      /* warm base */
-      var(--color-background);
+    background: var(--color-background);
+    color: var(--color-foreground);
+    min-height: 100vh;
   }
   input::placeholder, textarea::placeholder {
     color: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
+  }
+
+  /* Software-look 3D buttons & tabs (light mode) */
+  html.light button[data-slot="tabs-trigger"] {
+    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.88 0.005 270));
+    border: 1px solid oklch(0 0 0 / 0.25);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.15);
+    color: oklch(0.18 0.02 270);
+    border-radius: 4px;
+    margin-right: 2px;
+  }
+  html.light button[data-slot="tabs-trigger"]:hover {
+    background: linear-gradient(180deg, oklch(1 0 0), oklch(0.92 0.005 270));
+  }
+  html.light button[data-slot="tabs-trigger"][data-state="active"] {
+    background: linear-gradient(180deg, var(--primary), color-mix(in oklab, var(--primary) 80%, black));
+    color: var(--primary-foreground);
+    border-color: color-mix(in oklab, var(--primary) 60%, black);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.25);
   }
 }
