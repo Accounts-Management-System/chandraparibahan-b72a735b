@@ -162,7 +162,7 @@ const dict = {
   vendorName: { bn: "ভেন্ডরের নাম", en: "Vendor Name" },
   payable: { bn: "পাওনা", en: "Payable" },
   totalIncome: { bn: "মোট আয়", en: "Total Income" },
-  chartTripCount: { bn: "ট্রিপ সংখ্যা", en: "Trip Count" },
+  chartTripCount: { bn: "গাড়ী সংখ্যা", en: "Vehicle Count" },
   paid: { bn: "পরিশোধ", en: "Paid" },
   currentPayable: { bn: "বর্তমান পাওনা", en: "Current Payable" },
   dailyIncome: { bn: "দৈনিক ইনকাম", en: "Daily Income" },
