@@ -42,13 +42,13 @@ function Page() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["office_deposits"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("office_deposits" as any)
+      const { data, error } = await (supabase as any)
+        .from("office_deposits")
         .select("id,deposit_date,category,head,description,amount")
         .order("deposit_date", { ascending: false })
         .limit(2000);
       if (error) throw error;
-      return (data ?? []) as Row[];
+      return (data ?? []) as unknown as Row[];
     },
   });
 
@@ -72,7 +72,7 @@ function Page() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("office_deposits" as any).delete().eq("id", id);
+      const { error } = await (supabase as any).from("office_deposits").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -91,10 +91,10 @@ function Page() {
         amount: Number(amount || 0),
       };
       if (editing) {
-        const { error } = await supabase.from("office_deposits" as any).update(form).eq("id", editing.id);
+        const { error } = await (supabase as any).from("office_deposits").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("office_deposits" as any).insert(form);
+        const { error } = await (supabase as any).from("office_deposits").insert(form);
         if (error) throw error;
       }
     },
