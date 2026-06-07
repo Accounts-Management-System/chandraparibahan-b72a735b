@@ -3,17 +3,24 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FileDown, Plus } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/office-deposits")({ component: Page });
+
+const DEFAULT_CATEGORIES = ["অফিস কতৃক জমা", "ব্যাংক জমা", "মালিক জমা", "অন্যান্য"];
+const DEFAULT_HEADS: Record<string, string[]> = {
+  "অফিস কতৃক জমা": ["নগদ", "চেক", "বিকাশ", "নগদ ডিপোজিট"],
+  "ব্যাংক জমা": ["সঞ্চয়", "চলতি"],
+  "মালিক জমা": ["অগ্রিম", "সমন্বয়"],
+};
+
 
 type Row = {
   id: string;
@@ -37,6 +44,26 @@ function Page() {
   const [head, setHead] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | "">("");
+
+  const { data: dbCats = [] } = useQuery({
+    queryKey: ["expense_categories"],
+    queryFn: async () => (await supabase.from("expense_categories").select("name").order("name")).data ?? [],
+  });
+  const { data: dbHeads = [] } = useQuery({
+    queryKey: ["expense_heads_all"],
+    queryFn: async () => (await supabase.from("expense_heads").select("name").order("name")).data ?? [],
+  });
+  const catOptions = useMemo(() => {
+    const set = new Set<string>(DEFAULT_CATEGORIES);
+    (dbCats as { name: string }[]).forEach((c) => set.add(c.name));
+    return Array.from(set);
+  }, [dbCats]);
+  const headOptions = useMemo(() => {
+    const set = new Set<string>();
+    (DEFAULT_HEADS[category] ?? []).forEach((h) => set.add(h));
+    (dbHeads as { name: string }[]).forEach((h) => set.add(h.name));
+    return Array.from(set);
+  }, [dbHeads, category]);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["office_deposits"],
@@ -131,7 +158,7 @@ function Page() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">অফিস কতৃক জমা</h1>
+            <h1 className="text-2xl font-bold">{t("officeDeposits")}</h1>
             <p className="text-sm text-muted-foreground">
               {t("total")}: <span className="font-semibold text-emerald-400">{fmtNum(total, lang)}</span>
             </p>
@@ -152,8 +179,8 @@ function Page() {
         </div>
 
         <div className="overflow-x-auto rounded-md border bg-card">
-          <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">অফিস কতৃক জমা</div>
-          <div className="border-b px-3 py-2 text-right font-semibold text-primary">অফিস কতৃক জমা মোট&nbsp;&nbsp; {fmtNum(total, lang)}</div>
+          <div className="border-b bg-primary/20 px-3 py-3 text-center text-2xl font-bold">{t("officeDeposits")}</div>
+          <div className="border-b px-3 py-2 text-right font-semibold text-primary">{t("officeDeposits")} {t("total")}&nbsp;&nbsp; {fmtNum(total, lang)}</div>
           <table className="w-full text-sm">
             <thead className="bg-muted">
               <tr>
@@ -191,7 +218,7 @@ function Page() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>অফিস কতৃক জমা</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("officeDeposits")}</DialogTitle></DialogHeader>
           <form className="grid grid-cols-1 sm:grid-cols-2 gap-3" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("date")}</label>
@@ -199,12 +226,32 @@ function Page() {
             </div>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("category")}</label>
-              <CategorySelect value={category} onChange={(v) => { setCategory(v); setHead(""); }} required />
+              <input
+                list="od-cats"
+                value={category}
+                onChange={(e) => { setCategory(e.target.value); setHead(""); }}
+                required
+                placeholder={t("selectOrType")}
+                className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm"
+              />
+              <datalist id="od-cats">
+                {catOptions.map((c) => <option key={c} value={c} />)}
+              </datalist>
             </div>
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("head")}</label>
-              <HeadSelect category={category} value={head} onChange={setHead} />
+              <input
+                list="od-heads"
+                value={head}
+                onChange={(e) => setHead(e.target.value)}
+                placeholder={t("selectOrType")}
+                className="w-full h-10 rounded-md border border-input bg-input px-3 text-sm"
+              />
+              <datalist id="od-heads">
+                {headOptions.map((h) => <option key={h} value={h} />)}
+              </datalist>
             </div>
+
             <div>
               <label className="text-xs font-semibold uppercase text-muted-foreground">{t("amount")}</label>
               <Input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))} required className="h-10" />
