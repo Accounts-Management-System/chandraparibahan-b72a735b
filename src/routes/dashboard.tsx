@@ -76,25 +76,25 @@ function DashboardPage() {
     },
   });
 
-  // মূল পরিবহন হিসাব: সব ট্রিপ; অন্যান্য জমা ও খরচ থেকে owner_id null শুধু
+  // মূল পরিবহন হিসাব: সব ট্রিপ + আলাদা অফিস জমা; খরচ থেকে owner_id null শুধু
   const mainBalance = useQuery({
     queryKey: ["dash-main-balance"],
     queryFn: async () => {
-      const [tripsRes, othRes, expRes] = await Promise.all([
+      const [tripsRes, officeRes, expRes] = await Promise.all([
         supabase.from("trips").select("vehicle_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000),
-        supabase.from("other_incomes").select("owner_id,amount").is("owner_id", null).limit(100000),
+        (supabase as any).from("office_deposits").select("amount").limit(100000),
         supabase.from("expenses").select("owner_id,amount").is("owner_id", null).limit(100000),
       ]);
       const trips = (tripsRes.data ?? []) as any[];
       const dailyJama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
       const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
       const fare = trips.reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-      const otherJama = ((othRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const officeJama = ((officeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
       const dailyExpense = ((expRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0);
-      return { dailyJama, dena, fare, otherJama, dailyExpense, balance: (dailyJama - dena) + otherJama - dailyExpense, tripCount: trips.length };
+      return { dailyJama, dena, fare, officeJama, dailyExpense, balance: (dailyJama - dena) + officeJama - dailyExpense, tripCount: trips.length };
     },
   });
-  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, fare: 0, otherJama: 0, dailyExpense: 0, balance: 0, tripCount: 0 };
+  const mb = mainBalance.data ?? { dailyJama: 0, dena: 0, fare: 0, officeJama: 0, dailyExpense: 0, balance: 0, tripCount: 0 };
 
 
   const tripRows = summary.data ?? [];
@@ -132,7 +132,7 @@ function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <MiniStat label="দৈনিক জমা" value={fmtNum(mb.dailyJama, lang)} color="text-emerald-400" />
             <MiniStat label="দেনা" value={fmtNum(mb.dena, lang)} color="text-rose-400" />
-            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherJama, lang)} color="text-emerald-400" />
+            <MiniStat label="অফিস কতৃক জমা" value={fmtNum(mb.officeJama, lang)} color="text-emerald-400" />
             <MiniStat label="দৈনিক খরচ" value={fmtNum(mb.dailyExpense, lang)} color="text-rose-400" />
             <MiniStat
               label="ব্যালেন্স"
@@ -141,7 +141,7 @@ function DashboardPage() {
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-3">
-            (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ = ব্যালেন্স
+            (দৈনিক জমা − দেনা) + অফিস কতৃক জমা − দৈনিক খরচ = ব্যালেন্স
           </p>
         </Card>
 

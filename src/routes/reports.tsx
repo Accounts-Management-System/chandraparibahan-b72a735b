@@ -12,6 +12,8 @@ import { exportPdf, exportPdfHtml } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/reports")({ component: Page });
 
+const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 function Page() {
   const { t, lang } = useT();
   const today = new Date().toISOString().slice(0, 10);
@@ -39,12 +41,13 @@ function Page() {
       if (car) eQ = eQ.eq("vehicle_no", car);
       let oQ = supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date");
       if (car) oQ = oQ.eq("vehicle_no", car);
-      const [trips, exp, oth] = await Promise.all([tQ, eQ, oQ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [] };
+      const officeQ = (supabase as any).from("office_deposits").select("*").gte("deposit_date", from).lte("deposit_date", to).order("deposit_date");
+      const [trips, exp, oth, office] = await Promise.all([tQ, eQ, oQ, officeQ]);
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [], office: (office as any).data ?? [] };
     },
   });
 
-  const data = q.data ?? { trips: [], exp: [], oth: [] };
+  const data = q.data ?? { trips: [], exp: [], oth: [], office: [] };
 
   const ownerVehNos = useMemo(() => {
     const m = new Map<string, string | null>();
@@ -68,8 +71,8 @@ function Page() {
   // === অন্যান্য জমা: owner_id IS NULL → মূল হিসাব; owner_id সেট → ওনার হিসাব ===
   // ownerId খালি = মূল (owner_id null); সেট = সেই ওনারের
   const othRows = useMemo(() => {
-    if (!ownerId) return data.oth.filter((r: any) => !r.owner_id);
-    return data.oth.filter((r: any) => r.owner_id === ownerId);
+    if (!ownerId) return data.oth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY);
+    return data.oth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY);
   }, [data.oth, ownerId]);
   const othTotal = othRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
@@ -79,6 +82,8 @@ function Page() {
     return data.exp.filter((r: any) => r.owner_id === ownerId);
   }, [data.exp, ownerId]);
   const expTotal = expRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const officeRows = useMemo(() => ownerId ? [] : data.office, [data.office, ownerId]);
+  const officeTotal = officeRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
   // === ওনার হিসাব (জমা-খরচ) — journal style; কোনো বিয়োগ নয় ===
   const ownerTrips = useMemo(() => data.trips.filter((r: any) => {
@@ -86,7 +91,7 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [data.trips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
+  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
   const ownerExp = useMemo(() => data.exp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [data.exp, ownerId]);
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
@@ -122,6 +127,12 @@ function Page() {
       cur.oth += Number(r.amount || 0);
       m.set(k, cur);
     });
+    officeRows.forEach((r: any) => {
+      const k = r.deposit_date;
+      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
+      cur.oth += Number(r.amount || 0);
+      m.set(k, cur);
+    });
     expRows.forEach((r: any) => {
       const k = r.expense_date;
       const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
@@ -129,14 +140,14 @@ function Page() {
       m.set(k, cur);
     });
     return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [tripRows, othRows, expRows]);
+  }, [tripRows, othRows, officeRows, expRows]);
 
-  const balance = (dailyJama - dena) + othTotal - expTotal;
+  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (dailyJama - dena) + officeTotal - expTotal;
 
   const exportCsv = () => {
     const lines: string[] = [];
     lines.push("Chandra Paribahan Report");
-    lines.push(`From,${from},To,${to},Owner,${ownerId ? ownerName(ownerId) : "ALL"}`);
+    lines.push(`From,${from},To,${to},Owner,${ownerId ? ownerName(ownerId) : "MAIN"}`);
     lines.push("");
     lines.push("দৈনিক জমা");
     lines.push("Serial,Date,Vehicle,Owner,Jama,Dena,Balance,Fare,Route,Supervisor");
@@ -151,6 +162,10 @@ function Page() {
     lines.push("অন্যান্য জমা");
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
     othRows.forEach((r: any) => lines.push([r.income_date, ownerName(rowOwnerId(r)), r.vehicle_no ?? "", r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
+    lines.push("");
+    lines.push("অফিস কতৃক জমা");
+    lines.push("Date,Category,Head,Description,Amount");
+    officeRows.forEach((r: any) => lines.push([r.deposit_date, r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
     lines.push("");
     lines.push("দৈনিক খরচ");
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
@@ -200,8 +215,14 @@ function Page() {
       expRows.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(expTotal, lang)],
     );
+    const officeBody = tbl(
+      "অফিস কতৃক জমা",
+      [t("date"), t("category"), t("head"), t("description"), t("amount")],
+      officeRows.map((r: any) => [fmtDate(r.deposit_date, lang), r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
+      [t("grandTotal"), "", "", "", fmtNum(officeTotal, lang)],
+    );
     const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · ওনার: " + ownerName(ownerId) : ""}`;
-    exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: tripBody + othBody + expBody, orientation: "landscape" });
+    exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: tripBody + othBody + officeBody + expBody, orientation: "landscape" });
   };
 
   const exportOwnerPdf = () => {
@@ -269,7 +290,8 @@ function Page() {
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
-            <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
+              <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
+              <TabsTrigger value="office">অফিস জমা ({fmtNum(officeTotal, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(expTotal, lang)})</TabsTrigger>
             <TabsTrigger value="owner">ওনার হিসাব</TabsTrigger>
           </TabsList>
@@ -278,12 +300,12 @@ function Page() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
               <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
               <Stat label="দেনা" value={fmtNum(dena, lang)} color="text-rose-400" />
-              <Stat label="অন্যান্য জমা" value={fmtNum(othTotal, lang)} color="text-emerald-400" />
+              <Stat label="অফিস কতৃক জমা" value={fmtNum(officeTotal, lang)} color="text-emerald-400" />
               <Stat label="দৈনিক খরচ" value={fmtNum(expTotal, lang)} color="text-rose-400" />
               <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
             </div>
             <Section
-              headers={[t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "গাড়ী ভাড়া", "অন্যান্য জমা", "দৈনিক খরচ"]}
+              headers={[t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "গাড়ী ভাড়া", "অফিস জমা", "দৈনিক খরচ"]}
               rows={byDate.map(([d, v]) => ({ id: d, d, v }))}
               cells={(x: any) => [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.jama, lang), fmtNum(x.v.dena, lang), fmtNum(x.v.fare, lang), fmtNum(x.v.oth, lang), fmtNum(x.v.exp, lang)]}
               footer={[t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(fares, lang), fmtNum(othTotal, lang), fmtNum(expTotal, lang)]}
@@ -310,6 +332,15 @@ function Page() {
               rows={othRows}
               cells={(r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]}
               footer={[t("grandTotal"), "", "", "", "", "", fmtNum(othTotal, lang)]}
+            />
+          </TabsContent>
+
+          <TabsContent value="office">
+            <Section
+              headers={[t("serial"), t("date"), t("category"), t("head"), t("description"), t("amount")]}
+              rows={officeRows}
+              cells={(r: any) => [fmtNum(officeRows.indexOf(r) + 1, lang), fmtDate(r.deposit_date, lang), r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]}
+              footer={[t("grandTotal"), "", "", "", "", fmtNum(officeTotal, lang)]}
             />
           </TabsContent>
 

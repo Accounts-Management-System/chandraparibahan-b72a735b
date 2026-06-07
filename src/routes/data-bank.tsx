@@ -20,6 +20,8 @@ export const Route = createFileRoute("/data-bank")({
     }).parse(s),
 });
 
+const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 function Page() {
   const { t, lang } = useT();
   const search = Route.useSearch();
@@ -76,6 +78,22 @@ function Page() {
       return (data ?? []) as any[];
     },
   });
+  const office = useQuery({
+    queryKey: ["db-office", date, month],
+    queryFn: async () => {
+      let q: any = (supabase as any).from("office_deposits").select("*").order("deposit_date", { ascending: false }).limit(2000);
+      if (date) q = q.eq("deposit_date", date);
+      else if (month) {
+        const start = `${month}-01`;
+        const d = new Date(month + "-01");
+        d.setMonth(d.getMonth() + 1);
+        const end = d.toISOString().slice(0, 10);
+        q = q.gte("deposit_date", start).lt("deposit_date", end);
+      }
+      const { data } = await q;
+      return (data ?? []) as any[];
+    },
+  });
 
   const ownerName = (oid: string | null | undefined) => (owners as any[]).find((o) => o.id === oid)?.name ?? "—";
   const ownerVehNos = useMemo(() => {
@@ -88,6 +106,7 @@ function Page() {
   const allTrips = trips.data ?? [];
   const allExp = exp.data ?? [];
   const allOth = oth.data ?? [];
+  const allOffice = office.data ?? [];
 
   // দৈনিক জমা: সব ট্রিপ; owner filter দিলে সেই ওনারের গাড়ি
   const tripRows = useMemo(() => ownerId
@@ -96,8 +115,8 @@ function Page() {
 
   // অন্যান্য জমা: owner_id null → মূল; owner filter দিলে সেই ওনারের
   const othRows = useMemo(() => ownerId
-    ? allOth.filter((r: any) => r.owner_id === ownerId)
-    : allOth.filter((r: any) => !r.owner_id), [allOth, ownerId]);
+    ? allOth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY)
+    : allOth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY), [allOth, ownerId]);
 
   // দৈনিক খরচ: একই
   const expRows = useMemo(() => ownerId
@@ -110,18 +129,20 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [allTrips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
+  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
   const ownerExp = useMemo(() => allExp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allExp, ownerId]);
 
   const totalDailyJama = tripRows.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const totalDena = tripRows.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
   const totalFare = tripRows.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const totalOth = othRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const officeRows = useMemo(() => ownerId || car ? [] : allOffice, [allOffice, ownerId, car]);
+  const totalOffice = officeRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalExp = expRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const ownerKhoroch = ownerExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const balance = (totalDailyJama - totalDena) + totalOth - totalExp;
+  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (totalDailyJama - totalDena) + totalOffice - totalExp;
 
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
@@ -182,7 +203,8 @@ function Page() {
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger value="trips">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
-            <TabsTrigger value="oth">অন্যান্য জমা ({fmtNum(totalOth, lang)})</TabsTrigger>
+              <TabsTrigger value="oth">অন্যান্য জমা ({fmtNum(totalOth, lang)})</TabsTrigger>
+              <TabsTrigger value="office">অফিস জমা ({fmtNum(totalOffice, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(totalExp, lang)})</TabsTrigger>
             <TabsTrigger value="owner">ওনার হিসাব</TabsTrigger>
           </TabsList>
@@ -191,7 +213,7 @@ function Page() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Stat label="দৈনিক জমা" value={fmtNum(totalDailyJama, lang)} color="text-emerald-400" />
               <Stat label="দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
-              <Stat label="অন্যান্য জমা" value={fmtNum(totalOth, lang)} color="text-emerald-400" />
+              <Stat label="অফিস কতৃক জমা" value={fmtNum(totalOffice, lang)} color="text-emerald-400" />
               <Stat label="দৈনিক খরচ" value={fmtNum(totalExp, lang)} color="text-rose-400" />
               <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-primary" : "text-rose-500"} />
             </div>
@@ -229,6 +251,20 @@ function Page() {
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
               footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalOth, lang)]}
+            />
+          </TabsContent>
+
+          <TabsContent value="office">
+            <Tbl
+              rows={officeRows}
+              cols={[
+                ["deposit_date", t("date"), (v: any) => fmtDate(v, lang)],
+                ["category", t("category")],
+                ["head", t("head")],
+                ["description", t("description")],
+                ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
+              ]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalOffice, lang)]}
             />
           </TabsContent>
 

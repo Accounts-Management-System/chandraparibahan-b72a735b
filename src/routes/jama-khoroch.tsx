@@ -22,6 +22,8 @@ import { SearchFilters, MiniDashboard, matchesFilters, emptyFilters, type Filter
 
 export const Route = createFileRoute("/jama-khoroch")({ component: Page });
 
+const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 type TripRow = {
   id: string;
   trip_date: string;
@@ -109,6 +111,7 @@ function Page() {
     queryFn: async () => {
       const { data } = await supabase
         .from("other_incomes").select("*")
+        .neq("category", OFFICE_CATEGORY)
         .order("income_date", { ascending: false }).limit(500);
       return (data ?? []) as OIRow[];
     },
