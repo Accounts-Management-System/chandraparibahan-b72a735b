@@ -107,10 +107,10 @@ function Page() {
 
   // === তারিখ অনুযায়ী Dashboard summary ===
   const byDate = useMemo(() => {
-    const m = new Map<string, { trips: number; jama: number; dena: number; fare: number; oth: number; exp: number }>();
+    const m = new Map<string, { trips: number; jama: number; dena: number; fare: number; oth: number; jamaKhoroch: number; exp: number }>();
     tripRows.forEach((r: any) => {
       const k = r.trip_date;
-      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
+      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, jamaKhoroch: 0, exp: 0 };
       cur.trips += 1;
       cur.jama += Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
       cur.dena += Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
@@ -119,26 +119,26 @@ function Page() {
     });
     othRows.forEach((r: any) => {
       const k = r.income_date;
-      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
+      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, jamaKhoroch: 0, exp: 0 };
       cur.oth += Number(r.amount || 0);
       m.set(k, cur);
     });
-    officeRows.forEach((r: any) => {
-      const k = r.deposit_date;
-      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
-      cur.oth += Number(r.amount || 0);
+    ownerOth.forEach((r: any) => {
+      const k = r.income_date;
+      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, jamaKhoroch: 0, exp: 0 };
+      cur.jamaKhoroch += Number(r.amount || 0);
       m.set(k, cur);
     });
     expRows.forEach((r: any) => {
       const k = r.expense_date;
-      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, exp: 0 };
+      const cur = m.get(k) ?? { trips: 0, jama: 0, dena: 0, fare: 0, oth: 0, jamaKhoroch: 0, exp: 0 };
       cur.exp += Number(r.amount || 0);
       m.set(k, cur);
     });
     return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [tripRows, othRows, officeRows, expRows]);
+  }, [tripRows, othRows, ownerOth, expRows]);
 
-  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (dailyJama - dena) + officeTotal - expTotal;
+  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (dailyJama - dena) + othTotal + mainJamaKhorochJama - expTotal;
 
   const exportCsv = () => {
     const lines: string[] = [];
