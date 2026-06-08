@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { FileDown, Plus, Search, X } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { exportPdfHtml } from "@/lib/exportPdf";
+import { deleteOfficeDeposit, fetchOfficeDeposits, saveOfficeDeposit, type OfficeDepositRow } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/office-deposits")({ component: Page });
 
@@ -28,14 +29,7 @@ const DEFAULT_HEADS: Record<string, string[]> = {
   "মালিক জমা": ["অগ্রিম", "সমন্বয়"],
 };
 
-type Row = {
-  id: string;
-  deposit_date: string;
-  category: string;
-  head: string | null;
-  description: string | null;
-  amount: number;
-};
+type Row = OfficeDepositRow;
 
 function Page() {
   const { t, lang } = useT();
@@ -69,15 +63,7 @@ function Page() {
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["office_deposits"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("office_deposits")
-        .select("id,deposit_date,category,head,description,amount")
-        .order("deposit_date", { ascending: false })
-        .limit(2000);
-      if (error) throw error;
-      return (data ?? []) as unknown as Row[];
-    },
+    queryFn: async () => fetchOfficeDeposits({ limit: 2000 }),
   });
 
   const catOptions = useMemo(() => {
@@ -137,10 +123,7 @@ function Page() {
   }, [open, editing]);
 
   const del = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await (supabase as any).from("office_deposits").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => deleteOfficeDeposit(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["office_deposits"] });
       toast.success(t("deleted"));
@@ -159,13 +142,7 @@ function Page() {
         description: description || null,
         amount: Number(amount || 0),
       };
-      if (editing) {
-        const { error } = await (supabase as any).from("office_deposits").update(form).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await (supabase as any).from("office_deposits").insert(form);
-        if (error) throw error;
-      }
+      await saveOfficeDeposit(form, editing?.id);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["office_deposits"] });
