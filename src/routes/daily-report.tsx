@@ -49,7 +49,7 @@ function Page() {
   const totalJamaKhoroch = jamaKhorochDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalExpense = expenses.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalTrips = trips.length;
-  const handBalance = (totalJama - totalDena) + totalOther + totalJamaKhoroch - totalExpense;
+  const handBalance = (totalJama - totalDena) + totalOther - totalExpense;
 
   const dailyRows = useMemo(() => {
     const m = new Map<string, { jama: number; dena: number; other: number; jamaKhoroch: number; expense: number }>();
@@ -77,7 +77,7 @@ function Page() {
     let running = 0;
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => {
       const transport = v.jama - v.dena;
-      running += transport + v.other + v.jamaKhoroch - v.expense;
+      running += transport + v.other - v.expense;
       return { date, ...v, transport, balance: running };
     });
   }, [trips, otherDeposits, jamaKhorochDeposits, expenses]);
@@ -156,7 +156,7 @@ function Page() {
             <td>জমা-খরচের জমা<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
             <td>মোট খরচ<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
             <td>হাতে ব্যালেন্স<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
-            <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা + জমা-খরচের জমা − খরচ = হাতে ব্যালেন্স</td>
+            <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা − খরচ = হাতে ব্যালেন্স &nbsp;|&nbsp; জমা-খরচের জমা ওনার হিসাবে</td>
           </tr>
         </tbody>
       </table>

@@ -92,7 +92,7 @@ function DashboardPage() {
 
   const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
 
-  // Main filtered account
+  // Main / Owner account
   const mainAcc = useQuery({
     queryKey: ["dash-main", effRange.from, effRange.to, vehicle, ownerId],
     queryFn: async () => {
@@ -105,40 +105,48 @@ function DashboardPage() {
       const [tripsRes, othRes, expRes, vehRes] = await Promise.all([tq, oq, eq, supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000)]);
       const vehMap = new Map<string, string | null>();
       ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
-      let trips = (tripsRes.data ?? []) as any[];
-      let expenses = (expRes.data ?? []) as any[];
-      let incomes = (othRes.data ?? []) as any[];
+      const trips = (tripsRes.data ?? []) as any[];
+      const expenses = (expRes.data ?? []) as any[];
+      const incomes = (othRes.data ?? []) as any[];
+
       if (ownerId === "all") {
-        expenses = expenses.filter((r) => !r.owner_id);
-      } else {
-        trips = trips.filter((r) => vehMap.get(r.vehicle_no) === ownerId);
-        expenses = expenses.filter((r) => r.owner_id === ownerId);
-        incomes = incomes.filter((r) => r.owner_id === ownerId);
+        // মূল হিসাব: সকল গাড়ির দৈনিক জমা − দেনা + অন্যান্য জমা (owner_id NULL) − ownerless দৈনিক খরচ
+        const otherIncome = incomes.filter((r) => !r.owner_id).reduce((s, r) => s + Number(r.amount || 0), 0);
+        const expense = expenses.filter((r) => !r.owner_id).reduce((s, r) => s + Number(r.amount || 0), 0);
+        const jama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
+        const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
+        const incomeLoss = jama - dena;
+        return {
+          mode: "main" as const,
+          trips, jama, dena, incomeLoss, otherIncome, expense,
+          balance: incomeLoss + otherIncome - expense,
+          tripCount: new Set(trips.map((r) => r.vehicle_no)).size,
+        };
       }
-      const jama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
-      const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const otherIncome = ownerId === "all" ? incomes.filter((r) => !r.owner_id).reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
-      const jamaKhorochJama = incomes.filter((r) => !!r.owner_id).reduce((s, r) => s + Number(r.amount || 0), 0);
-      const expense = expenses.reduce((s, r) => s + Number(r.amount || 0), 0);
-      const incomeLoss = jama - dena;
+      // ওনার হিসাব: গাড়ী ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ
+      const ownerTrips = trips.filter((r) => vehMap.get(r.vehicle_no) === ownerId);
+      const fares = ownerTrips.reduce((s, r) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
+      const jamaKhorochJama = incomes.filter((r) => r.owner_id === ownerId).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const jamaKhorochKhoroch = expenses.filter((r) => r.owner_id === ownerId).reduce((s, r) => s + Number(r.amount || 0), 0);
       return {
-        trips, jama, dena, incomeLoss, otherIncome, jamaKhorochJama, expense,
-        balance: incomeLoss + otherIncome + jamaKhorochJama - expense,
-        tripCount: new Set(trips.map((r) => r.vehicle_no)).size,
+        mode: "owner" as const,
+        trips: ownerTrips, fares, jamaKhorochJama, jamaKhorochKhoroch,
+        balance: fares + jamaKhorochJama - jamaKhorochKhoroch,
+        tripCount: new Set(ownerTrips.map((r) => r.vehicle_no)).size,
       };
     },
   });
-  const mb = mainAcc.data ?? { trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, otherIncome: 0, jamaKhorochJama: 0, expense: 0, balance: 0, tripCount: 0 };
+  const mb: any = mainAcc.data ?? { mode: "main", trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, otherIncome: 0, expense: 0, balance: 0, tripCount: 0 };
 
-  const tripRows = mb.trips;
+  const tripRows = (mb.trips ?? []) as any[];
   const chartData = chartMode === "tripCount"
     ? Object.entries(
-        tripRows.reduce<Record<string, number>>((acc, r) => {
+        tripRows.reduce<Record<string, number>>((acc: Record<string, number>, r: any) => {
           acc[r.vehicle_no] = (acc[r.vehicle_no] || 0) + 1;
           return acc;
         }, {}),
       ).map(([name, value]) => ({ name, value }))
-    : tripRows.map((r, i) => {
+    : tripRows.map((r: any, i: number) => {
         const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
         const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
         return {
@@ -197,29 +205,39 @@ function DashboardPage() {
           </p>
         </Card>
 
-        {/* Main transport account */}
+        {/* Main / Owner account */}
         <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="text-sm font-semibold text-muted-foreground mb-3 flex items-center justify-between border-b pb-2">
-            <span>🚌 {t("mainTransportAccount")} {ownerId === "all" ? `(${t("ownerless")})` : ""}</span>
+            <span>🚌 {ownerId === "all" ? `${t("mainTransportAccount")} (${t("ownerless")})` : `ওনার হিসাব — ${owners.find((o) => o.id === ownerId)?.name ?? ""}`}</span>
             <span className="text-foreground text-xs">{t("totalTrips")}: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
-            <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
-            <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
-            <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
-            <MiniStat label="জমা-খরচের জমা" value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
-            <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
-            <MiniStat
-              label={t("mainBalance")}
-              value={fmtNum(mb.balance, lang)}
-              color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"}
-              highlight
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-            ({t("dailyJama")} − {t("dena")}) + অন্যান্য জমা + জমা-খরচের জমা − {t("dailyExpense")} = {t("mainBalance")}
-          </p>
+          {mb.mode === "main" ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
+                <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
+                <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
+                <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
+                <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
+                <MiniStat label={t("mainBalance")} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                ({t("dailyJama")} − {t("dena")}) + অন্যান্য জমা − {t("dailyExpense")} = {t("mainBalance")}
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <MiniStat label="গাড়ী ভাড়া" value={fmtNum(mb.fares, lang)} color="text-emerald-500" />
+                <MiniStat label="জমা-খরচের জমা" value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
+                <MiniStat label="জমা-খরচের খরচ" value={fmtNum(mb.jamaKhorochKhoroch, lang)} color="text-rose-500" />
+                <MiniStat label="ব্যালেন্স" value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                গাড়ী ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ = ব্যালেন্স
+              </p>
+            </>
+          )}
         </Card>
 
         {/* Per-trip chart */}
