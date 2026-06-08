@@ -240,7 +240,7 @@ function Page() {
           <div>
             <h1 className="text-2xl font-bold">প্রতিদিনের জমা ও খরচ হিসাব</h1>
             <p className="text-xs text-muted-foreground">
-              সকল গাড়ির দৈনিক জমা/দেনা + অফিস কতৃক জমা − ওনার-বিহীন দৈনিক খরচ
+              সকল গাড়ির দৈনিক জমা/দেনা + অন্যান্য জমা + জমা-খরচের জমা − দৈনিক খরচ
             </p>
           </div>
           <div className="flex gap-2">
@@ -270,7 +270,8 @@ function Page() {
           <Stat label="মোট দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
           <Stat label="ব্যালেন্স (জমা−দেনা)" value={fmtNum(totalJama - totalDena, lang)} />
           <Stat label="মোট ভাড়া" value={fmtNum(totalFare, lang)} />
-          <Stat label="অফিস কতৃক জমা" value={fmtNum(totalOffice, lang)} color="text-emerald-400" />
+          <Stat label="অন্যান্য জমা" value={fmtNum(totalOther, lang)} color="text-emerald-400" />
+          <Stat label="জমা-খরচের জমা" value={fmtNum(totalJamaKhoroch, lang)} color="text-emerald-400" />
           <Stat label="মোট খরচ" value={fmtNum(totalExpense, lang)} color="text-rose-400" />
           <Stat label="হাতে ব্যালেন্স" value={fmtNum(handBalance, lang)} color="text-sky-400" />
         </div>
@@ -349,13 +350,14 @@ function Page() {
           </div>
         </div>
 
-        {officeDeposits.length > 0 && (
+        {(otherDeposits.length > 0 || jamaKhorochDeposits.length > 0) && (
           <div className="rounded-md border bg-card/60 overflow-x-auto">
-            <div className="px-3 py-2 font-semibold bg-muted/40">অফিস কতৃক জমা</div>
+            <div className="px-3 py-2 font-semibold bg-muted/40">অন্যান্য জমা ও জমা-খরচের জমা</div>
             <table className="w-full text-xs">
               <thead className="bg-muted/30">
                 <tr>
                   <th className="px-2 py-1 text-left">তারিখ</th>
+                  <th className="px-2 py-1 text-left">ধরন</th>
                   <th className="px-2 py-1 text-left">ক্যাটাগরী</th>
                   <th className="px-2 py-1 text-left">খাত</th>
                   <th className="px-2 py-1 text-left">বিবরন</th>
@@ -363,9 +365,10 @@ function Page() {
                 </tr>
               </thead>
               <tbody>
-                {officeDeposits.map((r: any) => (
+                {[...otherDeposits.map((r: any) => ({ ...r, kindLabel: "অন্যান্য জমা" })), ...jamaKhorochDeposits.map((r: any) => ({ ...r, kindLabel: "জমা-খরচের জমা" }))].map((r: any) => (
                   <tr key={r.id} className="border-t">
-                    <td className="px-2 py-1">{fmtDate(r.deposit_date, lang)}</td>
+                    <td className="px-2 py-1">{fmtDate(r.income_date, lang)}</td>
+                    <td className="px-2 py-1">{r.kindLabel}</td>
                     <td className="px-2 py-1">{r.category ?? "—"}</td>
                     <td className="px-2 py-1">{r.head ?? "—"}</td>
                     <td className="px-2 py-1">{r.description ?? "—"}</td>
@@ -374,7 +377,7 @@ function Page() {
                 ))}
               </tbody>
               <tfoot className="bg-muted/30">
-                <tr><td colSpan={4} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOffice, lang)}</td></tr>
+                <tr><td colSpan={5} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOther + totalJamaKhoroch, lang)}</td></tr>
               </tfoot>
             </table>
           </div>
