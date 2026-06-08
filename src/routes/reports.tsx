@@ -330,25 +330,25 @@ function Page() {
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
-              <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
-              <TabsTrigger value="office">অফিস জমা ({fmtNum(officeTotal, lang)})</TabsTrigger>
+            <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(expTotal, lang)})</TabsTrigger>
             <TabsTrigger value="owner">ওনার হিসাব</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
               <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
               <Stat label="দেনা" value={fmtNum(dena, lang)} color="text-rose-400" />
-              <Stat label="অফিস কতৃক জমা" value={fmtNum(officeTotal, lang)} color="text-emerald-400" />
+              <Stat label="অন্যান্য জমা" value={fmtNum(othTotal, lang)} color="text-emerald-400" />
+              <Stat label="জমা-খরচের জমা" value={fmtNum(mainJamaKhorochJama, lang)} color="text-emerald-400" />
               <Stat label="দৈনিক খরচ" value={fmtNum(expTotal, lang)} color="text-rose-400" />
               <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
             </div>
             <Section
-              headers={[t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "গাড়ী ভাড়া", "অফিস জমা", "দৈনিক খরচ"]}
+              headers={[t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "গাড়ী ভাড়া", "অন্যান্য জমা", "জমা-খরচের জমা", "দৈনিক খরচ"]}
               rows={byDate.map(([d, v]) => ({ id: d, d, v }))}
-              cells={(x: any) => [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.jama, lang), fmtNum(x.v.dena, lang), fmtNum(x.v.fare, lang), fmtNum(x.v.oth, lang), fmtNum(x.v.exp, lang)]}
-              footer={[t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(fares, lang), fmtNum(othTotal, lang), fmtNum(expTotal, lang)]}
+              cells={(x: any) => [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.jama, lang), fmtNum(x.v.dena, lang), fmtNum(x.v.fare, lang), fmtNum(x.v.oth, lang), fmtNum(x.v.jamaKhoroch, lang), fmtNum(x.v.exp, lang)]}
+              footer={[t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(fares, lang), fmtNum(othTotal, lang), fmtNum(ownerJama, lang), fmtNum(expTotal, lang)]}
             />
           </TabsContent>
 
@@ -372,15 +372,6 @@ function Page() {
               rows={othRows}
               cells={(r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]}
               footer={[t("grandTotal"), "", "", "", "", "", fmtNum(othTotal, lang)]}
-            />
-          </TabsContent>
-
-          <TabsContent value="office">
-            <Section
-              headers={[t("serial"), t("date"), t("category"), t("head"), t("description"), t("amount")]}
-              rows={officeRows}
-              cells={(r: any) => [fmtNum(officeRows.indexOf(r) + 1, lang), fmtDate(r.deposit_date, lang), r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]}
-              footer={[t("grandTotal"), "", "", "", "", fmtNum(officeTotal, lang)]}
             />
           </TabsContent>
 
