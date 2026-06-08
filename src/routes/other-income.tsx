@@ -18,7 +18,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 
 export const Route = createFileRoute("/other-income")({ component: Page });
 
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 
 type Row = {
   id: string;
