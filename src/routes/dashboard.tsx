@@ -121,7 +121,7 @@ function DashboardPage() {
       return {
         trips, jama, dena, incomeLoss, office, expense,
         balance: incomeLoss + office - expense,
-        tripCount: trips.length,
+        tripCount: new Set(trips.map((r) => r.vehicle_no)).size,
       };
     },
   });
@@ -204,7 +204,7 @@ function DashboardPage() {
             <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
             <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
             <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-            <MiniStat label={t("otherDeposits")} value={fmtNum(mb.office, lang)} color="text-emerald-500" />
+            <MiniStat label={t("officeDeposits")} value={fmtNum(mb.office, lang)} color="text-emerald-500" />
             <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
             <MiniStat
               label={t("mainBalance")}
@@ -214,7 +214,7 @@ function DashboardPage() {
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-            ({t("dailyJama")} − {t("dena")}) + {t("otherDeposits")} − {t("dailyExpense")} = {t("mainBalance")}
+            ({t("dailyJama")} − {t("dena")}) + {t("officeDeposits")} − {t("dailyExpense")} = {t("mainBalance")}
           </p>
         </Card>
 
