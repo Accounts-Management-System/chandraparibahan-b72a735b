@@ -49,7 +49,7 @@ function Page() {
   const totalJamaKhoroch = jamaKhorochDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalExpense = expenses.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalTrips = trips.length;
-  const handBalance = (totalJama - totalDena) + totalOther + totalJamaKhoroch - totalExpense;
+  const handBalance = (totalJama - totalDena) + totalOther - totalExpense;
 
   const dailyRows = useMemo(() => {
     const m = new Map<string, { jama: number; dena: number; other: number; jamaKhoroch: number; expense: number }>();
