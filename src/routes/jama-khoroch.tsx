@@ -22,7 +22,7 @@ import { SearchFilters, MiniDashboard, matchesFilters, emptyFilters, type Filter
 
 export const Route = createFileRoute("/jama-khoroch")({ component: Page });
 
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 
 type TripRow = {
   id: string;
