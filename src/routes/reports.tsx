@@ -9,10 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { Download, Printer, FileDown } from "lucide-react";
 import { exportPdf, exportPdfHtml } from "@/lib/exportPdf";
+import { fetchOfficeDeposits, OFFICE_DEPOSIT_CATEGORY } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/reports")({ component: Page });
-
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
 
 function Page() {
   const { t, lang } = useT();
@@ -41,9 +40,8 @@ function Page() {
       if (car) eQ = eQ.eq("vehicle_no", car);
       let oQ = supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date");
       if (car) oQ = oQ.eq("vehicle_no", car);
-      const officeQ = (supabase as any).from("office_deposits").select("*").gte("deposit_date", from).lte("deposit_date", to).order("deposit_date");
-      const [trips, exp, oth, office] = await Promise.all([tQ, eQ, oQ, officeQ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [], office: (office as any).data ?? [] };
+      const [trips, exp, oth, office] = await Promise.all([tQ, eQ, oQ, fetchOfficeDeposits({ from, to })]);
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [], office: office ?? [] };
     },
   });
 
@@ -60,7 +58,7 @@ function Page() {
 
   // === দৈনিক জমা (সব ট্রিপ — owner column সহ) ===
   const tripRows = useMemo(() => {
-    if (!ownerId) return data.trips;
+    if (!ownerId) return data.trips.filter((r: any) => !ownerVehNos.get(r.vehicle_no));
     return data.trips.filter((r: any) => (ownerVehNos.get(r.vehicle_no) ?? null) === ownerId);
   }, [data.trips, ownerId, ownerVehNos]);
 
@@ -71,8 +69,8 @@ function Page() {
   // === অন্যান্য জমা: owner_id IS NULL → মূল হিসাব; owner_id সেট → ওনার হিসাব ===
   // ownerId খালি = মূল (owner_id null); সেট = সেই ওনারের
   const othRows = useMemo(() => {
-    if (!ownerId) return data.oth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY);
-    return data.oth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY);
+    if (!ownerId) return [];
+    return data.oth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_DEPOSIT_CATEGORY);
   }, [data.oth, ownerId]);
   const othTotal = othRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
@@ -91,7 +89,7 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [data.trips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
+  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.category !== OFFICE_DEPOSIT_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
   const ownerExp = useMemo(() => data.exp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [data.exp, ownerId]);
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
