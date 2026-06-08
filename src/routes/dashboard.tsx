@@ -27,6 +27,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
+import { fetchOfficeDeposits } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -97,18 +98,16 @@ function DashboardPage() {
     queryKey: ["dash-main", effRange.from, effRange.to, vehicle, ownerId],
     queryFn: async () => {
       let tq = supabase.from("trips").select("trip_date,vehicle_no,serial_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000);
-      let oq = (supabase as any).from("office_deposits").select("deposit_date,amount").limit(100000);
-      let eq = supabase.from("expenses").select("date,owner_id,amount").limit(100000);
-      if (effRange.from) { tq = tq.gte("trip_date", effRange.from); oq = oq.gte("deposit_date", effRange.from); eq = eq.gte("date", effRange.from); }
-      if (effRange.to) { tq = tq.lte("trip_date", effRange.to); oq = oq.lte("deposit_date", effRange.to); eq = eq.lte("date", effRange.to); }
+      let eq = supabase.from("expenses").select("expense_date,owner_id,amount").limit(100000);
+      if (effRange.from) { tq = tq.gte("trip_date", effRange.from); eq = eq.gte("expense_date", effRange.from); }
+      if (effRange.to) { tq = tq.lte("trip_date", effRange.to); eq = eq.lte("expense_date", effRange.to); }
       if (vehicle !== "all") tq = tq.eq("vehicle_no", vehicle);
-      const [tripsRes, officeRes, expRes, vehRes] = await Promise.all([tq, oq, eq, supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000)]);
+      const [tripsRes, officeRows, expRes, vehRes] = await Promise.all([tq, fetchOfficeDeposits({ from: effRange.from, to: effRange.to }), eq, supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000)]);
       const vehMap = new Map<string, string | null>();
       ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
       let trips = (tripsRes.data ?? []) as any[];
       let expenses = (expRes.data ?? []) as any[];
       if (ownerId === "all") {
-        trips = trips.filter((r) => !vehMap.get(r.vehicle_no));
         expenses = expenses.filter((r) => !r.owner_id);
       } else {
         trips = trips.filter((r) => vehMap.get(r.vehicle_no) === ownerId);
@@ -116,13 +115,13 @@ function DashboardPage() {
       }
       const jama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
       const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const office = ownerId === "all" ? ((officeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
+      const office = ownerId === "all" ? officeRows.reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
       const expense = expenses.reduce((s, r) => s + Number(r.amount || 0), 0);
       const incomeLoss = jama - dena;
       return {
         trips, jama, dena, incomeLoss, office, expense,
         balance: incomeLoss + office - expense,
-        tripCount: trips.length,
+        tripCount: new Set(trips.map((r) => r.vehicle_no)).size,
       };
     },
   });
@@ -205,7 +204,7 @@ function DashboardPage() {
             <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
             <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
             <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-            <MiniStat label={t("otherDeposits")} value={fmtNum(mb.office, lang)} color="text-emerald-500" />
+            <MiniStat label={t("officeDeposits")} value={fmtNum(mb.office, lang)} color="text-emerald-500" />
             <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
             <MiniStat
               label={t("mainBalance")}
@@ -215,7 +214,7 @@ function DashboardPage() {
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-            ({t("dailyJama")} − {t("dena")}) + {t("otherDeposits")} − {t("dailyExpense")} = {t("mainBalance")}
+            ({t("dailyJama")} − {t("dena")}) + {t("officeDeposits")} − {t("dailyExpense")} = {t("mainBalance")}
           </p>
         </Card>
 

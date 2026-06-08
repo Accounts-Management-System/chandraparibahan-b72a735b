@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { FileDown, Printer } from "lucide-react";
 import { exportPdfHtml } from "@/lib/exportPdf";
+import { fetchOfficeDeposits } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/daily-report")({ component: Page });
 
@@ -23,9 +24,9 @@ function Page() {
       const [trips, exp, office] = await Promise.all([
         supabase.from("trips").select("*").gte("trip_date", from).lte("trip_date", to).order("trip_date").order("serial_no"),
         supabase.from("expenses").select("*").gte("expense_date", from).lte("expense_date", to).order("expense_date"),
-        (supabase as any).from("office_deposits").select("*").gte("deposit_date", from).lte("deposit_date", to).order("deposit_date"),
+        fetchOfficeDeposits({ from, to }),
       ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], office: (office as any).data ?? [] };
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], office: office ?? [] };
     },
   });
 

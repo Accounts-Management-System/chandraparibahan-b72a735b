@@ -9,10 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { Download, Printer, FileDown } from "lucide-react";
 import { exportPdf, exportPdfHtml } from "@/lib/exportPdf";
+import { fetchOfficeDeposits, OFFICE_DEPOSIT_CATEGORY } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/reports")({ component: Page });
-
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
 
 function Page() {
   const { t, lang } = useT();
@@ -41,9 +40,8 @@ function Page() {
       if (car) eQ = eQ.eq("vehicle_no", car);
       let oQ = supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date");
       if (car) oQ = oQ.eq("vehicle_no", car);
-      const officeQ = (supabase as any).from("office_deposits").select("*").gte("deposit_date", from).lte("deposit_date", to).order("deposit_date");
-      const [trips, exp, oth, office] = await Promise.all([tQ, eQ, oQ, officeQ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [], office: (office as any).data ?? [] };
+      const [trips, exp, oth, office] = await Promise.all([tQ, eQ, oQ, fetchOfficeDeposits({ from, to })]);
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [], office: office ?? [] };
     },
   });
 
@@ -71,8 +69,8 @@ function Page() {
   // === অন্যান্য জমা: owner_id IS NULL → মূল হিসাব; owner_id সেট → ওনার হিসাব ===
   // ownerId খালি = মূল (owner_id null); সেট = সেই ওনারের
   const othRows = useMemo(() => {
-    if (!ownerId) return data.oth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY);
-    return data.oth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY);
+    if (!ownerId) return [];
+    return data.oth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_DEPOSIT_CATEGORY);
   }, [data.oth, ownerId]);
   const othTotal = othRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
@@ -82,7 +80,7 @@ function Page() {
     return data.exp.filter((r: any) => r.owner_id === ownerId);
   }, [data.exp, ownerId]);
   const expTotal = expRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const officeRows = useMemo(() => ownerId ? [] : data.office, [data.office, ownerId]);
+  const officeRows = useMemo(() => ownerId || car ? [] : data.office, [data.office, ownerId, car]);
   const officeTotal = officeRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
   // === ওনার হিসাব (জমা-খরচ) — journal style; কোনো বিয়োগ নয় ===
@@ -91,7 +89,7 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [data.trips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
+  const ownerOth = useMemo(() => data.oth.filter((r: any) => r.owner_id && r.category !== OFFICE_DEPOSIT_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [data.oth, ownerId]);
   const ownerExp = useMemo(() => data.exp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [data.exp, ownerId]);
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
@@ -193,7 +191,7 @@ function Page() {
 
   const summaryBlock = () => {
     const incomeLoss = dailyJama - dena;
-    const mainBalance = incomeLoss + officeTotal + othTotal - expTotal;
+    const mainBalance = incomeLoss + officeTotal - expTotal;
     if (ownerId) {
       const ownerBal = ownerFares + ownerJama - ownerKhoroch;
       return `
@@ -216,11 +214,10 @@ function Page() {
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দেনা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(dena, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd"><b>আয়/লস (জমা − দেনা)</b></td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:${incomeLoss>=0?"#047857":"#b91c1c"}">${esc(fmtNum(incomeLoss, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অফিস কতৃক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(officeTotal, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অন্যান্য জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(othTotal, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− দৈনিক খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(expTotal, lang))}</td></tr>
           <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>মূল ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${mainBalance>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(mainBalance, lang))}</td></tr>
         </table>
-        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অফিস কতৃক জমা + অন্যান্য জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
+        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অফিস কতৃক জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
       </div>`;
   };
 
