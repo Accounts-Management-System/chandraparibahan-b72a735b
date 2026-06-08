@@ -80,7 +80,7 @@ function Page() {
     return data.exp.filter((r: any) => r.owner_id === ownerId);
   }, [data.exp, ownerId]);
   const expTotal = expRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const officeRows = useMemo(() => ownerId ? [] : data.office, [data.office, ownerId]);
+  const officeRows = useMemo(() => ownerId || car ? [] : data.office, [data.office, ownerId, car]);
   const officeTotal = officeRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
   // === ওনার হিসাব (জমা-খরচ) — journal style; কোনো বিয়োগ নয় ===
@@ -191,7 +191,7 @@ function Page() {
 
   const summaryBlock = () => {
     const incomeLoss = dailyJama - dena;
-    const mainBalance = incomeLoss + officeTotal + othTotal - expTotal;
+    const mainBalance = incomeLoss + officeTotal - expTotal;
     if (ownerId) {
       const ownerBal = ownerFares + ownerJama - ownerKhoroch;
       return `
@@ -214,11 +214,10 @@ function Page() {
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দেনা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(dena, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd"><b>আয়/লস (জমা − দেনা)</b></td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:${incomeLoss>=0?"#047857":"#b91c1c"}">${esc(fmtNum(incomeLoss, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অফিস কতৃক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(officeTotal, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অন্যান্য জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(othTotal, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− দৈনিক খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(expTotal, lang))}</td></tr>
           <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>মূল ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${mainBalance>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(mainBalance, lang))}</td></tr>
         </table>
-        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অফিস কতৃক জমা + অন্যান্য জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
+        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অফিস কতৃক জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
       </div>`;
   };
 
