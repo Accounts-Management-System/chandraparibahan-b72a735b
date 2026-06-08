@@ -108,7 +108,6 @@ function DashboardPage() {
       let trips = (tripsRes.data ?? []) as any[];
       let expenses = (expRes.data ?? []) as any[];
       if (ownerId === "all") {
-        trips = trips.filter((r) => !vehMap.get(r.vehicle_no));
         expenses = expenses.filter((r) => !r.owner_id);
       } else {
         trips = trips.filter((r) => vehMap.get(r.vehicle_no) === ownerId);
