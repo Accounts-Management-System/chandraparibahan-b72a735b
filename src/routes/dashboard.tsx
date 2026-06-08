@@ -138,15 +138,15 @@ function DashboardPage() {
   });
   const mb: any = mainAcc.data ?? { mode: "main", trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, otherIncome: 0, expense: 0, balance: 0, tripCount: 0 };
 
-  const tripRows = mb.trips;
+  const tripRows = (mb.trips ?? []) as any[];
   const chartData = chartMode === "tripCount"
     ? Object.entries(
-        tripRows.reduce<Record<string, number>>((acc, r) => {
+        tripRows.reduce<Record<string, number>>((acc: Record<string, number>, r: any) => {
           acc[r.vehicle_no] = (acc[r.vehicle_no] || 0) + 1;
           return acc;
         }, {}),
       ).map(([name, value]) => ({ name, value }))
-    : tripRows.map((r, i) => {
+    : tripRows.map((r: any, i: number) => {
         const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
         const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
         return {
