@@ -205,29 +205,39 @@ function DashboardPage() {
           </p>
         </Card>
 
-        {/* Main transport account */}
+        {/* Main / Owner account */}
         <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="text-sm font-semibold text-muted-foreground mb-3 flex items-center justify-between border-b pb-2">
-            <span>🚌 {t("mainTransportAccount")} {ownerId === "all" ? `(${t("ownerless")})` : ""}</span>
+            <span>🚌 {ownerId === "all" ? `${t("mainTransportAccount")} (${t("ownerless")})` : `ওনার হিসাব — ${owners.find((o) => o.id === ownerId)?.name ?? ""}`}</span>
             <span className="text-foreground text-xs">{t("totalTrips")}: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
-            <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
-            <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
-            <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
-            <MiniStat label="জমা-খরচের জমা" value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
-            <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
-            <MiniStat
-              label={t("mainBalance")}
-              value={fmtNum(mb.balance, lang)}
-              color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"}
-              highlight
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-            ({t("dailyJama")} − {t("dena")}) + অন্যান্য জমা + জমা-খরচের জমা − {t("dailyExpense")} = {t("mainBalance")}
-          </p>
+          {mb.mode === "main" ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
+                <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
+                <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
+                <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
+                <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
+                <MiniStat label={t("mainBalance")} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                ({t("dailyJama")} − {t("dena")}) + অন্যান্য জমা − {t("dailyExpense")} = {t("mainBalance")}
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <MiniStat label="গাড়ী ভাড়া" value={fmtNum(mb.fares, lang)} color="text-emerald-500" />
+                <MiniStat label="জমা-খরচের জমা" value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
+                <MiniStat label="জমা-খরচের খরচ" value={fmtNum(mb.jamaKhorochKhoroch, lang)} color="text-rose-500" />
+                <MiniStat label="ব্যালেন্স" value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                গাড়ী ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ = ব্যালেন্স
+              </p>
+            </>
+          )}
         </Card>
 
         {/* Per-trip chart */}
