@@ -122,19 +122,20 @@ function Page() {
       <tr>
         <td>${esc(fmtDate(r.date, lang))}</td>
         <td class="num">${esc(fmtNum(r.transport, lang))}</td>
-        <td class="num">${esc(fmtNum(r.office, lang))}</td>
+        <td class="num">${esc(fmtNum(r.other, lang))}</td>
+        <td class="num">${esc(fmtNum(r.jamaKhoroch, lang))}</td>
         <td class="num">${esc(fmtNum(r.expense, lang))}</td>
         <td class="num">${esc(fmtNum(r.balance, lang))}</td>
       </tr>`).join("");
 
     const body = `
       <div class="banner green-banner">চন্দ্রা পরিবহন দৈনিক জমা খরচ হিসাব</div>
-      <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: সকল গাড়ির দৈনিক জমা/দেনা, অফিস জমা ও ওনার-বিহীন দৈনিক খরচ</div>
+      <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: দৈনিক জমা/দেনা, অন্যান্য জমা, জমা-খরচের জমা ও দৈনিক খরচ</div>
 
       <table class="month-report">
-        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>অফিস কতৃক জমা</th><th>দৈনিক খরচ</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
-        <tbody>${monthlyRows || `<tr><td colspan="5">${esc(t("noData"))}</td></tr>`}</tbody>
-        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOffice, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
+        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>অন্যান্য জমা</th><th>জমা-খরচের জমা</th><th>দৈনিক খরচ</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
+        <tbody>${monthlyRows || `<tr><td colspan="6">${esc(t("noData"))}</td></tr>`}</tbody>
+        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOther, lang))}</td><td class="num">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
       </table>
 
       <table class="summary">
@@ -151,10 +152,11 @@ function Page() {
             <td>মোট দেনা<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
             <td>ব্যালেন্স<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
             <td>মোট ভাড়া<br/><b>${esc(fmtNum(totalFare, lang))}</b></td>
-            <td>অফিস কতৃক জমা<br/><b class="green">${esc(fmtNum(totalOffice, lang))}</b></td>
+            <td>অন্যান্য জমা<br/><b class="green">${esc(fmtNum(totalOther, lang))}</b></td>
+            <td>জমা-খরচের জমা<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
             <td>মোট খরচ<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
             <td>হাতে ব্যালেন্স<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
-            <td colspan="4" class="formula">(জমা − দেনা) + অফিস কতৃক জমা − খরচ = হাতে ব্যালেন্স</td>
+            <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা + জমা-খরচের জমা − খরচ = হাতে ব্যালেন্স</td>
           </tr>
         </tbody>
       </table>
