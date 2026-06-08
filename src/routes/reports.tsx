@@ -58,7 +58,7 @@ function Page() {
 
   // === দৈনিক জমা (সব ট্রিপ — owner column সহ) ===
   const tripRows = useMemo(() => {
-    if (!ownerId) return data.trips.filter((r: any) => !ownerVehNos.get(r.vehicle_no));
+    if (!ownerId) return data.trips;
     return data.trips.filter((r: any) => (ownerVehNos.get(r.vehicle_no) ?? null) === ownerId);
   }, [data.trips, ownerId, ownerVehNos]);
 
