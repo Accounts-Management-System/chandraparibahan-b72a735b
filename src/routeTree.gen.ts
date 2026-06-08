@@ -16,7 +16,6 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OwnersRouteImport } from './routes/owners'
 import { Route as OwnerAccountsRouteImport } from './routes/owner-accounts'
 import { Route as OtherIncomeRouteImport } from './routes/other-income'
-import { Route as OfficeDepositsRouteImport } from './routes/office-deposits'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JamaKhorochRouteImport } from './routes/jama-khoroch'
 import { Route as ExpensesRouteImport } from './routes/expenses'
@@ -64,11 +63,6 @@ const OwnerAccountsRoute = OwnerAccountsRouteImport.update({
 const OtherIncomeRoute = OtherIncomeRouteImport.update({
   id: '/other-income',
   path: '/other-income',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OfficeDepositsRoute = OfficeDepositsRouteImport.update({
-  id: '/office-deposits',
-  path: '/office-deposits',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -151,7 +145,6 @@ export interface FileRoutesByFullPath {
   '/expenses': typeof ExpensesRoute
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
-  '/office-deposits': typeof OfficeDepositsRoute
   '/other-income': typeof OtherIncomeRoute
   '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
@@ -174,7 +167,6 @@ export interface FileRoutesByTo {
   '/expenses': typeof ExpensesRoute
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
-  '/office-deposits': typeof OfficeDepositsRoute
   '/other-income': typeof OtherIncomeRoute
   '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
@@ -198,7 +190,6 @@ export interface FileRoutesById {
   '/expenses': typeof ExpensesRoute
   '/jama-khoroch': typeof JamaKhorochRoute
   '/login': typeof LoginRoute
-  '/office-deposits': typeof OfficeDepositsRoute
   '/other-income': typeof OtherIncomeRoute
   '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
@@ -223,7 +214,6 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/jama-khoroch'
     | '/login'
-    | '/office-deposits'
     | '/other-income'
     | '/owner-accounts'
     | '/owners'
@@ -246,7 +236,6 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/jama-khoroch'
     | '/login'
-    | '/office-deposits'
     | '/other-income'
     | '/owner-accounts'
     | '/owners'
@@ -269,7 +258,6 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/jama-khoroch'
     | '/login'
-    | '/office-deposits'
     | '/other-income'
     | '/owner-accounts'
     | '/owners'
@@ -293,7 +281,6 @@ export interface RootRouteChildren {
   ExpensesRoute: typeof ExpensesRoute
   JamaKhorochRoute: typeof JamaKhorochRoute
   LoginRoute: typeof LoginRoute
-  OfficeDepositsRoute: typeof OfficeDepositsRoute
   OtherIncomeRoute: typeof OtherIncomeRoute
   OwnerAccountsRoute: typeof OwnerAccountsRoute
   OwnersRoute: typeof OwnersRoute
@@ -352,13 +339,6 @@ declare module '@tanstack/react-router' {
       path: '/other-income'
       fullPath: '/other-income'
       preLoaderRoute: typeof OtherIncomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/office-deposits': {
-      id: '/office-deposits'
-      path: '/office-deposits'
-      fullPath: '/office-deposits'
-      preLoaderRoute: typeof OfficeDepositsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -469,7 +449,6 @@ const rootRouteChildren: RootRouteChildren = {
   ExpensesRoute: ExpensesRoute,
   JamaKhorochRoute: JamaKhorochRoute,
   LoginRoute: LoginRoute,
-  OfficeDepositsRoute: OfficeDepositsRoute,
   OtherIncomeRoute: OtherIncomeRoute,
   OwnerAccountsRoute: OwnerAccountsRoute,
   OwnersRoute: OwnersRoute,
