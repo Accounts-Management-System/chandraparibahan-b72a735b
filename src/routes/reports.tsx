@@ -159,9 +159,9 @@ function Page() {
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
     othRows.forEach((r: any) => lines.push([r.income_date, ownerName(rowOwnerId(r)), r.vehicle_no ?? "", r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
     lines.push("");
-    lines.push("অফিস কতৃক জমা");
-    lines.push("Date,Category,Head,Description,Amount");
-    officeRows.forEach((r: any) => lines.push([r.deposit_date, r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
+    lines.push("জমা-খরচের জমা");
+    lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
+    ownerOth.forEach((r: any) => lines.push([r.income_date, ownerName(rowOwnerId(r)), r.vehicle_no ?? "", r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
     lines.push("");
     lines.push("দৈনিক খরচ");
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
@@ -189,7 +189,7 @@ function Page() {
 
   const summaryBlock = () => {
     const incomeLoss = dailyJama - dena;
-    const mainBalance = incomeLoss + officeTotal - expTotal;
+    const mainBalance = incomeLoss + othTotal + mainJamaKhorochJama - expTotal;
     if (ownerId) {
       const ownerBal = ownerFares + ownerJama - ownerKhoroch;
       return `
@@ -211,11 +211,12 @@ function Page() {
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দৈনিক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(dailyJama, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দেনা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(dena, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd"><b>আয়/লস (জমা − দেনা)</b></td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:${incomeLoss>=0?"#047857":"#b91c1c"}">${esc(fmtNum(incomeLoss, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অফিস কতৃক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(officeTotal, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অন্যান্য জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(othTotal, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ জমা-খরচের জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(mainJamaKhorochJama, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− দৈনিক খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(expTotal, lang))}</td></tr>
           <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>মূল ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${mainBalance>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(mainBalance, lang))}</td></tr>
         </table>
-        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অফিস কতৃক জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
+        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অন্যান্য জমা + জমা-খরচের জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
       </div>`;
   };
 
@@ -243,14 +244,14 @@ function Page() {
       expRows.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(expTotal, lang)],
     );
-    const officeBody = tbl(
-      "অফিস কতৃক জমা",
-      [t("date"), t("category"), t("head"), t("description"), t("amount")],
-      officeRows.map((r: any) => [fmtDate(r.deposit_date, lang), r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
-      [t("grandTotal"), "", "", "", fmtNum(officeTotal, lang)],
+    const jamaKhorochBody = tbl(
+      "জমা-খরচের জমা",
+      [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")],
+      ownerOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
+      [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)],
     );
     const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · ওনার: " + ownerName(ownerId) : ""}`;
-    exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: summaryBlock() + tripBody + othBody + officeBody + expBody, orientation: "landscape" });
+    exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: summaryBlock() + tripBody + othBody + jamaKhorochBody + expBody, orientation: "landscape" });
   };
 
   const exportOwnerPdf = () => {
