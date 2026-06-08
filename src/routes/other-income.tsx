@@ -74,7 +74,7 @@ function Page() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["other_incomes"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("other_incomes").select("*").neq("category", OFFICE_CATEGORY).order("income_date", { ascending: false }).limit(1000);
+      const { data, error } = await supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(1000);
       if (error) throw error;
       return (data ?? []) as Row[];
     },
