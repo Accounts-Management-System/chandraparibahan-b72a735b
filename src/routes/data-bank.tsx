@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { z } from "zod";
-import { fetchOfficeDeposits, OFFICE_DEPOSIT_CATEGORY } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/data-bank")({
   component: Page,
@@ -77,23 +76,6 @@ function Page() {
       return (data ?? []) as any[];
     },
   });
-  const office = useQuery({
-    queryKey: ["db-office", date, month],
-    queryFn: async () => {
-      let from = "";
-      let to = "";
-      if (month && !date) {
-        const start = `${month}-01`;
-        const d = new Date(month + "-01");
-        d.setMonth(d.getMonth() + 1);
-        from = start;
-        to = new Date(d.getTime() - 86400000).toISOString().slice(0, 10);
-      }
-      if (date) from = to = date;
-      return fetchOfficeDeposits({ from, to, limit: 2000 });
-    },
-  });
-
   const ownerName = (oid: string | null | undefined) => (owners as any[]).find((o) => o.id === oid)?.name ?? "—";
   const ownerVehNos = useMemo(() => {
     const m = new Map<string, string | null>();
@@ -105,7 +87,6 @@ function Page() {
   const allTrips = trips.data ?? [];
   const allExp = exp.data ?? [];
   const allOth = oth.data ?? [];
-  const allOffice = office.data ?? [];
 
   // দৈনিক জমা: সব ট্রিপ; owner filter দিলে সেই ওনারের গাড়ি
   const tripRows = useMemo(() => ownerId
@@ -114,8 +95,8 @@ function Page() {
 
   // অন্যান্য জমা: owner_id null → মূল; owner filter দিলে সেই ওনারের
   const othRows = useMemo(() => ownerId
-    ? allOth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_DEPOSIT_CATEGORY)
-    : allOth.filter((r: any) => !r.owner_id && r.category !== OFFICE_DEPOSIT_CATEGORY), [allOth, ownerId]);
+    ? allOth.filter((r: any) => r.owner_id === ownerId)
+    : allOth.filter((r: any) => !r.owner_id), [allOth, ownerId]);
 
   // দৈনিক খরচ: একই
   const expRows = useMemo(() => ownerId
@@ -128,20 +109,19 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [allTrips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && r.category !== OFFICE_DEPOSIT_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
+  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
   const ownerExp = useMemo(() => allExp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allExp, ownerId]);
 
   const totalDailyJama = tripRows.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const totalDena = tripRows.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
   const totalFare = tripRows.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const totalOth = othRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const officeRows = useMemo(() => ownerId || car ? [] : allOffice, [allOffice, ownerId, car]);
-  const totalOffice = officeRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalExp = expRows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const ownerKhoroch = ownerExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (totalDailyJama - totalDena) + totalOffice - totalExp;
+  const mainJamaKhorochJama = ownerId ? 0 : ownerJama;
+  const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (totalDailyJama - totalDena) + totalOth + mainJamaKhorochJama - totalExp;
 
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
