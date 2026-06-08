@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { z } from "zod";
+import { fetchOfficeDeposits, OFFICE_DEPOSIT_CATEGORY } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/data-bank")({
   component: Page,
@@ -19,8 +20,6 @@ export const Route = createFileRoute("/data-bank")({
       month: z.string().optional(),
     }).parse(s),
 });
-
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
 
 function Page() {
   const { t, lang } = useT();
@@ -81,17 +80,19 @@ function Page() {
   const office = useQuery({
     queryKey: ["db-office", date, month],
     queryFn: async () => {
-      let q: any = (supabase as any).from("office_deposits").select("*").order("deposit_date", { ascending: false }).limit(2000);
+      let from = "";
+      let to = "";
       if (date) q = q.eq("deposit_date", date);
       else if (month) {
         const start = `${month}-01`;
         const d = new Date(month + "-01");
         d.setMonth(d.getMonth() + 1);
         const end = d.toISOString().slice(0, 10);
-        q = q.gte("deposit_date", start).lt("deposit_date", end);
+        from = start;
+        to = new Date(d.getTime() - 86400000).toISOString().slice(0, 10);
       }
-      const { data } = await q;
-      return (data ?? []) as any[];
+      if (date) from = to = date;
+      return fetchOfficeDeposits({ from, to, limit: 2000 });
     },
   });
 
@@ -115,8 +116,8 @@ function Page() {
 
   // অন্যান্য জমা: owner_id null → মূল; owner filter দিলে সেই ওনারের
   const othRows = useMemo(() => ownerId
-    ? allOth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_CATEGORY)
-    : allOth.filter((r: any) => !r.owner_id && r.category !== OFFICE_CATEGORY), [allOth, ownerId]);
+    ? allOth.filter((r: any) => r.owner_id === ownerId && r.category !== OFFICE_DEPOSIT_CATEGORY)
+    : allOth.filter((r: any) => !r.owner_id && r.category !== OFFICE_DEPOSIT_CATEGORY), [allOth, ownerId]);
 
   // দৈনিক খরচ: একই
   const expRows = useMemo(() => ownerId
@@ -129,7 +130,7 @@ function Page() {
     if (!oid) return false;
     return ownerId ? oid === ownerId : true;
   }), [allTrips, ownerId, ownerVehNos]);
-  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && r.category !== OFFICE_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
+  const ownerOth = useMemo(() => allOth.filter((r: any) => r.owner_id && r.category !== OFFICE_DEPOSIT_CATEGORY && (ownerId ? r.owner_id === ownerId : true)), [allOth, ownerId]);
   const ownerExp = useMemo(() => allExp.filter((r: any) => r.owner_id && (ownerId ? r.owner_id === ownerId : true)), [allExp, ownerId]);
 
   const totalDailyJama = tripRows.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
