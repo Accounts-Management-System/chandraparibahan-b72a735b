@@ -11,7 +11,7 @@ import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/daily-expense")({ component: Page });
 
-const OFFICE_CATEGORY = "অফিস কতৃক জমা";
+
 
 function Page() {
   const { t, lang } = useT();
@@ -67,7 +67,6 @@ function Page() {
   const totalExpense = rows.reduce((s, r) => s + r.amount, 0);
   const totalFare = trips.filter((r: any) => passes(r.trip_date, r.vehicle_no)).reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const totalOther = otherIncomes
-    .filter((r: any) => r.category !== OFFICE_CATEGORY)
     .filter((r: any) => passes(r.income_date, r.vehicle_no, r.category, r.head))
     .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const net = totalFare + totalOther - totalExpense;
