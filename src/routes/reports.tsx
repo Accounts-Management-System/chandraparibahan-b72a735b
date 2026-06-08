@@ -335,19 +335,34 @@ function Page() {
           </TabsList>
 
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-              <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
-              <Stat label="দেনা" value={fmtNum(dena, lang)} color="text-rose-400" />
-              <Stat label="অন্যান্য জমা" value={fmtNum(othTotal, lang)} color="text-emerald-400" />
-              <Stat label="জমা-খরচের জমা" value={fmtNum(mainJamaKhorochJama, lang)} color="text-emerald-400" />
-              <Stat label="দৈনিক খরচ" value={fmtNum(expTotal, lang)} color="text-rose-400" />
-              <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
-            </div>
+            {ownerId ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <Stat label="গাড়ী ভাড়া" value={fmtNum(ownerFares, lang)} color="text-amber-400" />
+                <Stat label="জমা-খরচের জমা" value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
+                <Stat label="জমা-খরচের খরচ" value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
+                <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
+                <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
+                <Stat label="দেনা" value={fmtNum(dena, lang)} color="text-rose-400" />
+                <Stat label="আয়/লস" value={fmtNum(dailyJama - dena, lang)} color={(dailyJama - dena) >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label="অন্যান্য জমা" value={fmtNum(othTotal, lang)} color="text-emerald-400" />
+                <Stat label="দৈনিক খরচ" value={fmtNum(expTotal, lang)} color="text-rose-400" />
+                <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+              </div>
+            )}
             <Section
-              headers={[t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "গাড়ী ভাড়া", "অন্যান্য জমা", "জমা-খরচের জমা", "দৈনিক খরচ"]}
+              headers={ownerId
+                ? [t("date"), "ট্রিপ", "গাড়ী ভাড়া", "জমা-খরচের জমা", "জমা-খরচের খরচ"]
+                : [t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "অন্যান্য জমা", "দৈনিক খরচ"]}
               rows={byDate.map(([d, v]) => ({ id: d, d, v }))}
-              cells={(x: any) => [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.jama, lang), fmtNum(x.v.dena, lang), fmtNum(x.v.fare, lang), fmtNum(x.v.oth, lang), fmtNum(x.v.jamaKhoroch, lang), fmtNum(x.v.exp, lang)]}
-              footer={[t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(fares, lang), fmtNum(othTotal, lang), fmtNum(ownerJama, lang), fmtNum(expTotal, lang)]}
+              cells={(x: any) => ownerId
+                ? [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.fare, lang), fmtNum(x.v.jamaKhoroch, lang), fmtNum(x.v.exp, lang)]
+                : [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.jama, lang), fmtNum(x.v.dena, lang), fmtNum(x.v.oth, lang), fmtNum(x.v.exp, lang)]}
+              footer={ownerId
+                ? [t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(ownerFares, lang), fmtNum(ownerJama, lang), fmtNum(ownerKhoroch, lang)]
+                : [t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(othTotal, lang), fmtNum(expTotal, lang)]}
             />
           </TabsContent>
 
