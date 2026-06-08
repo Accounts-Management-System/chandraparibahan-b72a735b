@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { FileDown, Printer } from "lucide-react";
 import { exportPdfHtml } from "@/lib/exportPdf";
-import { fetchOfficeDeposits } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/daily-report")({ component: Page });
 
@@ -21,16 +20,16 @@ function Page() {
   const q = useQuery({
     queryKey: ["daily-report", from, to],
     queryFn: async () => {
-      const [trips, exp, office] = await Promise.all([
+      const [trips, exp, oth] = await Promise.all([
         supabase.from("trips").select("*").gte("trip_date", from).lte("trip_date", to).order("trip_date").order("serial_no"),
         supabase.from("expenses").select("*").gte("expense_date", from).lte("expense_date", to).order("expense_date"),
-        fetchOfficeDeposits({ from, to }),
+        supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date"),
       ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], office: office ?? [] };
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [] };
     },
   });
 
-  const data = q.data ?? { trips: [], exp: [], office: [] };
+  const data = q.data ?? { trips: [], exp: [], oth: [] };
 
   const trips = useMemo(
     () => data.trips,
@@ -40,44 +39,48 @@ function Page() {
     () => data.exp.filter((r: any) => !r.owner_id),
     [data.exp],
   );
-  const officeDeposits = useMemo(
-    () => data.office,
-    [data.office],
-  );
+  const otherDeposits = useMemo(() => data.oth.filter((r: any) => !r.owner_id), [data.oth]);
+  const jamaKhorochDeposits = useMemo(() => data.oth.filter((r: any) => !!r.owner_id), [data.oth]);
 
   const totalJama = trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const totalDena = trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
   const totalFare = trips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-  const totalOffice = officeDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const totalOther = otherDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const totalJamaKhoroch = jamaKhorochDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalExpense = expenses.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalTrips = trips.length;
-  const handBalance = (totalJama - totalDena) + totalOffice - totalExpense;
+  const handBalance = (totalJama - totalDena) + totalOther + totalJamaKhoroch - totalExpense;
 
   const dailyRows = useMemo(() => {
-    const m = new Map<string, { jama: number; dena: number; office: number; expense: number }>();
+    const m = new Map<string, { jama: number; dena: number; other: number; jamaKhoroch: number; expense: number }>();
     trips.forEach((r: any) => {
-      const cur = m.get(r.trip_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      const cur = m.get(r.trip_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
       cur.jama += Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
       cur.dena += Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
       m.set(r.trip_date, cur);
     });
-    officeDeposits.forEach((r: any) => {
-      const cur = m.get(r.deposit_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
-      cur.office += Number(r.amount || 0);
-      m.set(r.deposit_date, cur);
+    otherDeposits.forEach((r: any) => {
+      const cur = m.get(r.income_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
+      cur.other += Number(r.amount || 0);
+      m.set(r.income_date, cur);
+    });
+    jamaKhorochDeposits.forEach((r: any) => {
+      const cur = m.get(r.income_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
+      cur.jamaKhoroch += Number(r.amount || 0);
+      m.set(r.income_date, cur);
     });
     expenses.forEach((r: any) => {
-      const cur = m.get(r.expense_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      const cur = m.get(r.expense_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
       cur.expense += Number(r.amount || 0);
       m.set(r.expense_date, cur);
     });
     let running = 0;
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => {
       const transport = v.jama - v.dena;
-      running += transport + v.office - v.expense;
+      running += transport + v.other + v.jamaKhoroch - v.expense;
       return { date, ...v, transport, balance: running };
     });
-  }, [trips, officeDeposits, expenses]);
+  }, [trips, otherDeposits, jamaKhorochDeposits, expenses]);
 
   const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -119,19 +122,20 @@ function Page() {
       <tr>
         <td>${esc(fmtDate(r.date, lang))}</td>
         <td class="num">${esc(fmtNum(r.transport, lang))}</td>
-        <td class="num">${esc(fmtNum(r.office, lang))}</td>
+        <td class="num">${esc(fmtNum(r.other, lang))}</td>
+        <td class="num">${esc(fmtNum(r.jamaKhoroch, lang))}</td>
         <td class="num">${esc(fmtNum(r.expense, lang))}</td>
         <td class="num">${esc(fmtNum(r.balance, lang))}</td>
       </tr>`).join("");
 
     const body = `
       <div class="banner green-banner">চন্দ্রা পরিবহন দৈনিক জমা খরচ হিসাব</div>
-      <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: সকল গাড়ির দৈনিক জমা/দেনা, অফিস জমা ও ওনার-বিহীন দৈনিক খরচ</div>
+      <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: দৈনিক জমা/দেনা, অন্যান্য জমা, জমা-খরচের জমা ও দৈনিক খরচ</div>
 
       <table class="month-report">
-        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>অফিস কতৃক জমা</th><th>দৈনিক খরচ</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
-        <tbody>${monthlyRows || `<tr><td colspan="5">${esc(t("noData"))}</td></tr>`}</tbody>
-        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOffice, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
+        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>অন্যান্য জমা</th><th>জমা-খরচের জমা</th><th>দৈনিক খরচ</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
+        <tbody>${monthlyRows || `<tr><td colspan="6">${esc(t("noData"))}</td></tr>`}</tbody>
+        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOther, lang))}</td><td class="num">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
       </table>
 
       <table class="summary">
@@ -148,10 +152,11 @@ function Page() {
             <td>মোট দেনা<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
             <td>ব্যালেন্স<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
             <td>মোট ভাড়া<br/><b>${esc(fmtNum(totalFare, lang))}</b></td>
-            <td>অফিস কতৃক জমা<br/><b class="green">${esc(fmtNum(totalOffice, lang))}</b></td>
+            <td>অন্যান্য জমা<br/><b class="green">${esc(fmtNum(totalOther, lang))}</b></td>
+            <td>জমা-খরচের জমা<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
             <td>মোট খরচ<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
             <td>হাতে ব্যালেন্স<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
-            <td colspan="4" class="formula">(জমা − দেনা) + অফিস কতৃক জমা − খরচ = হাতে ব্যালেন্স</td>
+            <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা + জমা-খরচের জমা − খরচ = হাতে ব্যালেন্স</td>
           </tr>
         </tbody>
       </table>
@@ -235,7 +240,7 @@ function Page() {
           <div>
             <h1 className="text-2xl font-bold">প্রতিদিনের জমা ও খরচ হিসাব</h1>
             <p className="text-xs text-muted-foreground">
-              সকল গাড়ির দৈনিক জমা/দেনা + অফিস কতৃক জমা − ওনার-বিহীন দৈনিক খরচ
+              সকল গাড়ির দৈনিক জমা/দেনা + অন্যান্য জমা + জমা-খরচের জমা − দৈনিক খরচ
             </p>
           </div>
           <div className="flex gap-2">
@@ -265,7 +270,8 @@ function Page() {
           <Stat label="মোট দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
           <Stat label="ব্যালেন্স (জমা−দেনা)" value={fmtNum(totalJama - totalDena, lang)} />
           <Stat label="মোট ভাড়া" value={fmtNum(totalFare, lang)} />
-          <Stat label="অফিস কতৃক জমা" value={fmtNum(totalOffice, lang)} color="text-emerald-400" />
+          <Stat label="অন্যান্য জমা" value={fmtNum(totalOther, lang)} color="text-emerald-400" />
+          <Stat label="জমা-খরচের জমা" value={fmtNum(totalJamaKhoroch, lang)} color="text-emerald-400" />
           <Stat label="মোট খরচ" value={fmtNum(totalExpense, lang)} color="text-rose-400" />
           <Stat label="হাতে ব্যালেন্স" value={fmtNum(handBalance, lang)} color="text-sky-400" />
         </div>
@@ -344,13 +350,14 @@ function Page() {
           </div>
         </div>
 
-        {officeDeposits.length > 0 && (
+        {(otherDeposits.length > 0 || jamaKhorochDeposits.length > 0) && (
           <div className="rounded-md border bg-card/60 overflow-x-auto">
-            <div className="px-3 py-2 font-semibold bg-muted/40">অফিস কতৃক জমা</div>
+            <div className="px-3 py-2 font-semibold bg-muted/40">অন্যান্য জমা ও জমা-খরচের জমা</div>
             <table className="w-full text-xs">
               <thead className="bg-muted/30">
                 <tr>
                   <th className="px-2 py-1 text-left">তারিখ</th>
+                  <th className="px-2 py-1 text-left">ধরন</th>
                   <th className="px-2 py-1 text-left">ক্যাটাগরী</th>
                   <th className="px-2 py-1 text-left">খাত</th>
                   <th className="px-2 py-1 text-left">বিবরন</th>
@@ -358,9 +365,10 @@ function Page() {
                 </tr>
               </thead>
               <tbody>
-                {officeDeposits.map((r: any) => (
+                {[...otherDeposits.map((r: any) => ({ ...r, kindLabel: "অন্যান্য জমা" })), ...jamaKhorochDeposits.map((r: any) => ({ ...r, kindLabel: "জমা-খরচের জমা" }))].map((r: any) => (
                   <tr key={r.id} className="border-t">
-                    <td className="px-2 py-1">{fmtDate(r.deposit_date, lang)}</td>
+                    <td className="px-2 py-1">{fmtDate(r.income_date, lang)}</td>
+                    <td className="px-2 py-1">{r.kindLabel}</td>
                     <td className="px-2 py-1">{r.category ?? "—"}</td>
                     <td className="px-2 py-1">{r.head ?? "—"}</td>
                     <td className="px-2 py-1">{r.description ?? "—"}</td>
@@ -369,7 +377,7 @@ function Page() {
                 ))}
               </tbody>
               <tfoot className="bg-muted/30">
-                <tr><td colSpan={4} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOffice, lang)}</td></tr>
+                <tr><td colSpan={5} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOther + totalJamaKhoroch, lang)}</td></tr>
               </tfoot>
             </table>
           </div>

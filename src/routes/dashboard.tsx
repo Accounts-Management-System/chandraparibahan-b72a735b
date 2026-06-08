@@ -27,7 +27,6 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
-import { fetchOfficeDeposits } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -99,33 +98,37 @@ function DashboardPage() {
     queryFn: async () => {
       let tq = supabase.from("trips").select("trip_date,vehicle_no,serial_no,jama_1,jama_2,dena_1,dena_2,fare_1,fare_2").limit(100000);
       let eq = supabase.from("expenses").select("expense_date,owner_id,amount").limit(100000);
-      if (effRange.from) { tq = tq.gte("trip_date", effRange.from); eq = eq.gte("expense_date", effRange.from); }
-      if (effRange.to) { tq = tq.lte("trip_date", effRange.to); eq = eq.lte("expense_date", effRange.to); }
-      if (vehicle !== "all") tq = tq.eq("vehicle_no", vehicle);
-      const [tripsRes, officeRows, expRes, vehRes] = await Promise.all([tq, fetchOfficeDeposits({ from: effRange.from, to: effRange.to }), eq, supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000)]);
+      let oq = supabase.from("other_incomes").select("income_date,owner_id,vehicle_no,amount").limit(100000);
+      if (effRange.from) { tq = tq.gte("trip_date", effRange.from); eq = eq.gte("expense_date", effRange.from); oq = oq.gte("income_date", effRange.from); }
+      if (effRange.to) { tq = tq.lte("trip_date", effRange.to); eq = eq.lte("expense_date", effRange.to); oq = oq.lte("income_date", effRange.to); }
+      if (vehicle !== "all") { tq = tq.eq("vehicle_no", vehicle); oq = oq.eq("vehicle_no", vehicle); }
+      const [tripsRes, othRes, expRes, vehRes] = await Promise.all([tq, oq, eq, supabase.from("vehicles").select("vehicle_no,owner_id").limit(100000)]);
       const vehMap = new Map<string, string | null>();
       ((vehRes.data ?? []) as any[]).forEach((v) => vehMap.set(v.vehicle_no, v.owner_id ?? null));
       let trips = (tripsRes.data ?? []) as any[];
       let expenses = (expRes.data ?? []) as any[];
+      let incomes = (othRes.data ?? []) as any[];
       if (ownerId === "all") {
         expenses = expenses.filter((r) => !r.owner_id);
       } else {
         trips = trips.filter((r) => vehMap.get(r.vehicle_no) === ownerId);
         expenses = expenses.filter((r) => r.owner_id === ownerId);
+        incomes = incomes.filter((r) => r.owner_id === ownerId);
       }
       const jama = trips.reduce((s, r) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
       const dena = trips.reduce((s, r) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
-      const office = ownerId === "all" ? officeRows.reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
+      const otherIncome = ownerId === "all" ? incomes.filter((r) => !r.owner_id).reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
+      const jamaKhorochJama = incomes.filter((r) => !!r.owner_id).reduce((s, r) => s + Number(r.amount || 0), 0);
       const expense = expenses.reduce((s, r) => s + Number(r.amount || 0), 0);
       const incomeLoss = jama - dena;
       return {
-        trips, jama, dena, incomeLoss, office, expense,
-        balance: incomeLoss + office - expense,
+        trips, jama, dena, incomeLoss, otherIncome, jamaKhorochJama, expense,
+        balance: incomeLoss + otherIncome + jamaKhorochJama - expense,
         tripCount: new Set(trips.map((r) => r.vehicle_no)).size,
       };
     },
   });
-  const mb = mainAcc.data ?? { trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, office: 0, expense: 0, balance: 0, tripCount: 0 };
+  const mb = mainAcc.data ?? { trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, otherIncome: 0, jamaKhorochJama: 0, expense: 0, balance: 0, tripCount: 0 };
 
   const tripRows = mb.trips;
   const chartData = chartMode === "tripCount"
@@ -200,11 +203,12 @@ function DashboardPage() {
             <span>🚌 {t("mainTransportAccount")} {ownerId === "all" ? `(${t("ownerless")})` : ""}</span>
             <span className="text-foreground text-xs">{t("totalTrips")}: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
             <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
             <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
             <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-            <MiniStat label={t("officeDeposits")} value={fmtNum(mb.office, lang)} color="text-emerald-500" />
+            <MiniStat label="অন্যান্য জমা" value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
+            <MiniStat label="জমা-খরচের জমা" value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
             <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
             <MiniStat
               label={t("mainBalance")}
@@ -214,7 +218,7 @@ function DashboardPage() {
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-            ({t("dailyJama")} − {t("dena")}) + {t("officeDeposits")} − {t("dailyExpense")} = {t("mainBalance")}
+            ({t("dailyJama")} − {t("dena")}) + অন্যান্য জমা + জমা-খরচের জমা − {t("dailyExpense")} = {t("mainBalance")}
           </p>
         </Card>
 
