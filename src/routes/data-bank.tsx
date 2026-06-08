@@ -182,8 +182,7 @@ function Page() {
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger value="trips">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
-              <TabsTrigger value="oth">অন্যান্য জমা ({fmtNum(totalOth, lang)})</TabsTrigger>
-              <TabsTrigger value="office">অফিস জমা ({fmtNum(totalOffice, lang)})</TabsTrigger>
+            <TabsTrigger value="oth">অন্যান্য জমা ({fmtNum(totalOth, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(totalExp, lang)})</TabsTrigger>
             <TabsTrigger value="owner">ওনার হিসাব</TabsTrigger>
           </TabsList>
@@ -192,7 +191,8 @@ function Page() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Stat label="দৈনিক জমা" value={fmtNum(totalDailyJama, lang)} color="text-emerald-400" />
               <Stat label="দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
-              <Stat label="অফিস কতৃক জমা" value={fmtNum(totalOffice, lang)} color="text-emerald-400" />
+              <Stat label="অন্যান্য জমা" value={fmtNum(totalOth, lang)} color="text-emerald-400" />
+              <Stat label="জমা-খরচের জমা" value={fmtNum(mainJamaKhorochJama, lang)} color="text-emerald-400" />
               <Stat label="দৈনিক খরচ" value={fmtNum(totalExp, lang)} color="text-rose-400" />
               <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-primary" : "text-rose-500"} />
             </div>
@@ -230,20 +230,6 @@ function Page() {
                 ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
               ]}
               footer={[t("grandTotal"), "", "", "", "", "", fmtNum(totalOth, lang)]}
-            />
-          </TabsContent>
-
-          <TabsContent value="office">
-            <Tbl
-              rows={officeRows}
-              cols={[
-                ["deposit_date", t("date"), (v: any) => fmtDate(v, lang)],
-                ["category", t("category")],
-                ["head", t("head")],
-                ["description", t("description")],
-                ["amount", t("amount"), (v: any) => fmtNum(v, lang)],
-              ]}
-              footer={[t("grandTotal"), "", "", "", fmtNum(totalOffice, lang)]}
             />
           </TabsContent>
 
