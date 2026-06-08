@@ -111,7 +111,6 @@ function Page() {
     queryFn: async () => {
       const { data } = await supabase
         .from("other_incomes").select("*")
-        .neq("category", OFFICE_CATEGORY)
         .order("income_date", { ascending: false }).limit(500);
       return (data ?? []) as OIRow[];
     },
