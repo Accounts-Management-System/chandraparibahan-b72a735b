@@ -82,12 +82,10 @@ function Page() {
     queryFn: async () => {
       let from = "";
       let to = "";
-      if (date) q = q.eq("deposit_date", date);
-      else if (month) {
+      if (month && !date) {
         const start = `${month}-01`;
         const d = new Date(month + "-01");
         d.setMonth(d.getMonth() + 1);
-        const end = d.toISOString().slice(0, 10);
         from = start;
         to = new Date(d.getTime() - 86400000).toISOString().slice(0, 10);
       }
