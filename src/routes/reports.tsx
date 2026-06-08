@@ -191,6 +191,39 @@ function Page() {
     (footer ? `<tfoot><tr>${footer.map((c) => `<td>${esc(c)}</td>`).join("")}</tr></tfoot>` : "") +
     `</table>`;
 
+  const summaryBlock = () => {
+    const incomeLoss = dailyJama - dena;
+    const mainBalance = incomeLoss + officeTotal + othTotal - expTotal;
+    if (ownerId) {
+      const ownerBal = ownerFares + ownerJama - ownerKhoroch;
+      return `
+        <div style="border:2px solid #111;padding:10px;margin:0 0 14px;background:#f8fafc">
+          <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">ওনার হিসাব — ${esc(ownerName(ownerId))} — ব্যালেন্স</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">গাড়ি ভাড়া (দৈনিক জমা)</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ জমা-খরচের জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− জমা-খরচের খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(ownerKhoroch, lang))}</td></tr>
+            <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${ownerBal>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(ownerBal, lang))}</td></tr>
+          </table>
+          <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: গাড়ি ভাড়া + জমা-খরচ (জমা) − জমা-খরচ (খরচ) = ব্যালেন্স</p>
+        </div>`;
+    }
+    return `
+      <div style="border:2px solid #111;padding:10px;margin:0 0 14px;background:#f8fafc">
+        <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">মূল পরিবহন হিসাব — ব্যালেন্স</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দৈনিক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(dailyJama, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দেনা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(dena, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd"><b>আয়/লস (জমা − দেনা)</b></td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:${incomeLoss>=0?"#047857":"#b91c1c"}">${esc(fmtNum(incomeLoss, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অফিস কতৃক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(officeTotal, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অন্যান্য জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(othTotal, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− দৈনিক খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(expTotal, lang))}</td></tr>
+          <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>মূল ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${mainBalance>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(mainBalance, lang))}</td></tr>
+        </table>
+        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অফিস কতৃক জমা + অন্যান্য জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
+      </div>`;
+  };
+
   const exportFullPdf = () => {
     const tripBody = tbl(
       "দৈনিক জমা",
@@ -222,7 +255,7 @@ function Page() {
       [t("grandTotal"), "", "", "", fmtNum(officeTotal, lang)],
     );
     const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · ওনার: " + ownerName(ownerId) : ""}`;
-    exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: tripBody + othBody + officeBody + expBody, orientation: "landscape" });
+    exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: summaryBlock() + tripBody + othBody + officeBody + expBody, orientation: "landscape" });
   };
 
   const exportOwnerPdf = () => {
@@ -230,8 +263,19 @@ function Page() {
     const tripRowsArr = ownerTrips.map((r: any) => [fmtDate(r.trip_date, lang), ownerName(ownerVehNos.get(r.vehicle_no)), r.vehicle_no, fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)]);
     const jamaRows = ownerOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]);
     const khorochRows = ownerExp.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]);
-    const body =
-      `<div class="totals" style="border:0;margin:0 0 10px"><span>গাড়ি ভাড়া: ${esc(fmtNum(ownerFares, lang))}</span><span>জমা-খরচের জমা: ${esc(fmtNum(ownerJama, lang))}</span><span>জমা-খরচের খরচ: ${esc(fmtNum(ownerKhoroch, lang))}</span></div>` +
+    const ownerBal = ownerFares + ownerJama - ownerKhoroch;
+    const balBlock = `
+      <div style="border:2px solid #111;padding:10px;margin:0 0 12px;background:#f8fafc">
+        <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">ওনার হিসাব — ${esc(ownerId ? ownerName(ownerId) : "সকল ওনার")} — ব্যালেন্স</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">গাড়ি ভাড়া (দৈনিক জমা)</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ জমা-খরচের জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− জমা-খরচের খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(ownerKhoroch, lang))}</td></tr>
+          <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${ownerBal>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(ownerBal, lang))}</td></tr>
+        </table>
+        <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: গাড়ি ভাড়া + জমা-খরচ (জমা) − জমা-খরচ (খরচ) = ব্যালেন্স</p>
+      </div>`;
+    const body = balBlock +
       tbl("গাড়ি অনুযায়ী ভাড়া", [t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")], vehRows, [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]) +
       tbl("ট্রিপ বিবরণ", [t("date"), t("owner"), t("vehicleNo"), t("fareTotal")], tripRowsArr, [t("grandTotal"), "", "", fmtNum(ownerFares, lang)]) +
       tbl("জমা-খরচের জমা", [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], jamaRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)]) +
