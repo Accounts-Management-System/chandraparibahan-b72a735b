@@ -156,7 +156,7 @@ function Page() {
             <td>জমা-খরচের জমা<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
             <td>মোট খরচ<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
             <td>হাতে ব্যালেন্স<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
-            <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা + জমা-খরচের জমা − খরচ = হাতে ব্যালেন্স</td>
+            <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা − খরচ = হাতে ব্যালেন্স &nbsp;|&nbsp; জমা-খরচের জমা ওনার হিসাবে</td>
           </tr>
         </tbody>
       </table>
