@@ -91,7 +91,7 @@ function Page() {
   const ownerFares = ownerTrips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
   const ownerJama = ownerOth.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const ownerKhoroch = ownerExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const mainJamaKhorochJama = ownerId ? 0 : ownerJama;
+  const mainJamaKhorochJama = 0; // মূল হিসাবে জমা-খরচের জমা যোগ হবে না
 
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
