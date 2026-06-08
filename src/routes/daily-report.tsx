@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { FileDown, Printer } from "lucide-react";
 import { exportPdfHtml } from "@/lib/exportPdf";
-import { fetchOfficeDeposits } from "@/lib/officeDeposits";
 
 export const Route = createFileRoute("/daily-report")({ component: Page });
 
@@ -21,16 +20,16 @@ function Page() {
   const q = useQuery({
     queryKey: ["daily-report", from, to],
     queryFn: async () => {
-      const [trips, exp, office] = await Promise.all([
+      const [trips, exp, oth] = await Promise.all([
         supabase.from("trips").select("*").gte("trip_date", from).lte("trip_date", to).order("trip_date").order("serial_no"),
         supabase.from("expenses").select("*").gte("expense_date", from).lte("expense_date", to).order("expense_date"),
-        fetchOfficeDeposits({ from, to }),
+        supabase.from("other_incomes").select("*").gte("income_date", from).lte("income_date", to).order("income_date"),
       ]);
-      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], office: office ?? [] };
+      return { trips: (trips as any).data ?? [], exp: (exp as any).data ?? [], oth: (oth as any).data ?? [] };
     },
   });
 
-  const data = q.data ?? { trips: [], exp: [], office: [] };
+  const data = q.data ?? { trips: [], exp: [], oth: [] };
 
   const trips = useMemo(
     () => data.trips,
@@ -40,44 +39,48 @@ function Page() {
     () => data.exp.filter((r: any) => !r.owner_id),
     [data.exp],
   );
-  const officeDeposits = useMemo(
-    () => data.office,
-    [data.office],
-  );
+  const otherDeposits = useMemo(() => data.oth.filter((r: any) => !r.owner_id), [data.oth]);
+  const jamaKhorochDeposits = useMemo(() => data.oth.filter((r: any) => !!r.owner_id), [data.oth]);
 
   const totalJama = trips.reduce((s: number, r: any) => s + Number(r.jama_1 || 0) + Number(r.jama_2 || 0), 0);
   const totalDena = trips.reduce((s: number, r: any) => s + Number(r.dena_1 || 0) + Number(r.dena_2 || 0), 0);
   const totalFare = trips.reduce((s: number, r: any) => s + Number(r.fare_1 || 0) + Number(r.fare_2 || 0), 0);
-  const totalOffice = officeDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const totalOther = otherDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const totalJamaKhoroch = jamaKhorochDeposits.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalExpense = expenses.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const totalTrips = trips.length;
-  const handBalance = (totalJama - totalDena) + totalOffice - totalExpense;
+  const handBalance = (totalJama - totalDena) + totalOther + totalJamaKhoroch - totalExpense;
 
   const dailyRows = useMemo(() => {
-    const m = new Map<string, { jama: number; dena: number; office: number; expense: number }>();
+    const m = new Map<string, { jama: number; dena: number; other: number; jamaKhoroch: number; expense: number }>();
     trips.forEach((r: any) => {
-      const cur = m.get(r.trip_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      const cur = m.get(r.trip_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
       cur.jama += Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
       cur.dena += Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
       m.set(r.trip_date, cur);
     });
-    officeDeposits.forEach((r: any) => {
-      const cur = m.get(r.deposit_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
-      cur.office += Number(r.amount || 0);
-      m.set(r.deposit_date, cur);
+    otherDeposits.forEach((r: any) => {
+      const cur = m.get(r.income_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
+      cur.other += Number(r.amount || 0);
+      m.set(r.income_date, cur);
+    });
+    jamaKhorochDeposits.forEach((r: any) => {
+      const cur = m.get(r.income_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
+      cur.jamaKhoroch += Number(r.amount || 0);
+      m.set(r.income_date, cur);
     });
     expenses.forEach((r: any) => {
-      const cur = m.get(r.expense_date) ?? { jama: 0, dena: 0, office: 0, expense: 0 };
+      const cur = m.get(r.expense_date) ?? { jama: 0, dena: 0, other: 0, jamaKhoroch: 0, expense: 0 };
       cur.expense += Number(r.amount || 0);
       m.set(r.expense_date, cur);
     });
     let running = 0;
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => {
       const transport = v.jama - v.dena;
-      running += transport + v.office - v.expense;
+      running += transport + v.other + v.jamaKhoroch - v.expense;
       return { date, ...v, transport, balance: running };
     });
-  }, [trips, officeDeposits, expenses]);
+  }, [trips, otherDeposits, jamaKhorochDeposits, expenses]);
 
   const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
