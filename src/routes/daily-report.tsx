@@ -77,7 +77,7 @@ function Page() {
     let running = 0;
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => {
       const transport = v.jama - v.dena;
-      running += transport + v.other + v.jamaKhoroch - v.expense;
+      running += transport + v.other - v.expense;
       return { date, ...v, transport, balance: running };
     });
   }, [trips, otherDeposits, jamaKhorochDeposits, expenses]);
