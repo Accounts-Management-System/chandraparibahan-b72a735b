@@ -249,7 +249,7 @@ function Page() {
       ownerOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)],
     );
-    const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · ${trBn("ওনার:", lang)} " + ownerName(ownerId) : ""}`;
+    const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · " + trBn("ওনার:", lang) + " " + ownerName(ownerId) : ""}`;
     exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: summaryBlock() + tripBody + othBody + jamaKhorochBody + expBody, orientation: "landscape" });
   };
 
