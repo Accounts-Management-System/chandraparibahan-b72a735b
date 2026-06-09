@@ -171,8 +171,10 @@ const dict = {
   dailyReport: { bn: "দৈনিক রিপোর্ট", en: "Daily Report" },
   selectOwner: { bn: "ওনার নির্বাচন", en: "Select Owner" },
   grandTotal: { bn: "সর্বমোট", en: "Grand Total" },
-  receivable: { bn: "পাওনা", en: "Receivable" },
-  addReceivable: { bn: "পাওনা যোগ", en: "Add Receivable" },
+  receivable: { bn: "পূর্বের পাওনা", en: "Previous Receivable" },
+  addReceivable: { bn: "পূর্বের পাওনা যোগ", en: "Add Previous Receivable" },
+  currentReceivable: { bn: "বর্তমান পাওনা", en: "Current Receivable" },
+  
   collection: { bn: "জমা", en: "Collection" },
   payment: { bn: "পরিশোধ", en: "Payment" },
   remaining: { bn: "বাকি", en: "Remaining" },

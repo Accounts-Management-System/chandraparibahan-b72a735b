@@ -24,7 +24,7 @@ import {
   BookOpen,
   ShieldCheck,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
 import { useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
 
@@ -58,11 +58,15 @@ function monthRange(ym: string): { from: string; to: string } | null {
 function DashboardPage() {
   const { t, lang } = useT();
   const { isAdmin, canWrite } = useRole();
-  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }, []);
 
-  // Filters
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  // Filters — default to previous day
+  const [dateFrom, setDateFrom] = useState(yesterday);
+  const [dateTo, setDateTo] = useState(yesterday);
   const [month, setMonth] = useState("");
   const [vehicle, setVehicle] = useState<string>("all");
   const [ownerId, setOwnerId] = useState<string>("all");
@@ -90,7 +94,7 @@ function DashboardPage() {
     },
   });
 
-  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
+  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("tripCount");
 
   // Main / Owner account
   const mainAcc = useQuery({
@@ -154,7 +158,14 @@ function DashboardPage() {
           value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
         };
       });
-  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : chartMode === "tripCount" ? "oklch(0.75 0.15 80)" : "var(--primary)";
+  const chartStops = chartMode === "debit"
+    ? { from: "oklch(0.72 0.22 25)", to: "oklch(0.55 0.18 25)" }
+    : chartMode === "deposit"
+      ? { from: "oklch(0.78 0.18 150)", to: "oklch(0.55 0.15 150)" }
+      : chartMode === "tripCount"
+        ? { from: "#C9B6FF", to: "#7C5BD9" } // lavender
+        : { from: "oklch(0.72 0.18 270)", to: "oklch(0.5 0.18 270)" };
+  const gradId = `barGrad-${chartMode}`;
 
   return (
     <AppLayout>
@@ -259,14 +270,22 @@ function DashboardPage() {
           {chartData.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">{t("noData")}</p>
           ) : (
-            <div className="h-64 w-full">
+            <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                <BarChart data={chartData} margin={{ top: 24, right: 8, left: 0, bottom: 8 }}>
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={chartStops.from} />
+                      <stop offset="100%" stopColor={chartStops.to} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0 0 0 / 0.08)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={50} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="value" fill={chartColor} radius={[6, 6, 0, 0]} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={60} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtNum(v, lang)} />
+                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v: any) => fmtNum(Number(v), lang)} />
+                  <Bar dataKey="value" fill={`url(#${gradId})`} radius={[6, 6, 0, 0]}>
+                    <LabelList dataKey="value" position="top" formatter={(v: any) => fmtNum(Number(v), lang)} style={{ fontSize: 10, fontWeight: 600, fill: "var(--foreground)" }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
