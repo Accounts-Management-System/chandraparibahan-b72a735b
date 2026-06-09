@@ -94,7 +94,7 @@ function DashboardPage() {
     },
   });
 
-  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("balance");
+  const [chartMode, setChartMode] = useState<"balance" | "debit" | "deposit" | "tripCount">("tripCount");
 
   // Main / Owner account
   const mainAcc = useQuery({
