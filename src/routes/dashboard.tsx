@@ -219,7 +219,7 @@ function DashboardPage() {
         {/* Main / Owner account */}
         <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="text-sm font-semibold text-muted-foreground mb-3 flex items-center justify-between border-b pb-2">
-            <span>🚌 {ownerId === "all" ? `${t("mainTransportAccount")} (${t("ownerless")})` : `ওনার হিসাব — ${owners.find((o) => o.id === ownerId)?.name ?? ""}`}</span>
+            <span>🚌 {ownerId === "all" ? `${t("mainTransportAccount")} (${t("ownerless")})` : `${trBn("ওনার হিসাব", lang)} — ${owners.find((o) => o.id === ownerId)?.name ?? ""}`}</span>
             <span className="text-foreground text-xs">{t("totalTrips")}: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
           {mb.mode === "main" ? (
@@ -233,7 +233,7 @@ function DashboardPage() {
                 <MiniStat label={t("mainBalance")} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
               </div>
               <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-                ({t("dailyJama")} − {t("dena")}) + অন্যান্য জমা − {t("dailyExpense")} = {t("mainBalance")}
+                ({t("dailyJama")} − {t("dena")}) + {trBn("অন্যান্য জমা", lang)} − {t("dailyExpense")} = {t("mainBalance")}
               </p>
             </>
           ) : (

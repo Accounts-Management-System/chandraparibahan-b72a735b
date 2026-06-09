@@ -196,10 +196,10 @@ function Page() {
         <div style="border:2px solid #111;padding:10px;margin:0 0 14px;background:#f8fafc">
           <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">ওনার হিসাব — ${esc(ownerName(ownerId))} — ব্যালেন্স</h2>
           <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">গাড়ি ভাড়া (দৈনিক জমা)</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
-            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ জমা-খরচের জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
-            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− জমা-খরচের খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(ownerKhoroch, lang))}</td></tr>
-            <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${ownerBal>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(ownerBal, lang))}</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("গাড়ি ভাড়া (দৈনিক জমা)", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("+ জমা-খরচের জমা", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("− জমা-খরচের খরচ", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(ownerKhoroch, lang))}</td></tr>
+            <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>${trBn("ব্যালেন্স", lang)}</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${ownerBal>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(ownerBal, lang))}</td></tr>
           </table>
           <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: গাড়ি ভাড়া + জমা-খরচ (জমা) − জমা-খরচ (খরচ) = ব্যালেন্স</p>
         </div>`;
@@ -208,12 +208,12 @@ function Page() {
       <div style="border:2px solid #111;padding:10px;margin:0 0 14px;background:#f8fafc">
         <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">মূল পরিবহন হিসাব — ব্যালেন্স</h2>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দৈনিক জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(dailyJama, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">দেনা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(dena, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd"><b>আয়/লস (জমা − দেনা)</b></td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:${incomeLoss>=0?"#047857":"#b91c1c"}">${esc(fmtNum(incomeLoss, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ অন্যান্য জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(othTotal, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− দৈনিক খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(expTotal, lang))}</td></tr>
-          <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>মূল ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${mainBalance>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(mainBalance, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("দৈনিক জমা", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(dailyJama, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("দেনা", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(dena, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd"><b>${trBn("আয়/লস (জমা − দেনা)", lang)}</b></td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:${incomeLoss>=0?"#047857":"#b91c1c"}">${esc(fmtNum(incomeLoss, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("+ অন্যান্য জমা", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(othTotal, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("− দৈনিক খরচ", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(expTotal, lang))}</td></tr>
+          <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>${trBn("মূল ব্যালেন্স", lang)}</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${mainBalance>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(mainBalance, lang))}</td></tr>
         </table>
         <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: (দৈনিক জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ = মূল ব্যালেন্স</p>
       </div>`;
@@ -249,7 +249,7 @@ function Page() {
       ownerOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)],
     );
-    const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · ওনার: " + ownerName(ownerId) : ""}`;
+    const sub = `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · ${trBn("ওনার:", lang)} " + ownerName(ownerId) : ""}`;
     exportPdfHtml({ title: `${t("brand")} — ${t("reports")}`, subtitle: sub, body: summaryBlock() + tripBody + othBody + jamaKhorochBody + expBody, orientation: "landscape" });
   };
 
@@ -263,10 +263,10 @@ function Page() {
       <div style="border:2px solid #111;padding:10px;margin:0 0 12px;background:#f8fafc">
         <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">ওনার হিসাব — ${esc(ownerId ? ownerName(ownerId) : trBn("সকল ওনার", lang))} — ব্যালেন্স</h2>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">গাড়ি ভাড়া (দৈনিক জমা)</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ জমা-খরচের জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
-          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">− জমা-খরচের খরচ</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(ownerKhoroch, lang))}</td></tr>
-          <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>ব্যালেন্স</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${ownerBal>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(ownerBal, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("গাড়ি ভাড়া (দৈনিক জমা)", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("+ জমা-খরচের জমা", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
+          <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">${trBn("− জমা-খরচের খরচ", lang)}</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#b91c1c">${esc(fmtNum(ownerKhoroch, lang))}</td></tr>
+          <tr><td style="padding:6px 8px;border:2px solid #111;background:#fde68a"><b>${trBn("ব্যালেন্স", lang)}</b></td><td style="padding:6px 8px;border:2px solid #111;background:#fde68a;text-align:right;font-weight:800;font-size:16px;color:${ownerBal>=0?"#0369a1":"#b91c1c"}">${esc(fmtNum(ownerBal, lang))}</td></tr>
         </table>
         <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: গাড়ি ভাড়া + জমা-খরচ (জমা) − জমা-খরচ (খরচ) = ব্যালেন্স</p>
       </div>`;
@@ -275,7 +275,7 @@ function Page() {
       tbl(trBn("ট্রিপ বিবরণ", lang), [t("date"), t("owner"), t("vehicleNo"), t("fareTotal")], tripRowsArr, [t("grandTotal"), "", "", fmtNum(ownerFares, lang)]) +
       tbl(trBn("জমা-খরচের জমা", lang), [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], jamaRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)]) +
       tbl(trBn("জমা-খরচের খরচ", lang), [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], khorochRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerKhoroch, lang)]);
-    const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ওনার: ${ownerId ? ownerName(ownerId) : trBn("সকল", lang)}`;
+    const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ${trBn("ওনার:", lang)} ${ownerId ? ownerName(ownerId) : trBn("সকল", lang)}`;
     exportPdfHtml({ title: `${t("brand")} — ওনার হিসাব`, subtitle: subt, body, orientation: "landscape" });
   };
 
@@ -331,7 +331,7 @@ function Page() {
             <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
             <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(expTotal, lang)})</TabsTrigger>
-            <TabsTrigger value="owner">ওনার হিসাব</TabsTrigger>
+            <TabsTrigger value="owner">${trBn("ওনার হিসাব", lang)}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -408,7 +408,7 @@ function Page() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া</h3>
+                <h3 className="text-sm font-semibold mb-2">${trBn("গাড়ি অনুযায়ী ভাড়া", lang)}</h3>
                 <Section
                   headers={[t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")]}
                   rows={ownerByVehicle}
@@ -418,7 +418,7 @@ function Page() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">ট্রিপ বিবরণ (গাড়ি ভাড়া)</h3>
+                <h3 className="text-sm font-semibold mb-2">${trBn("ট্রিপ বিবরণ (গাড়ি ভাড়া)", lang)}</h3>
                 <Section
                   headers={[t("date"), t("owner"), t("vehicleNo"), t("fareTotal")]}
                   rows={ownerTrips}
@@ -431,7 +431,7 @@ function Page() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচের জমা</h3>
+                <h3 className="text-sm font-semibold mb-2">${trBn("জমা-খরচের জমা", lang)}</h3>
                 <Section
                   headers={[t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")]}
                   rows={ownerOth}
@@ -441,7 +441,7 @@ function Page() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচের খরচ</h3>
+                <h3 className="text-sm font-semibold mb-2">${trBn("জমা-খরচের খরচ", lang)}</h3>
                 <Section
                   headers={[t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")]}
                   rows={ownerExp}

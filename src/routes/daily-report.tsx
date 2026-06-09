@@ -133,7 +133,7 @@ function Page() {
       <div class="meta">${esc(subtitle)} &nbsp;|&nbsp; পরিবহন হিসাব: দৈনিক জমা/দেনা, অন্যান্য জমা, জমা-খরচের জমা ও দৈনিক খরচ</div>
 
       <table class="month-report">
-        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>অন্যান্য জমা</th><th>জমা-খরচের জমা</th><th>দৈনিক খরচ</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
+        <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>{trBn("অন্যান্য জমা", lang)}</th><th>{trBn("জমা-খরচের জমা", lang)}</th><th>{trBn("দৈনিক খরচ", lang)}</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
         <tbody>${monthlyRows || `<tr><td colspan="6">${esc(t("noData"))}</td></tr>`}</tbody>
         <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOther, lang))}</td><td class="num">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
       </table>
@@ -148,14 +148,14 @@ function Page() {
         <tbody>
           <tr>
             <td>${esc(t("totalTrips"))}<br/><b>${esc(fmtNum(totalTrips, lang))} টি</b></td>
-            <td>মোট জমা<br/><b class="green">${esc(fmtNum(totalJama, lang))}</b></td>
-            <td>মোট দেনা<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
-            <td>ব্যালেন্স<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
-            <td>মোট ভাড়া<br/><b>${esc(fmtNum(totalFare, lang))}</b></td>
-            <td>অন্যান্য জমা<br/><b class="green">${esc(fmtNum(totalOther, lang))}</b></td>
-            <td>জমা-খরচের জমা<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
-            <td>মোট খরচ<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
-            <td>হাতে ব্যালেন্স<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
+            <td>{trBn("মোট জমা", lang)}<br/><b class="green">${esc(fmtNum(totalJama, lang))}</b></td>
+            <td>{trBn("মোট দেনা", lang)}<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
+            <td>{trBn("ব্যালেন্স", lang)}<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
+            <td>{trBn("মোট ভাড়া", lang)}<br/><b>${esc(fmtNum(totalFare, lang))}</b></td>
+            <td>{trBn("অন্যান্য জমা", lang)}<br/><b class="green">${esc(fmtNum(totalOther, lang))}</b></td>
+            <td>{trBn("জমা-খরচের জমা", lang)}<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
+            <td>{trBn("মোট খরচ", lang)}<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
+            <td>{trBn("হাতে ব্যালেন্স", lang)}<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
             <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা − খরচ = হাতে ব্যালেন্স &nbsp;|&nbsp; জমা-খরচের জমা ওনার হিসাবে</td>
           </tr>
         </tbody>
@@ -173,10 +173,10 @@ function Page() {
             <th>তারিখ</th>
             <th>গাড়ী নাম্বার</th>
             <th>সুপারভাইজার</th>
-            <th>জমা</th>
-            <th>দেনা</th>
-            <th>আয়/লস</th>
-            <th>গাড়ী ভাড়া</th>
+            <th>{trBn("জমা", lang)}</th>
+            <th>{trBn("দেনা", lang)}</th>
+            <th>{trBn("আয়/লস", lang)}</th>
+            <th>{trBn("গাড়ী ভাড়া", lang)}</th>
             <th>রুট</th>
             <th class="sep"></th>
             <th>ক্যাটাগরী</th>
@@ -195,7 +195,7 @@ function Page() {
             <td class="num">${esc(fmtNum(totalFare, lang))}</td>
             <td></td>
             <td class="sep"></td>
-            <td colspan="3">মোট খরচ</td>
+            <td colspan="3">{trBn("মোট খরচ", lang)}</td>
             <td class="num">${esc(fmtNum(totalExpense, lang))}</td>
           </tr>
         </tfoot>
@@ -286,10 +286,10 @@ function Page() {
                   <th className="px-2 py-1 text-left">তারিখ</th>
                   <th className="px-2 py-1 text-left">গাড়ী</th>
                   <th className="px-2 py-1 text-left">সুপারভাইজার</th>
-                  <th className="px-2 py-1 text-right">জমা</th>
-                  <th className="px-2 py-1 text-right">দেনা</th>
-                  <th className="px-2 py-1 text-right">আয়/লস</th>
-                  <th className="px-2 py-1 text-right">ভাড়া</th>
+                  <th className="px-2 py-1 text-right">{trBn("জমা", lang)}</th>
+                  <th className="px-2 py-1 text-right">{trBn("দেনা", lang)}</th>
+                  <th className="px-2 py-1 text-right">{trBn("আয়/লস", lang)}</th>
+                  <th className="px-2 py-1 text-right">{trBn("ভাড়া", lang)}</th>
                   <th className="px-2 py-1 text-left">রুট</th>
                 </tr>
               </thead>
@@ -344,7 +344,7 @@ function Page() {
                 ))}
               </tbody>
               <tfoot className="bg-muted/30">
-                <tr><td colSpan={3} className="px-2 py-1 font-semibold">মোট খরচ</td><td className="px-2 py-1 text-right font-semibold text-rose-400">{fmtNum(totalExpense, lang)}</td></tr>
+                <tr><td colSpan={3} className="px-2 py-1 font-semibold">{trBn("মোট খরচ", lang)}</td><td className="px-2 py-1 text-right font-semibold text-rose-400">{fmtNum(totalExpense, lang)}</td></tr>
               </tfoot>
             </table>
           </div>
@@ -377,7 +377,7 @@ function Page() {
                 ))}
               </tbody>
               <tfoot className="bg-muted/30">
-                <tr><td colSpan={5} className="px-2 py-1 font-semibold">মোট</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOther + totalJamaKhoroch, lang)}</td></tr>
+                <tr><td colSpan={5} className="px-2 py-1 font-semibold">{trBn("মোট", lang)}</td><td className="px-2 py-1 text-right font-semibold text-emerald-400">{fmtNum(totalOther + totalJamaKhoroch, lang)}</td></tr>
               </tfoot>
             </table>
           </div>
