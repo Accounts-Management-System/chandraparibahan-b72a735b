@@ -338,7 +338,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
 }
 
 function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; editing: ERow | null; defaultOwnerId: string }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -401,7 +401,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
 }
 
 function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: boolean; onOpenChange: (v: boolean) => void; editing: OIRow | null; defaultOwnerId: string }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
 
