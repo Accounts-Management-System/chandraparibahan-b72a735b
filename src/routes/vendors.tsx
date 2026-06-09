@@ -21,6 +21,7 @@ function Page() {
   const qc = useQueryClient();
   const [ownerId, setOwnerId] = useState<string>(CHANDRA_ID);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ entry_date: new Date().toISOString().slice(0, 10), vendor: "", amount: "", note: "" });
 
   const { data: owners = [] } = useQuery({
