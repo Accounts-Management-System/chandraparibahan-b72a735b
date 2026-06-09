@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useT, fmtNum, fmtDate } from "@/lib/i18n";
+import { useT, fmtNum, fmtDate, trBn } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
@@ -133,7 +133,7 @@ function Page() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["vendor-receivables"] }),
   });
 
-  const ownerName = isMain ? "মুল হিসাব" : ((owners.find((o) => o.id === ownerId)?.name) ?? "—");
+  const ownerName = isMain ? trBn("মুল হিসাব", lang) : ((owners.find((o) => o.id === ownerId)?.name) ?? "—");
 
   return (
     <AppLayout>
