@@ -91,7 +91,7 @@ function Page() {
       const { error } = await supabase.from("vendor_receivables").insert({
         entry_date: form.entry_date,
         vendor: form.vendor.trim(),
-        owner_id: ownerId,
+        owner_id: isMain ? null : ownerId,
         amount: amt,
         note: form.note || null,
       });
