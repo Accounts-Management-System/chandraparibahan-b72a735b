@@ -54,20 +54,23 @@ function Page() {
     const ensure = (n: string) => {
       const k = n.trim();
       if (!k) return null;
-      if (!map.has(k)) map.set(k, { name: k, receivable: 0, collection: 0, payment: 0, remaining: 0 });
+      if (!map.has(k)) map.set(k, { name: k, previous: 0, collection: 0, current: 0, payment: 0, remaining: 0 });
       return map.get(k)!;
     };
     for (const v of vendorList) ensure(v.value);
-    for (const r of receivables) { const x = ensure(r.vendor); if (x) x.receivable += Number(r.amount || 0); }
+    for (const r of receivables) { const x = ensure(r.vendor); if (x) x.previous += Number(r.amount || 0); }
     for (const r of collections) { const x = ensure(r.vendor ?? ""); if (x) x.collection += Number(r.amount || 0); }
     for (const r of payments) { const x = ensure(r.vendor ?? ""); if (x) x.payment += Number(r.amount || 0); }
-    const arr = Array.from(map.values()).map((r) => ({ ...r, remaining: r.receivable - r.collection - r.payment }));
-    return arr.filter((r) => r.receivable || r.collection || r.payment).sort((a, b) => b.remaining - a.remaining);
+    const arr = Array.from(map.values()).map((r) => {
+      const current = r.previous + r.collection;
+      return { ...r, current, remaining: current - r.payment };
+    });
+    return arr.filter((r) => r.previous || r.collection || r.payment).sort((a, b) => b.remaining - a.remaining);
   }, [vendorList, receivables, collections, payments]);
 
   const totals = rows.reduce(
-    (s, r) => ({ receivable: s.receivable + r.receivable, collection: s.collection + r.collection, payment: s.payment + r.payment, remaining: s.remaining + r.remaining }),
-    { receivable: 0, collection: 0, payment: 0, remaining: 0 },
+    (s, r) => ({ previous: s.previous + r.previous, collection: s.collection + r.collection, current: s.current + r.current, payment: s.payment + r.payment, remaining: s.remaining + r.remaining }),
+    { previous: 0, collection: 0, current: 0, payment: 0, remaining: 0 },
   );
 
   const addReceivable = useMutation({
