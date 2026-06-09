@@ -33,20 +33,30 @@ function Page() {
     queryFn: async () =>
       ((await supabase.from("entry_lookups").select("id,value").eq("kind", "vendor").order("value")).data ?? []) as { id: string; value: string }[],
   });
+  const isMain = ownerId === "main";
   const { data: receivables = [] } = useQuery({
     queryKey: ["vendor-receivables", ownerId],
-    queryFn: async () =>
-      ((await supabase.from("vendor_receivables").select("*").eq("owner_id", ownerId).order("entry_date", { ascending: false }).limit(5000)).data ?? []) as any[],
+    queryFn: async () => {
+      const q = supabase.from("vendor_receivables").select("*").order("entry_date", { ascending: false }).limit(5000);
+      const { data } = await (isMain ? q.is("owner_id", null) : q.eq("owner_id", ownerId));
+      return (data ?? []) as any[];
+    },
   });
   const { data: collections = [] } = useQuery({
     queryKey: ["vendor-collections", ownerId],
-    queryFn: async () =>
-      ((await supabase.from("other_incomes").select("vendor,amount,owner_id").not("vendor", "is", null).eq("owner_id", ownerId).limit(5000)).data ?? []) as any[],
+    queryFn: async () => {
+      const q = supabase.from("other_incomes").select("vendor,amount,owner_id").not("vendor", "is", null).limit(5000);
+      const { data } = await (isMain ? q.is("owner_id", null) : q.eq("owner_id", ownerId));
+      return (data ?? []) as any[];
+    },
   });
   const { data: payments = [] } = useQuery({
     queryKey: ["vendor-payments", ownerId],
-    queryFn: async () =>
-      ((await supabase.from("expenses").select("vendor,amount,owner_id").not("vendor", "is", null).eq("owner_id", ownerId).limit(5000)).data ?? []) as any[],
+    queryFn: async () => {
+      const q = supabase.from("expenses").select("vendor,amount,owner_id").not("vendor", "is", null).limit(5000);
+      const { data } = await (isMain ? q.is("owner_id", null) : q.eq("owner_id", ownerId));
+      return (data ?? []) as any[];
+    },
   });
 
   const rows: Row[] = useMemo(() => {
