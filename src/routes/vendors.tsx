@@ -195,9 +195,10 @@ function Page() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label={t("receivable")} value={fmtNum(totals.receivable, lang)} color="text-amber-400" />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <Stat label={t("receivable")} value={fmtNum(totals.previous, lang)} color="text-amber-400" />
           <Stat label={t("collection")} value={fmtNum(totals.collection, lang)} color="text-emerald-400" />
+          <Stat label={t("currentReceivable")} value={fmtNum(totals.current, lang)} color="text-sky-400" />
           <Stat label={t("payment")} value={fmtNum(totals.payment, lang)} color="text-rose-400" />
           <Stat label={t("remaining")} value={fmtNum(totals.remaining, lang)} color={totals.remaining >= 0 ? "text-emerald-500" : "text-rose-500"} />
         </div>
@@ -209,17 +210,19 @@ function Page() {
                 <th className="text-left px-3 py-2">{t("vendorName")}</th>
                 <th className="text-right px-3 py-2">{t("receivable")}</th>
                 <th className="text-right px-3 py-2">{t("collection")}</th>
+                <th className="text-right px-3 py-2">{t("currentReceivable")}</th>
                 <th className="text-right px-3 py-2">{t("payment")}</th>
                 <th className="text-right px-3 py-2">{t("remaining")}</th>
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>}
               {rows.map((r) => (
                 <tr key={r.name} className="border-t">
                   <td className="px-3 py-2 font-medium">{r.name}</td>
-                  <td className="px-3 py-2 text-right text-amber-400">{fmtNum(r.receivable, lang)}</td>
+                  <td className="px-3 py-2 text-right text-amber-400">{fmtNum(r.previous, lang)}</td>
                   <td className="px-3 py-2 text-right text-emerald-400">{fmtNum(r.collection, lang)}</td>
+                  <td className="px-3 py-2 text-right text-sky-400 font-semibold">{fmtNum(r.current, lang)}</td>
                   <td className="px-3 py-2 text-right text-rose-400">{fmtNum(r.payment, lang)}</td>
                   <td className={`px-3 py-2 text-right font-semibold ${r.remaining >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{fmtNum(r.remaining, lang)}</td>
                 </tr>
@@ -229,8 +232,9 @@ function Page() {
               <tfoot className="bg-muted/40 font-bold">
                 <tr>
                   <td className="px-3 py-2">{t("grandTotal")}</td>
-                  <td className="px-3 py-2 text-right text-amber-500">{fmtNum(totals.receivable, lang)}</td>
+                  <td className="px-3 py-2 text-right text-amber-500">{fmtNum(totals.previous, lang)}</td>
                   <td className="px-3 py-2 text-right text-emerald-500">{fmtNum(totals.collection, lang)}</td>
+                  <td className="px-3 py-2 text-right text-sky-500">{fmtNum(totals.current, lang)}</td>
                   <td className="px-3 py-2 text-right text-rose-500">{fmtNum(totals.payment, lang)}</td>
                   <td className={`px-3 py-2 text-right ${totals.remaining >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{fmtNum(totals.remaining, lang)}</td>
                 </tr>
