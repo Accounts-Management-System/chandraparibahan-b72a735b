@@ -6,7 +6,7 @@ import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
-import { FileDown, Plus, Trash2 } from "lucide-react";
+import { FileDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { exportPdf } from "@/lib/exportPdf";
 import { toast } from "sonner";
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/vendors")({ component: Page });
 
 const CHANDRA_ID = "674def72-609b-434c-8186-15aa3d351d28";
 
-type Row = { name: string; receivable: number; collection: number; payment: number; remaining: number };
+type Row = { name: string; previous: number; collection: number; current: number; payment: number; remaining: number };
 
 function Page() {
   const { t, lang } = useT();
