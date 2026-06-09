@@ -180,7 +180,7 @@ const dict = {
   remaining: { bn: "বাকি", en: "Remaining" },
   note: { bn: "মন্তব্য", en: "Note" },
   amountReq: { bn: "পরিমান প্রয়োজন", en: "Amount required" },
-  vendorReq: { bn: "ভেন্ডর প্রয়োজন", en: "Vendor required" },
+  vendorReq: { bn: "ভেন্ডর প্রয়োজন", en: "Third party required" },
   mainTransportAccount: { bn: "মূল পরিবহন হিসাব", en: "Main Transport Account" },
   ownerless: { bn: "ওনার বিহীন", en: "Ownerless" },
   totalTrips: { bn: "গাড়ী সংখ্যা", en: "Vehicle Count" },
