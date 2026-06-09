@@ -19,7 +19,7 @@ type Row = { name: string; previous: number; collection: number; current: number
 function Page() {
   const { t, lang } = useT();
   const qc = useQueryClient();
-  const [ownerId, setOwnerId] = useState<string>(CHANDRA_ID);
+  const [ownerId, setOwnerId] = useState<string>("main");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ entry_date: new Date().toISOString().slice(0, 10), vendor: "", amount: "", note: "" });
