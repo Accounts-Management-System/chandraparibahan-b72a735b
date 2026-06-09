@@ -158,7 +158,14 @@ function DashboardPage() {
           value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
         };
       });
-  const chartColor = chartMode === "debit" ? "oklch(0.65 0.2 25)" : chartMode === "deposit" ? "oklch(0.7 0.18 150)" : chartMode === "tripCount" ? "oklch(0.75 0.15 80)" : "var(--primary)";
+  const chartStops = chartMode === "debit"
+    ? { from: "oklch(0.72 0.22 25)", to: "oklch(0.55 0.18 25)" }
+    : chartMode === "deposit"
+      ? { from: "oklch(0.78 0.18 150)", to: "oklch(0.55 0.15 150)" }
+      : chartMode === "tripCount"
+        ? { from: "#C9B6FF", to: "#7C5BD9" } // lavender
+        : { from: "oklch(0.72 0.18 270)", to: "oklch(0.5 0.18 270)" };
+  const gradId = `barGrad-${chartMode}`;
 
   return (
     <AppLayout>
