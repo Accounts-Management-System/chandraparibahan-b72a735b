@@ -138,8 +138,8 @@ function Page() {
                 exportPdf({
                   title: `${t("vendors")} — ${ownerName}`,
                   subtitle: `${t("remaining")}: ${fmtNum(totals.remaining, lang)}`,
-                  headers: [t("vendorName"), t("receivable"), t("collection"), t("payment"), t("remaining")],
-                  rows: rows.map((r) => [r.name, fmtNum(r.receivable, lang), fmtNum(r.collection, lang), fmtNum(r.payment, lang), fmtNum(r.remaining, lang)]),
+                  headers: [t("vendorName"), t("receivable"), t("collection"), t("currentReceivable"), t("payment"), t("remaining")],
+                  rows: rows.map((r) => [r.name, fmtNum(r.previous, lang), fmtNum(r.collection, lang), fmtNum(r.current, lang), fmtNum(r.payment, lang), fmtNum(r.remaining, lang)]),
                 })
               }
             >
