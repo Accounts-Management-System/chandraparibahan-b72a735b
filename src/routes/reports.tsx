@@ -337,19 +337,19 @@ function Page() {
           <TabsContent value="dashboard">
             {ownerId ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <Stat label=trBn("গাড়ী ভাড়া", lang) value={fmtNum(ownerFares, lang)} color="text-amber-400" />
-                <Stat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
-                <Stat label=trBn("জমা-খরচের খরচ", lang) value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
-                <Stat label=trBn("ব্যালেন্স", lang) value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label={trBn("গাড়ী ভাড়া", lang)} value={fmtNum(ownerFares, lang)} color="text-amber-400" />
+                <Stat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
+                <Stat label={trBn("জমা-খরচের খরচ", lang)} value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
+                <Stat label={trBn("ব্যালেন্স", lang)} value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-                <Stat label=trBn("দৈনিক জমা", lang) value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
-                <Stat label=trBn("দেনা", lang) value={fmtNum(dena, lang)} color="text-rose-400" />
-                <Stat label=trBn("আয়/লস", lang) value={fmtNum(dailyJama - dena, lang)} color={(dailyJama - dena) >= 0 ? "text-sky-400" : "text-rose-500"} />
-                <Stat label=trBn("অন্যান্য জমা", lang) value={fmtNum(othTotal, lang)} color="text-emerald-400" />
-                <Stat label=trBn("দৈনিক খরচ", lang) value={fmtNum(expTotal, lang)} color="text-rose-400" />
-                <Stat label=trBn("ব্যালেন্স", lang) value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label={trBn("দৈনিক জমা", lang)} value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
+                <Stat label={trBn("দেনা", lang)} value={fmtNum(dena, lang)} color="text-rose-400" />
+                <Stat label={trBn("আয়/লস", lang)} value={fmtNum(dailyJama - dena, lang)} color={(dailyJama - dena) >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label={trBn("অন্যান্য জমা", lang)} value={fmtNum(othTotal, lang)} color="text-emerald-400" />
+                <Stat label={trBn("দৈনিক খরচ", lang)} value={fmtNum(expTotal, lang)} color="text-rose-400" />
+                <Stat label={trBn("ব্যালেন্স", lang)} value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
               </div>
             )}
             <Section
@@ -401,9 +401,9 @@ function Page() {
           <TabsContent value="owner">
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Stat label=trBn("গাড়ি ভাড়া", lang) value={fmtNum(ownerFares, lang)} color="text-amber-400" />
-                <Stat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
-                <Stat label=trBn("জমা-খরচের খরচ", lang) value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
+                <Stat label={trBn("গাড়ি ভাড়া", lang)} value={fmtNum(ownerFares, lang)} color="text-amber-400" />
+                <Stat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
+                <Stat label={trBn("জমা-খরচের খরচ", lang)} value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
                 <Stat label={t("totalTrips")} value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
               </div>
 

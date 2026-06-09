@@ -225,8 +225,8 @@ function Page() {
 
         {isAdmin ? (
           <div className="flex flex-wrap gap-2">
-            <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label=trBn("মূল হিসাব", lang) />
-            <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label=trBn("সব", lang) />
+            <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label={trBn("মূল হিসাব", lang)} />
+            <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label={trBn("সব", lang)} />
             {(owners as { id: string; name: string }[]).map((o) => (
               <ScopeBtn key={o.id} active={ownerScope === o.id} onClick={() => setOwnerScope(o.id)} label={o.name} />
             ))}

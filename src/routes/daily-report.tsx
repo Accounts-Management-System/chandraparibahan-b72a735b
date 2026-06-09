@@ -266,14 +266,14 @@ function Page() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label={t("totalTrips")} value={`${fmtNum(totalTrips, lang)} টি`} />
-          <Stat label=trBn("মোট জমা", lang) value={fmtNum(totalJama, lang)} color="text-emerald-400" />
-          <Stat label=trBn("মোট দেনা", lang) value={fmtNum(totalDena, lang)} color="text-rose-400" />
-          <Stat label=trBn("ব্যালেন্স (জমা−দেনা)", lang) value={fmtNum(totalJama - totalDena, lang)} />
-          <Stat label=trBn("মোট ভাড়া", lang) value={fmtNum(totalFare, lang)} />
-          <Stat label=trBn("অন্যান্য জমা", lang) value={fmtNum(totalOther, lang)} color="text-emerald-400" />
-          <Stat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(totalJamaKhoroch, lang)} color="text-emerald-400" />
-          <Stat label=trBn("মোট খরচ", lang) value={fmtNum(totalExpense, lang)} color="text-rose-400" />
-          <Stat label=trBn("হাতে ব্যালেন্স", lang) value={fmtNum(handBalance, lang)} color="text-sky-400" />
+          <Stat label={trBn("মোট জমা", lang)} value={fmtNum(totalJama, lang)} color="text-emerald-400" />
+          <Stat label={trBn("মোট দেনা", lang)} value={fmtNum(totalDena, lang)} color="text-rose-400" />
+          <Stat label={trBn("ব্যালেন্স (জমা−দেনা)", lang)} value={fmtNum(totalJama - totalDena, lang)} />
+          <Stat label={trBn("মোট ভাড়া", lang)} value={fmtNum(totalFare, lang)} />
+          <Stat label={trBn("অন্যান্য জমা", lang)} value={fmtNum(totalOther, lang)} color="text-emerald-400" />
+          <Stat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(totalJamaKhoroch, lang)} color="text-emerald-400" />
+          <Stat label={trBn("মোট খরচ", lang)} value={fmtNum(totalExpense, lang)} color="text-rose-400" />
+          <Stat label={trBn("হাতে ব্যালেন্স", lang)} value={fmtNum(handBalance, lang)} color="text-sky-400" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

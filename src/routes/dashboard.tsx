@@ -228,7 +228,7 @@ function DashboardPage() {
                 <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
                 <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
                 <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-                <MiniStat label=trBn("অন্যান্য জমা", lang) value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
+                <MiniStat label={trBn("অন্যান্য জমা", lang)} value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
                 <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
                 <MiniStat label={t("mainBalance")} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
               </div>
@@ -239,10 +239,10 @@ function DashboardPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <MiniStat label=trBn("গাড়ী ভাড়া", lang) value={fmtNum(mb.fares, lang)} color="text-emerald-500" />
-                <MiniStat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
-                <MiniStat label=trBn("জমা-খরচের খরচ", lang) value={fmtNum(mb.jamaKhorochKhoroch, lang)} color="text-rose-500" />
-                <MiniStat label=trBn("ব্যালেন্স", lang) value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+                <MiniStat label={trBn("গাড়ী ভাড়া", lang)} value={fmtNum(mb.fares, lang)} color="text-emerald-500" />
+                <MiniStat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
+                <MiniStat label={trBn("জমা-খরচের খরচ", lang)} value={fmtNum(mb.jamaKhorochKhoroch, lang)} color="text-rose-500" />
+                <MiniStat label={trBn("ব্যালেন্স", lang)} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
               </div>
               <p className="text-[11px] text-muted-foreground mt-3 font-mono">
                 গাড়ী ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ = ব্যালেন্স
