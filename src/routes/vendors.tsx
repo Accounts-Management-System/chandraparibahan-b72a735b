@@ -160,6 +160,9 @@ function Page() {
 
         {/* Owner buttons */}
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant={isMain ? "default" : "outline"} onClick={() => setOwnerId("main")}>
+            মুল হিসাব
+          </Button>
           {owners.map((o) => (
             <Button
               key={o.id}
