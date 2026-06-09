@@ -122,7 +122,7 @@ function Page() {
     return {
       ...t,
       owner_id: oid,
-      owner_label: oid ? (ownerName.get(oid) ?? "—") : "মূল",
+      owner_label: oid ? (ownerName.get(oid) ?? "—") : trBn("মূল", lang),
       fare: Number(t.fare_1 || 0) + Number(t.fare_2 || 0),
     };
   }), [trips, vehOwner, ownerName]);
@@ -135,7 +135,7 @@ function Page() {
       owner_id: t.owner_id,
       owner_label: t.owner_label,
       vehicle_no: t.vehicle_no,
-      category: "ভাড়া",
+      category: trBn("ভাড়া", lang),
       head: null,
       description: null,
       amount: t.fare,
@@ -145,7 +145,7 @@ function Page() {
       source: "other",
       date: o.income_date,
       owner_id: o.owner_id,
-      owner_label: o.owner_id ? (ownerName.get(o.owner_id) ?? "—") : "মূল",
+      owner_label: o.owner_id ? (ownerName.get(o.owner_id) ?? "—") : trBn("মূল", lang),
       vehicle_no: o.vehicle_no,
       category: o.category,
       head: o.head,
@@ -216,7 +216,7 @@ function Page() {
     );
   }
 
-  const tripCountJ = jamaFiltered.filter((r) => r.category === "ভাড়া").length;
+  const tripCountJ = jamaFiltered.filter((r) => r.category === trBn("ভাড়া", lang)).length;
 
   return (
     <AppLayout>
@@ -225,8 +225,8 @@ function Page() {
 
         {isAdmin ? (
           <div className="flex flex-wrap gap-2">
-            <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label="মূল হিসাব" />
-            <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label="সব" />
+            <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label=trBn("মূল হিসাব", lang) />
+            <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label=trBn("সব", lang) />
             {(owners as { id: string; name: string }[]).map((o) => (
               <ScopeBtn key={o.id} active={ownerScope === o.id} onClick={() => setOwnerScope(o.id)} label={o.name} />
             ))}
@@ -270,13 +270,13 @@ function Page() {
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
               onEdit={isAdmin ? (r) => {
-                if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন"); return; }
+                if (r.source !== "other") { toast.error(trBn("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন", lang)); return; }
                 const oid = r.id.slice(2);
                 const oi = (otherIncomes as OIRow[]).find((x) => x.id === oid);
                 if (oi) { setEditJ(oi); setOpenJ(true); }
               } : undefined}
               onDelete={isAdmin ? (r) => {
-                if (r.source !== "other") { toast.error("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন"); return; }
+                if (r.source !== "other") { toast.error(trBn("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন", lang)); return; }
                 delOI.mutate(r.id.slice(2));
               } : undefined}
             />
@@ -350,7 +350,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
 
   const save = useMutation({
     mutationFn: async (form: any) => {
-      if (!form.owner_id) throw new Error("ওনার নির্বাচন করুন");
+      if (!form.owner_id) throw new Error(trBn("ওনার নির্বাচন করুন", lang));
       if (editing) {
         const { error } = await supabase.from("expenses").update(form).eq("id", editing.id);
         if (error) throw error;
@@ -374,7 +374,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
             const f = new FormData(e.currentTarget);
             save.mutate({
               expense_date: f.get("d"),
-              category: category || "খরচ",
+              category: category || trBn("খরচ", lang),
               head: head || null,
               description: description || null,
               amount: Number(f.get("a") || 0),
@@ -438,7 +438,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
 
   const save = useMutation({
     mutationFn: async (form: any) => {
-      if (!form.owner_id) throw new Error("ওনার নির্বাচন করুন");
+      if (!form.owner_id) throw new Error(trBn("ওনার নির্বাচন করুন", lang));
       if (editing) {
         const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id);
         if (error) throw error;
@@ -467,7 +467,7 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
             const f = new FormData(e.currentTarget);
             save.mutate({
               income_date: f.get("d"),
-              category: category || "জমা",
+              category: category || trBn("জমা", lang),
               head: head || null,
               description: description || null,
               vehicle_no: (f.get("v") as string) || null,

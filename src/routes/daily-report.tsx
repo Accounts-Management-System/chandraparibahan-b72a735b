@@ -227,7 +227,7 @@ function Page() {
     </style>`;
 
     exportPdfHtml({
-      title: "চন্দ্রা পরিবহন — প্রতিদিনের জমা ও খরচ হিসাব",
+      title: trBn("চন্দ্রা পরিবহন — প্রতিদিনের জমা ও খরচ হিসাব", lang),
       body: extraStyle + body,
       orientation: "landscape",
     });
@@ -266,14 +266,14 @@ function Page() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label={t("totalTrips")} value={`${fmtNum(totalTrips, lang)} টি`} />
-          <Stat label="মোট জমা" value={fmtNum(totalJama, lang)} color="text-emerald-400" />
-          <Stat label="মোট দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
-          <Stat label="ব্যালেন্স (জমা−দেনা)" value={fmtNum(totalJama - totalDena, lang)} />
-          <Stat label="মোট ভাড়া" value={fmtNum(totalFare, lang)} />
-          <Stat label="অন্যান্য জমা" value={fmtNum(totalOther, lang)} color="text-emerald-400" />
-          <Stat label="জমা-খরচের জমা" value={fmtNum(totalJamaKhoroch, lang)} color="text-emerald-400" />
-          <Stat label="মোট খরচ" value={fmtNum(totalExpense, lang)} color="text-rose-400" />
-          <Stat label="হাতে ব্যালেন্স" value={fmtNum(handBalance, lang)} color="text-sky-400" />
+          <Stat label=trBn("মোট জমা", lang) value={fmtNum(totalJama, lang)} color="text-emerald-400" />
+          <Stat label=trBn("মোট দেনা", lang) value={fmtNum(totalDena, lang)} color="text-rose-400" />
+          <Stat label=trBn("ব্যালেন্স (জমা−দেনা)", lang) value={fmtNum(totalJama - totalDena, lang)} />
+          <Stat label=trBn("মোট ভাড়া", lang) value={fmtNum(totalFare, lang)} />
+          <Stat label=trBn("অন্যান্য জমা", lang) value={fmtNum(totalOther, lang)} color="text-emerald-400" />
+          <Stat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(totalJamaKhoroch, lang)} color="text-emerald-400" />
+          <Stat label=trBn("মোট খরচ", lang) value={fmtNum(totalExpense, lang)} color="text-rose-400" />
+          <Stat label=trBn("হাতে ব্যালেন্স", lang) value={fmtNum(handBalance, lang)} color="text-sky-400" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -365,7 +365,7 @@ function Page() {
                 </tr>
               </thead>
               <tbody>
-                {[...otherDeposits.map((r: any) => ({ ...r, kindLabel: "অন্যান্য জমা" })), ...jamaKhorochDeposits.map((r: any) => ({ ...r, kindLabel: "জমা-খরচের জমা" }))].map((r: any) => (
+                {[...otherDeposits.map((r: any) => ({ ...r, kindLabel: trBn("অন্যান্য জমা", lang) })), ...jamaKhorochDeposits.map((r: any) => ({ ...r, kindLabel: trBn("জমা-খরচের জমা", lang) }))].map((r: any) => (
                   <tr key={r.id} className="border-t">
                     <td className="px-2 py-1">{fmtDate(r.income_date, lang)}</td>
                     <td className="px-2 py-1">{r.kindLabel}</td>

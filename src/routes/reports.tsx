@@ -145,7 +145,7 @@ function Page() {
     lines.push("Chandra Paribahan Report");
     lines.push(`From,${from},To,${to},Owner,${ownerId ? ownerName(ownerId) : "MAIN"}`);
     lines.push("");
-    lines.push("দৈনিক জমা");
+    lines.push(trBn("দৈনিক জমা", lang));
     lines.push("Serial,Date,Vehicle,Owner,Jama,Dena,Balance,Fare,Route,Supervisor");
     tripRows.forEach((r: any) => {
       const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
@@ -155,19 +155,19 @@ function Page() {
       lines.push([r.serial_no ?? "", r.trip_date, r.vehicle_no, ownerName(ownerVehNos.get(r.vehicle_no)), j, d, j - d, f, rt, r.supervisor ?? ""].join(","));
     });
     lines.push("");
-    lines.push("অন্যান্য জমা");
+    lines.push(trBn("অন্যান্য জমা", lang));
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
     othRows.forEach((r: any) => lines.push([r.income_date, ownerName(rowOwnerId(r)), r.vehicle_no ?? "", r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
     lines.push("");
-    lines.push("জমা-খরচের জমা");
+    lines.push(trBn("জমা-খরচের জমা", lang));
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
     ownerOth.forEach((r: any) => lines.push([r.income_date, ownerName(rowOwnerId(r)), r.vehicle_no ?? "", r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
     lines.push("");
-    lines.push("দৈনিক খরচ");
+    lines.push(trBn("দৈনিক খরচ", lang));
     lines.push("Date,Owner,Vehicle,Category,Head,Description,Amount");
     expRows.forEach((r: any) => lines.push([r.expense_date, ownerName(rowOwnerId(r)), r.vehicle_no ?? "", r.category ?? "", r.head ?? "", r.description ?? "", r.amount].join(",")));
     lines.push("");
-    lines.push("ওনার হিসাব — গাড়ি অনুযায়ী ভাড়া");
+    lines.push(trBn("ওনার হিসাব — গাড়ি অনুযায়ী ভাড়া", lang));
     lines.push("Vehicle,Owner,Trips,Fare");
     ownerByVehicle.forEach((v) => lines.push([v.vno, v.owner, v.trips, v.fare].join(",")));
 
@@ -221,8 +221,8 @@ function Page() {
 
   const exportFullPdf = () => {
     const tripBody = tbl(
-      "দৈনিক জমা",
-      [t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), "আয়/লস", t("fareTotal"), t("route"), t("supervisor")],
+      trBn("দৈনিক জমা", lang),
+      [t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), trBn("আয়/লস", lang), t("fareTotal"), t("route"), t("supervisor")],
       tripRows.map((r: any) => {
         const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
         const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
@@ -232,19 +232,19 @@ function Page() {
       [t("grandTotal"), "", "", "", fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(dailyJama - dena, lang), fmtNum(fares, lang), "", ""],
     );
     const othBody = tbl(
-      "অন্যান্য জমা",
+      trBn("অন্যান্য জমা", lang),
       [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")],
       othRows.map((r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(othTotal, lang)],
     );
     const expBody = tbl(
-      "দৈনিক খরচ",
+      trBn("দৈনিক খরচ", lang),
       [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")],
       expRows.map((r: any) => [fmtDate(r.expense_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(expTotal, lang)],
     );
     const jamaKhorochBody = tbl(
-      "জমা-খরচের জমা",
+      trBn("জমা-খরচের জমা", lang),
       [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")],
       ownerOth.map((r: any) => [fmtDate(r.income_date, lang), ownerName(rowOwnerId(r)), r.vehicle_no ?? "-", r.category ?? "-", r.head ?? "-", r.description ?? "-", fmtNum(r.amount, lang)]),
       [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)],
@@ -261,7 +261,7 @@ function Page() {
     const ownerBal = ownerFares + ownerJama - ownerKhoroch;
     const balBlock = `
       <div style="border:2px solid #111;padding:10px;margin:0 0 12px;background:#f8fafc">
-        <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">ওনার হিসাব — ${esc(ownerId ? ownerName(ownerId) : "সকল ওনার")} — ব্যালেন্স</h2>
+        <h2 style="margin:0 0 8px;text-align:center;background:#fde68a;padding:6px;border:1px solid #525252">ওনার হিসাব — ${esc(ownerId ? ownerName(ownerId) : trBn("সকল ওনার", lang))} — ব্যালেন্স</h2>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">গাড়ি ভাড়া (দৈনিক জমা)</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerFares, lang))}</td></tr>
           <tr><td style="padding:4px 8px;border:1px solid #d0d5dd">+ জমা-খরচের জমা</td><td style="padding:4px 8px;border:1px solid #d0d5dd;text-align:right;font-weight:700;color:#047857">${esc(fmtNum(ownerJama, lang))}</td></tr>
@@ -271,11 +271,11 @@ function Page() {
         <p style="font-size:11px;color:#555;margin:6px 0 0">সূত্র: গাড়ি ভাড়া + জমা-খরচ (জমা) − জমা-খরচ (খরচ) = ব্যালেন্স</p>
       </div>`;
     const body = balBlock +
-      tbl("গাড়ি অনুযায়ী ভাড়া", [t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")], vehRows, [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]) +
-      tbl("ট্রিপ বিবরণ", [t("date"), t("owner"), t("vehicleNo"), t("fareTotal")], tripRowsArr, [t("grandTotal"), "", "", fmtNum(ownerFares, lang)]) +
-      tbl("জমা-খরচের জমা", [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], jamaRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)]) +
-      tbl("জমা-খরচের খরচ", [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], khorochRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerKhoroch, lang)]);
-    const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ওনার: ${ownerId ? ownerName(ownerId) : "সকল"}`;
+      tbl(trBn("গাড়ি অনুযায়ী ভাড়া", lang), [t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")], vehRows, [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)]) +
+      tbl(trBn("ট্রিপ বিবরণ", lang), [t("date"), t("owner"), t("vehicleNo"), t("fareTotal")], tripRowsArr, [t("grandTotal"), "", "", fmtNum(ownerFares, lang)]) +
+      tbl(trBn("জমা-খরচের জমা", lang), [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], jamaRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)]) +
+      tbl(trBn("জমা-খরচের খরচ", lang), [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], khorochRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerKhoroch, lang)]);
+    const subt = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} · ওনার: ${ownerId ? ownerName(ownerId) : trBn("সকল", lang)}`;
     exportPdfHtml({ title: `${t("brand")} — ওনার হিসাব`, subtitle: subt, body, orientation: "landscape" });
   };
 
@@ -337,25 +337,25 @@ function Page() {
           <TabsContent value="dashboard">
             {ownerId ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <Stat label="গাড়ী ভাড়া" value={fmtNum(ownerFares, lang)} color="text-amber-400" />
-                <Stat label="জমা-খরচের জমা" value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
-                <Stat label="জমা-খরচের খরচ" value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
-                <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label=trBn("গাড়ী ভাড়া", lang) value={fmtNum(ownerFares, lang)} color="text-amber-400" />
+                <Stat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
+                <Stat label=trBn("জমা-খরচের খরচ", lang) value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
+                <Stat label=trBn("ব্যালেন্স", lang) value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-                <Stat label="দৈনিক জমা" value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
-                <Stat label="দেনা" value={fmtNum(dena, lang)} color="text-rose-400" />
-                <Stat label="আয়/লস" value={fmtNum(dailyJama - dena, lang)} color={(dailyJama - dena) >= 0 ? "text-sky-400" : "text-rose-500"} />
-                <Stat label="অন্যান্য জমা" value={fmtNum(othTotal, lang)} color="text-emerald-400" />
-                <Stat label="দৈনিক খরচ" value={fmtNum(expTotal, lang)} color="text-rose-400" />
-                <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label=trBn("দৈনিক জমা", lang) value={fmtNum(dailyJama, lang)} color="text-emerald-400" />
+                <Stat label=trBn("দেনা", lang) value={fmtNum(dena, lang)} color="text-rose-400" />
+                <Stat label=trBn("আয়/লস", lang) value={fmtNum(dailyJama - dena, lang)} color={(dailyJama - dena) >= 0 ? "text-sky-400" : "text-rose-500"} />
+                <Stat label=trBn("অন্যান্য জমা", lang) value={fmtNum(othTotal, lang)} color="text-emerald-400" />
+                <Stat label=trBn("দৈনিক খরচ", lang) value={fmtNum(expTotal, lang)} color="text-rose-400" />
+                <Stat label=trBn("ব্যালেন্স", lang) value={fmtNum(balance, lang)} color={balance >= 0 ? "text-sky-400" : "text-rose-500"} />
               </div>
             )}
             <Section
               headers={ownerId
-                ? [t("date"), "ট্রিপ", "গাড়ী ভাড়া", "জমা-খরচের জমা", "জমা-খরচের খরচ"]
-                : [t("date"), "ট্রিপ", "দৈনিক জমা", "দেনা", "অন্যান্য জমা", "দৈনিক খরচ"]}
+                ? [t("date"), trBn("ট্রিপ", lang), trBn("গাড়ী ভাড়া", lang), trBn("জমা-খরচের জমা", lang), trBn("জমা-খরচের খরচ", lang)]
+                : [t("date"), trBn("ট্রিপ", lang), trBn("দৈনিক জমা", lang), trBn("দেনা", lang), trBn("অন্যান্য জমা", lang), trBn("দৈনিক খরচ", lang)]}
               rows={byDate.map(([d, v]) => ({ id: d, d, v }))}
               cells={(x: any) => ownerId
                 ? [fmtDate(x.d, lang), fmtNum(x.v.trips, lang), fmtNum(x.v.fare, lang), fmtNum(x.v.jamaKhoroch, lang), fmtNum(x.v.exp, lang)]
@@ -368,7 +368,7 @@ function Page() {
 
           <TabsContent value="jama">
             <Section
-              headers={[t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), "আয়/লস", t("fareTotal"), t("supervisor")]}
+              headers={[t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), trBn("আয়/লস", lang), t("fareTotal"), t("supervisor")]}
               rows={tripRows}
               cells={(r: any) => {
                 const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
@@ -401,9 +401,9 @@ function Page() {
           <TabsContent value="owner">
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Stat label="গাড়ি ভাড়া" value={fmtNum(ownerFares, lang)} color="text-amber-400" />
-                <Stat label="জমা-খরচের জমা" value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
-                <Stat label="জমা-খরচের খরচ" value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
+                <Stat label=trBn("গাড়ি ভাড়া", lang) value={fmtNum(ownerFares, lang)} color="text-amber-400" />
+                <Stat label=trBn("জমা-খরচের জমা", lang) value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
+                <Stat label=trBn("জমা-খরচের খরচ", lang) value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
                 <Stat label={t("totalTrips")} value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
               </div>
 

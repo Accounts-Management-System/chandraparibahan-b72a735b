@@ -82,7 +82,7 @@ function Page() {
               exportPdf({
                 title: t("dailyExpense"),
                 subtitle: `${t("totalExpense")}: ${fmtNum(totalExpense, lang)} | ${t("net")}: ${fmtNum(net, lang)}`,
-                headers: [t("date"), "ওনার", t("head"), t("vehicleNo"), t("description"), t("amount")],
+                headers: [t("date"), trBn("ওনার", lang), t("head"), t("vehicleNo"), t("description"), t("amount")],
                 rows: rows.map((r) => [fmtDate(r.date, lang), r.owner, r.head ?? "—", r.vehicle_no ?? "—", r.description ?? "—", fmtNum(r.amount, lang)]),
                 orientation: "landscape",
               })
