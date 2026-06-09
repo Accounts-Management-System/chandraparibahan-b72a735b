@@ -238,14 +238,14 @@ function Page() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">প্রতিদিনের জমা ও খরচ হিসাব</h1>
+            <h1 className="text-2xl font-bold">{lang === "en" ? "Daily Income & Expense Report" : "প্রতিদিনের জমা ও খরচ হিসাব"}</h1>
             <p className="text-xs text-muted-foreground">
-              সকল গাড়ির দৈনিক জমা/দেনা + অন্যান্য জমা + জমা-খরচের জমা − দৈনিক খরচ
+              {lang === "en" ? "All vehicles: Daily Deposit/Debt + Other Deposits + Income-Expense Income − Daily Expense" : "সকল গাড়ির দৈনিক জমা/দেনা + অন্যান্য জমা + জমা-খরচের জমা − দৈনিক খরচ"}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={exportLandscapePdf}>
-              <FileDown className="h-4 w-4 mr-2" /> PDF (ল্যান্ডস্কেপ)
+              <FileDown className="h-4 w-4 mr-2" /> {lang === "en" ? "PDF (Landscape)" : "PDF (ল্যান্ডস্কেপ)"}
             </Button>
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="h-4 w-4 mr-2" /> {t("print")}
@@ -265,7 +265,7 @@ function Page() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label={t("totalTrips")} value={`${fmtNum(totalTrips, lang)} টি`} />
+          <Stat label={t("totalTrips")} value={`${fmtNum(totalTrips, lang)}${lang === "en" ? "" : " টি"}`} />
           <Stat label={trBn("মোট জমা", lang)} value={fmtNum(totalJama, lang)} color="text-emerald-400" />
           <Stat label={trBn("মোট দেনা", lang)} value={fmtNum(totalDena, lang)} color="text-rose-400" />
           <Stat label={trBn("ব্যালেন্স (জমা−দেনা)", lang)} value={fmtNum(totalJama - totalDena, lang)} />
@@ -278,19 +278,19 @@ function Page() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className="rounded-md border bg-card/60 overflow-x-auto">
-            <div className="px-3 py-2 font-semibold bg-muted/40">জমা হিসাব</div>
+            <div className="px-3 py-2 font-semibold bg-muted/40">{lang === "en" ? "Income" : "জমা হিসাব"}</div>
             <table className="w-full text-xs">
               <thead className="bg-muted/30">
                 <tr>
-                  <th className="px-2 py-1 text-left">সিঃ</th>
-                  <th className="px-2 py-1 text-left">তারিখ</th>
-                  <th className="px-2 py-1 text-left">গাড়ী</th>
-                  <th className="px-2 py-1 text-left">সুপারভাইজার</th>
+                  <th className="px-2 py-1 text-left">{lang === "en" ? "Sl" : "সিঃ"}</th>
+                  <th className="px-2 py-1 text-left">{t("date")}</th>
+                  <th className="px-2 py-1 text-left">{lang === "en" ? "Vehicle" : "গাড়ী"}</th>
+                  <th className="px-2 py-1 text-left">{t("supervisor")}</th>
                   <th className="px-2 py-1 text-right">{trBn("জমা", lang)}</th>
                   <th className="px-2 py-1 text-right">{trBn("দেনা", lang)}</th>
                   <th className="px-2 py-1 text-right">{trBn("আয়/লস", lang)}</th>
                   <th className="px-2 py-1 text-right">{trBn("ভাড়া", lang)}</th>
-                  <th className="px-2 py-1 text-left">রুট</th>
+                  <th className="px-2 py-1 text-left">{t("route")}</th>
                 </tr>
               </thead>
               <tbody>
