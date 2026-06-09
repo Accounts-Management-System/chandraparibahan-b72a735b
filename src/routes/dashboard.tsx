@@ -24,7 +24,7 @@ import {
   BookOpen,
   ShieldCheck,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
 import { useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
 
