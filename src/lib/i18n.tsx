@@ -174,7 +174,7 @@ const dict = {
   receivable: { bn: "পূর্বের পাওনা", en: "Previous Receivable" },
   addReceivable: { bn: "পূর্বের পাওনা যোগ", en: "Add Previous Receivable" },
   currentReceivable: { bn: "বর্তমান পাওনা", en: "Current Receivable" },
-  edit: { bn: "এডিট", en: "Edit" },
+  
   collection: { bn: "জমা", en: "Collection" },
   payment: { bn: "পরিশোধ", en: "Payment" },
   remaining: { bn: "বাকি", en: "Remaining" },
