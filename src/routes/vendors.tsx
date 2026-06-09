@@ -96,6 +96,25 @@ function Page() {
     onError: (e: any) => toast.error(e?.message ?? "Error"),
   });
 
+  const updateRec = useMutation({
+    mutationFn: async () => {
+      if (!editing) return;
+      const { error } = await supabase.from("vendor_receivables").update({
+        entry_date: editing.entry_date,
+        vendor: editing.vendor,
+        amount: Number(editing.amount) || 0,
+        note: editing.note || null,
+      }).eq("id", editing.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(t("save"));
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["vendor-receivables"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Error"),
+  });
+
   const delRec = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("vendor_receivables").delete().eq("id", id);
