@@ -237,3 +237,60 @@ export function fmtDate(d: string | Date | null | undefined, lang: Lang): string
   const s = date.toLocaleDateString("en-GB");
   return lang === "bn" ? toBnDigits(s) : s;
 }
+
+// Bilingual helper: returns English mapping when lang==="en", else original Bengali.
+const bnEn: Record<string, string> = {
+  "মূল": "Main",
+  "মুল হিসাব": "Main Account",
+  "মূল হিসাব": "Main Account",
+  "মূল পরিবহন হিসাব": "Main Transport Account",
+  "প্রাইভেট": "Private",
+  "সব": "All",
+  "সকল": "All",
+  "সকল ওনার": "All Owners",
+  "ভাড়া": "Fare",
+  "জমা": "Income",
+  "খরচ": "Expense",
+  "মোট": "Total",
+  "মোট জমা": "Total Deposit",
+  "মোট দেনা": "Total Debt",
+  "মোট ভাড়া": "Total Fare",
+  "মোট খরচ": "Total Expense",
+  "অন্যান্য জমা": "Other Deposits",
+  "+ অন্যান্য জমা": "+ Other Deposits",
+  "জমা-খরচের জমা": "Income-Expense Income",
+  "+ জমা-খরচের জমা": "+ Income-Expense Income",
+  "জমা-খরচের খরচ": "Income-Expense Expense",
+  "− জমা-খরচের খরচ": "− Income-Expense Expense",
+  "− দৈনিক খরচ": "− Daily Expense",
+  "দৈনিক জমা": "Daily Deposit",
+  "দৈনিক খরচ": "Daily Expense",
+  "দেনা": "Debt",
+  "আয়/লস": "Income/Loss",
+  "আয়/লস (জমা − দেনা)": "Income/Loss (Deposit − Debt)",
+  "ব্যালেন্স": "Balance",
+  "ব্যালেন্স (জমা−দেনা)": "Balance (Deposit − Debt)",
+  "মূল ব্যালেন্স": "Main Balance",
+  "হাতে ব্যালেন্স": "In-Hand Balance",
+  "গাড়ী ভাড়া": "Vehicle Fare",
+  "গাড়ি ভাড়া": "Vehicle Fare",
+  "গাড়ি ভাড়া (দৈনিক জমা)": "Vehicle Fare (Daily Deposit)",
+  "ওনার": "Owner",
+  "ওনার:": "Owner:",
+  "ওনার হিসাব": "Owner Account",
+  "ওনার হিসাব — গাড়ি অনুযায়ী ভাড়া": "Owner Account — Fare by Vehicle",
+  "গাড়ি অনুযায়ী ভাড়া": "Fare by Vehicle",
+  "ট্রিপ": "Trip",
+  "ট্রিপ বিবরণ": "Trip Details",
+  "ট্রিপ বিবরণ (গাড়ি ভাড়া)": "Trip Details (Vehicle Fare)",
+  "ওনার নির্বাচন করুন": "Select an owner",
+  "ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন": "Edit fare entries from the Daily Accounts page",
+  "ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন": "Delete fare entries from the Daily Accounts page",
+  "চন্দ্রা পরিবহন — প্রতিদিনের জমা ও খরচ হিসাব": "Chandra Paribahan — Daily Income & Expense Report",
+  "চন্দ্রা পরিবহন": "Chandra Paribahan",
+};
+
+export function trBn(text: string, lang: Lang): string {
+  if (lang !== "en") return text;
+  return bnEn[text] ?? text;
+}
