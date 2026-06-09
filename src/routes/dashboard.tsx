@@ -58,11 +58,15 @@ function monthRange(ym: string): { from: string; to: string } | null {
 function DashboardPage() {
   const { t, lang } = useT();
   const { isAdmin, canWrite } = useRole();
-  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }, []);
 
-  // Filters
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  // Filters — default to previous day
+  const [dateFrom, setDateFrom] = useState(yesterday);
+  const [dateTo, setDateTo] = useState(yesterday);
   const [month, setMonth] = useState("");
   const [vehicle, setVehicle] = useState<string>("all");
   const [ownerId, setOwnerId] = useState<string>("all");
