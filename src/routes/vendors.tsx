@@ -266,12 +266,43 @@ function Page() {
                       <td className="px-3 py-2 text-right text-amber-400">{fmtNum(r.amount, lang)}</td>
                       <td className="px-3 py-2 text-muted-foreground">{r.note ?? "—"}</td>
                       <td className="px-3 py-2 text-right">
+                        <Button size="sm" variant="ghost" onClick={() => setEditing({ ...r })}><Pencil className="h-4 w-4 text-sky-400" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => delRec.mutate(r.id)}><Trash2 className="h-4 w-4 text-rose-400" /></Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {editing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setEditing(null)}>
+            <div className="bg-card border rounded-lg p-4 w-full max-w-md space-y-3" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-semibold">{t("edit")} — {t("receivable")}</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] uppercase text-muted-foreground">{t("date")}</label>
+                  <Input type="date" value={editing.entry_date} onChange={(e) => setEditing({ ...editing, entry_date: e.target.value })} className="h-9" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase text-muted-foreground">{t("amount")}</label>
+                  <Input type="number" value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: e.target.value })} className="h-9" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] uppercase text-muted-foreground">{t("vendorName")}</label>
+                  <input list="vendor-options" value={editing.vendor} onChange={(e) => setEditing({ ...editing, vendor: e.target.value })} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] uppercase text-muted-foreground">{t("note")}</label>
+                  <Input value={editing.note ?? ""} onChange={(e) => setEditing({ ...editing, note: e.target.value })} className="h-9" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="outline" onClick={() => setEditing(null)}>{t("cancel")}</Button>
+                <Button size="sm" onClick={() => updateRec.mutate()} disabled={updateRec.isPending}>{t("save")}</Button>
+              </div>
             </div>
           </div>
         )}
