@@ -340,21 +340,25 @@ function DashboardPage() {
             {t("quickEntry")}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite)).map((tile) => {
-              const Icon = tile.icon;
-              return (
-                <Link
-                  key={tile.to}
-                  to={tile.to}
-                  className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="font-medium text-sm">{t(tile.key)}</div>
-                </Link>
-              );
-            })}
+            {(() => {
+              const tones = ["blue","mint","peach","lavender","pink","cyan","amber"] as const;
+              return tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite)).map((tile, i) => {
+                const Icon = tile.icon;
+                const tone = tones[i % tones.length];
+                return (
+                  <Link
+                    key={tile.to}
+                    to={tile.to}
+                    className={`tile-3d tile-${tone} group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-md`}
+                  >
+                    <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="font-medium text-sm text-foreground">{t(tile.key)}</div>
+                  </Link>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
