@@ -55,68 +55,18 @@ const nav: NavItem[] = [
 
 
 function Watermark() {
-  // Vehicle watermark — visible bus silhouettes + dashed road, stronger in light mode
+  // Soft white + light-ash embossed texture (no vehicles)
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 overflow-hidden -z-0 opacity-[0.10] dark:opacity-[0.05]"
-    >
-      {/* Big bus bottom-right */}
-      <svg
-        className="absolute -right-16 -bottom-16 w-[640px] h-[640px] text-primary"
-        viewBox="0 0 200 200"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      >
-        <rect x="20" y="60" width="160" height="70" rx="10" />
-        <rect x="30" y="72" width="40" height="28" />
-        <rect x="78" y="72" width="40" height="28" />
-        <rect x="126" y="72" width="40" height="28" />
-        <circle cx="55" cy="138" r="14" />
-        <circle cx="145" cy="138" r="14" />
-        <path d="M0 165 H200 M0 175 H200 M0 185 H200" strokeDasharray="6 8" />
-      </svg>
-      {/* Medium bus top-left */}
-      <svg
-        className="absolute -left-10 top-16 w-[360px] h-[360px] text-primary"
-        viewBox="0 0 200 200"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <rect x="20" y="70" width="160" height="60" rx="8" />
-        <rect x="30" y="80" width="35" height="24" />
-        <rect x="73" y="80" width="35" height="24" />
-        <rect x="116" y="80" width="35" height="24" />
-        <rect x="159" y="80" width="14" height="24" />
-        <circle cx="55" cy="138" r="12" />
-        <circle cx="145" cy="138" r="12" />
-      </svg>
-      {/* Concentric rings — center */}
-      <svg
-        className="absolute left-1/2 top-1/3 -translate-x-1/2 w-[420px] h-[420px] text-primary-glow"
-        viewBox="0 0 100 100"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="0.4"
-      >
-        {Array.from({ length: 18 }).map((_, i) => (
-          <circle key={i} cx="50" cy="50" r={2 + i * 2.6} />
-        ))}
-      </svg>
-      {/* Road dashes across middle */}
-      <svg
-        className="absolute inset-x-0 top-1/2 w-full h-24 text-primary opacity-70"
-        viewBox="0 0 1000 100"
-        preserveAspectRatio="none"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path d="M0 50 H1000" strokeDasharray="22 18" />
-      </svg>
-    </div>
+      className="pointer-events-none fixed inset-0 -z-0"
+      style={{
+        backgroundColor: "var(--background)",
+        backgroundImage:
+          "radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 0), linear-gradient(180deg, color-mix(in oklab, var(--foreground) 3%, transparent), transparent 60%)",
+        backgroundSize: "22px 22px, 100% 100%",
+      }}
+    />
   );
 }
 
