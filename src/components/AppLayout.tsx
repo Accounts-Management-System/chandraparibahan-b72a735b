@@ -98,15 +98,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen bg-background">
       <Watermark />
-      <aside className="hidden md:flex w-60 flex-col border-r bg-card/80 backdrop-blur relative z-10">
-        <div className="px-4 py-5 border-b">
-          <h1 className="text-lg font-bold text-primary">{t("brand")}</h1>
-          <p className="text-xs text-muted-foreground">{t("tagline")}</p>
-          <p className="mt-2 inline-flex rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-            {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
-          </p>
+      <aside
+        className="hidden md:flex w-64 flex-col relative z-10 text-slate-100"
+        style={{ background: SIDEBAR_BG, borderRight: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
+          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/40 to-teal-600/40 border border-white/20 flex items-center justify-center text-sm font-bold">
+            {t("brand").slice(0, 2)}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold leading-tight truncate">{t("brand")}</h1>
+            <p className="text-[11px] text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
+            <p className="mt-1 inline-flex rounded border border-cyan-300/30 bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-200">
+              {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
+            </p>
+          </div>
         </div>
-        <nav className="flex-1 px-2 py-3 space-y-1">
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
           {visibleNav.map((n) => {
             const Icon = n.icon;
             const active = pathname === n.to || (n.to !== "/dashboard" && pathname.startsWith(n.to));
@@ -115,7 +123,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 key={n.to}
                 to={n.to}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                  active ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                  active
+                    ? "bg-cyan-400/15 text-cyan-200 border-l-2 border-cyan-300"
+                    : "text-slate-200/90 hover:bg-white/5 border-l-2 border-transparent"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -124,19 +134,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-3 border-t space-y-2">
-          <Button variant="outline" size="sm" className="w-full" onClick={toggleTheme}>
+        <div className="p-3 border-t border-white/10 space-y-2">
+          <Button variant="outline" size="sm" className="w-full bg-white/5 border-white/15 text-slate-100 hover:bg-white/10" onClick={toggleTheme}>
             {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
             {theme === "dark" ? (lang === "bn" ? "লাইট মুড" : "Light") : (lang === "bn" ? "ডার্ক মুড" : "Dark")}
           </Button>
-          <Button variant="outline" size="sm" className="w-full" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
+          <Button variant="outline" size="sm" className="w-full bg-white/5 border-white/15 text-slate-100 hover:bg-white/10" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
             <Languages className="h-4 w-4 mr-2" />
             {lang === "bn" ? "English" : "বাংলা"}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start"
+            className="w-full justify-start text-slate-200 hover:bg-white/5 hover:text-white"
             onClick={async () => {
               await supabase.auth.signOut();
               navigate({ to: "/login" });
@@ -147,6 +157,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </Button>
         </div>
       </aside>
+
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
         <header className="md:hidden flex items-center justify-between border-b px-4 py-3 bg-card/80 backdrop-blur">
