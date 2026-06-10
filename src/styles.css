@@ -109,8 +109,8 @@
 }
 
 html.light {
-  /* Software / Ash look — light gray body, classic UI panels */
-  --background: oklch(0.93 0.005 270);
+  /* Pure white surfaces — body & sidebar same shade, ash highlights */
+  --background: oklch(1 0 0);
   --foreground: oklch(0.18 0.02 270);
   --card: oklch(0.985 0.003 270);
   --card-foreground: oklch(0.18 0.02 270);
@@ -165,23 +165,39 @@ html.light { color-scheme: light; }
     color: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
   }
 
-  /* Software-look 3D buttons & tabs (light mode) */
-  html.light button[data-slot="tabs-trigger"] {
-    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.88 0.005 270));
-    border: 1px solid oklch(0 0 0 / 0.25);
-    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.15);
-    color: oklch(0.18 0.02 270);
-    border-radius: 4px;
+  /* White translucent tabs (40% opacity) — same shape in light & dark */
+  button[data-slot="tabs-trigger"] {
+    background: rgba(255,255,255,0.4);
+    border: 1px solid color-mix(in oklab, var(--foreground) 18%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 1px 2px rgba(0,0,0,0.1);
+    color: var(--foreground);
+    border-radius: 6px;
     margin-right: 2px;
+    backdrop-filter: blur(4px);
   }
-  html.light button[data-slot="tabs-trigger"]:hover {
-    background: linear-gradient(180deg, oklch(1 0 0), oklch(0.92 0.005 270));
+  button[data-slot="tabs-trigger"]:hover {
+    background: rgba(255,255,255,0.55);
   }
-  html.light button[data-slot="tabs-trigger"][data-state="active"] {
+  html.dark button[data-slot="tabs-trigger"] {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.4);
+  }
+  html.dark button[data-slot="tabs-trigger"]:hover {
+    background: rgba(255,255,255,0.12);
+  }
+  button[data-slot="tabs-trigger"][data-state="active"] {
     background: linear-gradient(180deg, var(--primary), color-mix(in oklab, var(--primary) 80%, black));
     color: var(--primary-foreground);
     border-color: color-mix(in oklab, var(--primary) 60%, black);
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.25);
+  }
+
+  /* Search inputs & chart cards: translucent plates */
+  html.light input[data-slot="input"],
+  html.light [data-slot="card"] {
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(6px);
   }
 
   /* 3D software buttons in light mode */
@@ -235,6 +251,10 @@ html.light { color-scheme: light; }
     inset 0 -1px 0 rgba(0,0,0,0.06),
     0 6px 14px -8px rgba(15,30,60,0.25),
     0 2px 4px -2px rgba(15,30,60,0.15);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.tile-3d:hover {
+  background: linear-gradient(135deg, rgba(203,213,225,0.55), rgba(226,232,240,0.55)) !important;
 }
 html.dark .tile-3d {
   border-color: rgba(255,255,255,0.08);
@@ -242,6 +262,9 @@ html.dark .tile-3d {
     inset 0 1px 0 rgba(255,255,255,0.06),
     inset 0 -1px 0 rgba(0,0,0,0.4),
     0 6px 16px -8px rgba(0,0,0,0.6);
+}
+html.dark .tile-3d:hover {
+  background: linear-gradient(135deg, rgba(71,85,105,0.5), rgba(51,65,85,0.5)) !important;
 }
 .tile-blue   { background: linear-gradient(135deg, rgba(232,241,255,0.4) 0%, rgba(246,249,255,0.4) 60%, rgba(238,246,255,0.4) 100%); }
 .tile-mint   { background: linear-gradient(135deg, rgba(230,248,241,0.4) 0%, rgba(244,251,247,0.4) 60%, rgba(234,247,239,0.4) 100%); }
