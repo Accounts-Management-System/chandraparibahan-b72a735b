@@ -143,21 +143,21 @@ function DashboardPage() {
   const mb: any = mainAcc.data ?? { mode: "main", trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, otherIncome: 0, expense: 0, balance: 0, tripCount: 0 };
 
   const tripRows = (mb.trips ?? []) as any[];
-  const chartData = chartMode === "tripCount"
-    ? Object.entries(
-        tripRows.reduce<Record<string, number>>((acc: Record<string, number>, r: any) => {
-          acc[r.vehicle_no] = (acc[r.vehicle_no] || 0) + 1;
-          return acc;
-        }, {}),
-      ).map(([name, value]) => ({ name, value }))
-    : tripRows.map((r: any, i: number) => {
-        const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
-        const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
-        return {
-          name: `${r.vehicle_no}${r.serial_no ? "·" + r.serial_no : "·" + (i + 1)}`,
-          value: chartMode === "balance" ? jama - dena : chartMode === "debit" ? dena : jama,
-        };
-      });
+  // Find last date in range, filter only last-date rows for sum-per-vehicle
+  const lastDate = tripRows.reduce<string>((mx, r: any) => (r.trip_date > mx ? r.trip_date : mx), "");
+  const lastDateRows = lastDate ? tripRows.filter((r: any) => r.trip_date === lastDate) : tripRows;
+  const aggSource = chartMode === "tripCount" ? tripRows : lastDateRows;
+  const aggregated = aggSource.reduce<Record<string, number>>((acc, r: any) => {
+    const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+    const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+    const v = chartMode === "tripCount" ? 1
+      : chartMode === "deposit" ? jama
+      : chartMode === "debit" ? dena
+      : jama - dena;
+    acc[r.vehicle_no] = (acc[r.vehicle_no] || 0) + v;
+    return acc;
+  }, {});
+  const chartData = Object.entries(aggregated).map(([name, value]) => ({ name, value }));
   const chartStops = chartMode === "debit"
     ? { from: "oklch(0.72 0.22 25)", to: "oklch(0.55 0.18 25)" }
     : chartMode === "deposit"
@@ -166,6 +166,33 @@ function DashboardPage() {
         ? { from: "#C9B6FF", to: "#7C5BD9" } // lavender
         : { from: "oklch(0.72 0.18 270)", to: "oklch(0.5 0.18 270)" };
   const gradId = `barGrad-${chartMode}`;
+  const labelGradId = `labelGrad-${chartMode}`;
+  const labelBlurId = `labelBlur-${chartMode}`;
+
+  // Custom vector label: rounded pill with gradient + glow behind the value
+  const ValueLabel = (props: any) => {
+    const { x, y, width, value } = props;
+    if (value == null) return null;
+    const text = fmtNum(Number(value), lang);
+    const cx = x + width / 2;
+    const cy = y - 14;
+    const padX = 8;
+    const charW = 7;
+    const w = Math.max(28, text.length * charW + padX * 2);
+    const h = 18;
+    return (
+      <g>
+        <rect x={cx - w / 2} y={cy - h / 2} rx={9} ry={9} width={w} height={h}
+          fill={`url(#${labelGradId})`} filter={`url(#${labelBlurId})`} opacity={0.95} />
+        <rect x={cx - w / 2} y={cy - h / 2} rx={9} ry={9} width={w} height={h}
+          fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
+        <text x={cx} y={cy + 3.5} textAnchor="middle"
+          style={{ fontSize: 10, fontWeight: 700, fill: "#fff", letterSpacing: 0.2 }}>
+          {text}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <AppLayout>
