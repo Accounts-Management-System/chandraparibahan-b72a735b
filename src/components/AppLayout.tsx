@@ -55,7 +55,7 @@ const nav: NavItem[] = [
 
 
 function Watermark() {
-  // Subtle grid pattern like Smart Vehicle template
+  // Stepped grid — same in light & dark
   return (
     <div
       aria-hidden
@@ -63,19 +63,17 @@ function Watermark() {
       style={{
         backgroundColor: "var(--background)",
         backgroundImage:
-          "linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px)",
-        backgroundSize: "32px 32px, 32px 32px",
+          "linear-gradient(to right, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px)",
+        backgroundSize: "28px 28px, 28px 28px",
       }}
     />
   );
 }
 
-const SIDEBAR_BG_LIGHT =
-  "linear-gradient(180deg, #c9d0d8 0%, #8d97a4 50%, #4a5460 100%)";
-const SIDEBAR_BG_DARK =
-  "linear-gradient(180deg, oklch(0.22 0.06 275) 0%, oklch(0.18 0.05 275) 50%, oklch(0.15 0.04 275) 100%)";
+const SIDEBAR_BG_LIGHT = "#ffffff";
+const SIDEBAR_BG_DARK = "var(--background)";
 const SIDEBAR_GRID =
-  "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)";
+  "linear-gradient(to right, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px)";
 
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
