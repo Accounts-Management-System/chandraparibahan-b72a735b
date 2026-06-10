@@ -70,8 +70,12 @@ function Watermark() {
   );
 }
 
-const SIDEBAR_BG =
-  "linear-gradient(180deg, #0c2f3d 0%, #0a3d4d 40%, #0e4a5a 100%)";
+const SIDEBAR_BG_LIGHT =
+  "linear-gradient(180deg, #4a5460 0%, #8d97a4 50%, #c9d0d8 100%)";
+const SIDEBAR_BG_DARK =
+  "linear-gradient(180deg, oklch(0.15 0.04 275) 0%, oklch(0.18 0.05 275) 50%, oklch(0.22 0.06 275) 100%)";
+const SIDEBAR_GRID =
+  "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)";
 
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -99,17 +103,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="relative flex min-h-screen bg-background">
       <Watermark />
       <aside
-        className="hidden md:flex w-64 flex-col relative z-10 text-slate-100"
-        style={{ background: SIDEBAR_BG, borderRight: "1px solid rgba(255,255,255,0.06)" }}
+        className="hidden md:flex w-64 flex-col relative z-10"
+        style={{
+          backgroundImage: `${SIDEBAR_GRID}, ${theme === "dark" ? SIDEBAR_BG_DARK : SIDEBAR_BG_LIGHT}`,
+          backgroundSize: "32px 32px, 32px 32px, 100% 100%",
+          color: theme === "dark" ? "#e2e8f0" : "#0f172a",
+          borderRight: "1px solid rgba(0,0,0,0.08)",
+        }}
       >
-        <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
-          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/40 to-teal-600/40 border border-white/20 flex items-center justify-center text-sm font-bold">
+        <div className="px-4 py-5 border-b border-black/10 dark:border-white/10 flex items-center gap-3">
+          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/60 to-teal-600/60 dark:from-cyan-300/40 dark:to-teal-600/40 border border-white/30 flex items-center justify-center text-sm font-bold text-slate-900 dark:text-slate-100">
             {t("brand").slice(0, 2)}
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold leading-tight truncate">{t("brand")}</h1>
-            <p className="text-[11px] text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
-            <p className="mt-1 inline-flex rounded border border-cyan-300/30 bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-200">
+            <h1 className="text-sm font-bold leading-tight truncate text-slate-900 dark:text-slate-100">{t("brand")}</h1>
+            <p className="text-[11px] text-slate-700/90 dark:text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
+            <p className="mt-1 inline-flex rounded border border-cyan-700/40 dark:border-cyan-300/30 bg-cyan-200/40 dark:bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-900 dark:text-cyan-200">
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
             </p>
           </div>
@@ -124,8 +133,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 to={n.to}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   active
-                    ? "bg-cyan-400/15 text-cyan-200 border-l-2 border-cyan-300"
-                    : "text-slate-200/90 hover:bg-white/5 border-l-2 border-transparent"
+                    ? "bg-cyan-500/25 dark:bg-cyan-400/15 text-cyan-950 dark:text-cyan-200 border-l-2 border-cyan-600 dark:border-cyan-300 font-semibold"
+                    : "text-slate-900/85 dark:text-slate-200/90 hover:bg-black/5 dark:hover:bg-white/5 border-l-2 border-transparent"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -134,19 +143,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-3 border-t border-white/10 space-y-2">
-          <Button variant="outline" size="sm" className="w-full bg-white/5 border-white/15 text-slate-100 hover:bg-white/10" onClick={toggleTheme}>
+        <div className="p-3 border-t border-black/10 dark:border-white/10 space-y-2">
+          <Button variant="outline" size="sm" className="w-full bg-white/70 dark:bg-white/5 border-black/20 dark:border-white/15 text-slate-900 dark:text-slate-100 hover:bg-white" onClick={toggleTheme}>
             {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
             {theme === "dark" ? (lang === "bn" ? "লাইট মুড" : "Light") : (lang === "bn" ? "ডার্ক মুড" : "Dark")}
           </Button>
-          <Button variant="outline" size="sm" className="w-full bg-white/5 border-white/15 text-slate-100 hover:bg-white/10" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
+          <Button variant="outline" size="sm" className="w-full bg-white/70 dark:bg-white/5 border-black/20 dark:border-white/15 text-slate-900 dark:text-slate-100 hover:bg-white" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
             <Languages className="h-4 w-4 mr-2" />
             {lang === "bn" ? "English" : "বাংলা"}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-slate-200 hover:bg-white/5 hover:text-white"
+            className="w-full justify-start text-slate-900 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
             onClick={async () => {
               await supabase.auth.signOut();
               navigate({ to: "/login" });
