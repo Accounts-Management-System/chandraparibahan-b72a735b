@@ -109,7 +109,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative flex min-h-screen bg-background">
-      <Watermark />
+      <Watermark theme={theme} />
       <aside
         className="hidden md:flex w-64 flex-col relative z-10"
         style={{
@@ -120,20 +120,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="px-4 py-5 border-b border-black/10 dark:border-white/10 flex items-center gap-3">
-          <div
-            className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold text-slate-900 dark:text-slate-100"
-            style={{
-              background:
-                "radial-gradient(circle at 30% 25%, #ffffff 0%, #cfd6df 45%, #6b7785 100%)",
-              boxShadow:
-                "inset 0 2px 3px rgba(255,255,255,0.9), inset 0 -2px 4px rgba(0,0,0,0.25), 0 4px 10px -3px rgba(0,0,0,0.4)",
-              border: "1px solid rgba(0,0,0,0.15)",
-            }}
-          >
-            {t("brand").slice(0, 2)}
-          </div>
+          <img
+            src={cpLogo}
+            alt="CP"
+            className="h-12 w-12 object-contain flex-shrink-0"
+            style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+          />
           <div className="min-w-0">
-            <h1 className="text-sm font-bold leading-tight truncate text-slate-900 dark:text-slate-100">{t("brand")}</h1>
+            <h1 className="text-lg font-bold leading-tight truncate text-slate-900 dark:text-slate-100">{t("brand")}</h1>
             <p className="text-[11px] text-slate-700/90 dark:text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
             <p className="mt-1 inline-flex rounded border border-cyan-700/40 dark:border-cyan-300/30 bg-cyan-200/40 dark:bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-900 dark:text-cyan-200">
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
