@@ -103,14 +103,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside
         className="hidden md:flex w-64 flex-col relative z-10"
         style={{
-          backgroundImage: `${SIDEBAR_GRID}, ${theme === "dark" ? SIDEBAR_BG_DARK : SIDEBAR_BG_LIGHT}`,
-          backgroundSize: "32px 32px, 32px 32px, 100% 100%",
+          backgroundImage: `${SIDEBAR_GRID}, linear-gradient(180deg, ${theme === "dark" ? SIDEBAR_BG_DARK : SIDEBAR_BG_LIGHT}, ${theme === "dark" ? SIDEBAR_BG_DARK : SIDEBAR_BG_LIGHT})`,
+          backgroundSize: "28px 28px, 28px 28px, 100% 100%",
           color: theme === "dark" ? "#e2e8f0" : "#0f172a",
-          borderRight: "1px solid rgba(0,0,0,0.08)",
+          borderRight: "1px solid color-mix(in oklab, var(--foreground) 12%, transparent)",
         }}
       >
         <div className="px-4 py-5 border-b border-black/10 dark:border-white/10 flex items-center gap-3">
-          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/60 to-teal-600/60 dark:from-cyan-300/40 dark:to-teal-600/40 border border-white/30 flex items-center justify-center text-sm font-bold text-slate-900 dark:text-slate-100">
+          <div
+            className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold text-slate-900 dark:text-slate-100"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 25%, #ffffff 0%, #cfd6df 45%, #6b7785 100%)",
+              boxShadow:
+                "inset 0 2px 3px rgba(255,255,255,0.9), inset 0 -2px 4px rgba(0,0,0,0.25), 0 4px 10px -3px rgba(0,0,0,0.4)",
+              border: "1px solid rgba(0,0,0,0.15)",
+            }}
+          >
             {t("brand").slice(0, 2)}
           </div>
           <div className="min-w-0">
@@ -131,8 +140,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 to={n.to}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   active
-                    ? "bg-cyan-500/25 dark:bg-cyan-400/15 text-cyan-950 dark:text-cyan-200 border-l-2 border-cyan-600 dark:border-cyan-300 font-semibold"
-                    : "text-slate-900/85 dark:text-slate-200/90 hover:bg-black/5 dark:hover:bg-white/5 border-l-2 border-transparent"
+                    ? "bg-slate-300/70 dark:bg-cyan-400/15 text-slate-900 dark:text-cyan-200 border-l-2 border-slate-500 dark:border-cyan-300 font-semibold"
+                    : "text-slate-900/85 dark:text-slate-200/90 hover:bg-slate-200/80 dark:hover:bg-white/5 border-l-2 border-transparent"
                 }`}
               >
                 <Icon className="h-4 w-4" />
