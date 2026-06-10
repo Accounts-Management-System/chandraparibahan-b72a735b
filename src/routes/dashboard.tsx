@@ -299,14 +299,14 @@ function DashboardPage() {
             <p className="text-sm text-muted-foreground py-8 text-center">{t("noData")}</p>
           ) : (
             <>
-              {chartMode !== "tripCount" && lastDate && (
+              {lastDate && (
                 <p className="text-[11px] text-muted-foreground mb-2">
                   {trBn("সর্বশেষ তারিখ", lang)}: <span className="font-semibold text-foreground">{fmtDate(lastDate, lang)}</span>
                 </p>
               )}
-              <div className="h-72 w-full">
+              <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 32, right: 8, left: 0, bottom: 8 }}>
+                  <BarChart data={chartData} margin={{ top: 48, right: 8, left: 0, bottom: 8 }}>
                     <defs>
                       <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor={chartStops.from} />
@@ -362,11 +362,11 @@ function DashboardPage() {
   );
 }
 
-function MiniStat({ label, value, color, highlight }: { label: string; value: string; color: string; highlight?: boolean }) {
+function MiniStat({ label, value, tone = "blue", highlight }: { label: string; value: string; tone?: "blue"|"mint"|"peach"|"lavender"|"pink"|"cyan"|"amber"; highlight?: boolean }) {
   return (
-    <div className={`rounded-md border p-2 ${highlight ? "bg-primary/5 border-primary/40" : "bg-muted/30"}`}>
-      <div className="text-[10px] uppercase text-muted-foreground mb-1">{label}</div>
-      <div className={`text-base md:text-lg font-bold ${color}`}>{value}</div>
+    <div className={`tile-3d tile-${tone} p-3 ${highlight ? "ring-2 ring-primary/50" : ""}`}>
+      <div className="text-[10px] uppercase text-foreground/60 mb-1 font-semibold tracking-wide">{label}</div>
+      <div className="text-base md:text-lg font-extrabold text-foreground">{value}</div>
     </div>
   );
 }
