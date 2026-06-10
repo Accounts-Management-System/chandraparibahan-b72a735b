@@ -103,8 +103,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="relative flex min-h-screen bg-background">
       <Watermark />
       <aside
-        className="hidden md:flex w-64 flex-col relative z-10 text-slate-100"
-        style={{ background: SIDEBAR_BG, borderRight: "1px solid rgba(255,255,255,0.06)" }}
+        className="hidden md:flex w-64 flex-col relative z-10"
+        style={{
+          backgroundImage: `${SIDEBAR_GRID}, ${theme === "dark" ? SIDEBAR_BG_DARK : SIDEBAR_BG_LIGHT}`,
+          backgroundSize: "32px 32px, 32px 32px, 100% 100%",
+          color: theme === "dark" ? "#e2e8f0" : "#0f172a",
+          borderRight: "1px solid rgba(0,0,0,0.08)",
+        }}
       >
         <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
           <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/40 to-teal-600/40 border border-white/20 flex items-center justify-center text-sm font-bold">
