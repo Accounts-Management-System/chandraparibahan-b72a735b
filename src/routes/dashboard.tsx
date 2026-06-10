@@ -297,25 +297,39 @@ function DashboardPage() {
           {chartData.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">{t("noData")}</p>
           ) : (
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 24, right: 8, left: 0, bottom: 8 }}>
-                  <defs>
-                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={chartStops.from} />
-                      <stop offset="100%" stopColor={chartStops.to} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0 0 0 / 0.08)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={60} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtNum(v, lang)} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v: any) => fmtNum(Number(v), lang)} />
-                  <Bar dataKey="value" fill={`url(#${gradId})`} radius={[6, 6, 0, 0]}>
-                    <LabelList dataKey="value" position="top" formatter={(v: any) => fmtNum(Number(v), lang)} style={{ fontSize: 10, fontWeight: 600, fill: "var(--foreground)" }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <>
+              {chartMode !== "tripCount" && lastDate && (
+                <p className="text-[11px] text-muted-foreground mb-2">
+                  {trBn("সর্বশেষ তারিখ", lang)}: <span className="font-semibold text-foreground">{fmtDate(lastDate, lang)}</span>
+                </p>
+              )}
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 32, right: 8, left: 0, bottom: 8 }}>
+                    <defs>
+                      <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={chartStops.from} />
+                        <stop offset="100%" stopColor={chartStops.to} />
+                      </linearGradient>
+                      <linearGradient id={labelGradId} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={chartStops.from} stopOpacity={0.95} />
+                        <stop offset="100%" stopColor={chartStops.to} stopOpacity={0.95} />
+                      </linearGradient>
+                      <filter id={labelBlurId} x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" />
+                      </filter>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0 0 0 / 0.08)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={60} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtNum(v, lang)} />
+                    <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v: any) => fmtNum(Number(v), lang)} />
+                    <Bar dataKey="value" fill={`url(#${gradId})`} radius={[6, 6, 0, 0]}>
+                      <LabelList dataKey="value" position="top" content={<ValueLabel />} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
           )}
         </Card>
 
