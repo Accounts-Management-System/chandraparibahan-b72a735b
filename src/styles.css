@@ -251,6 +251,10 @@ html.light { color-scheme: light; }
     inset 0 -1px 0 rgba(0,0,0,0.06),
     0 6px 14px -8px rgba(15,30,60,0.25),
     0 2px 4px -2px rgba(15,30,60,0.15);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.tile-3d:hover {
+  background: linear-gradient(135deg, rgba(203,213,225,0.55), rgba(226,232,240,0.55)) !important;
 }
 html.dark .tile-3d {
   border-color: rgba(255,255,255,0.08);
@@ -258,6 +262,9 @@ html.dark .tile-3d {
     inset 0 1px 0 rgba(255,255,255,0.06),
     inset 0 -1px 0 rgba(0,0,0,0.4),
     0 6px 16px -8px rgba(0,0,0,0.6);
+}
+html.dark .tile-3d:hover {
+  background: linear-gradient(135deg, rgba(71,85,105,0.5), rgba(51,65,85,0.5)) !important;
 }
 .tile-blue   { background: linear-gradient(135deg, rgba(232,241,255,0.4) 0%, rgba(246,249,255,0.4) 60%, rgba(238,246,255,0.4) 100%); }
 .tile-mint   { background: linear-gradient(135deg, rgba(230,248,241,0.4) 0%, rgba(244,251,247,0.4) 60%, rgba(234,247,239,0.4) 100%); }
