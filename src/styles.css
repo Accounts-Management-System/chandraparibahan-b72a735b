@@ -109,8 +109,8 @@
 }
 
 html.light {
-  /* Software / Ash look — light gray body, classic UI panels */
-  --background: oklch(0.93 0.005 270);
+  /* Pure white surfaces — body & sidebar same shade, ash highlights */
+  --background: oklch(1 0 0);
   --foreground: oklch(0.18 0.02 270);
   --card: oklch(0.985 0.003 270);
   --card-foreground: oklch(0.18 0.02 270);
