@@ -70,8 +70,12 @@ function Watermark() {
   );
 }
 
-const SIDEBAR_BG =
-  "linear-gradient(180deg, #0c2f3d 0%, #0a3d4d 40%, #0e4a5a 100%)";
+const SIDEBAR_BG_LIGHT =
+  "linear-gradient(180deg, #4a5460 0%, #8d97a4 50%, #c9d0d8 100%)";
+const SIDEBAR_BG_DARK =
+  "linear-gradient(180deg, oklch(0.15 0.04 275) 0%, oklch(0.18 0.05 275) 50%, oklch(0.22 0.06 275) 100%)";
+const SIDEBAR_GRID =
+  "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)";
 
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
