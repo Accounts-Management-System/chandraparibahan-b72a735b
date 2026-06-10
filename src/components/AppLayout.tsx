@@ -29,6 +29,7 @@ import {
   UserCheck,
   FileText,
 } from "lucide-react";
+import cpLogo from "@/assets/cp-logo.png";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
 
@@ -54,8 +55,17 @@ const nav: NavItem[] = [
 ];
 
 
-function Watermark() {
-  // Stepped grid — same in light & dark
+function Watermark({ theme }: { theme: string }) {
+  // Stepped grid in light mode only; plain background in dark mode
+  if (theme === "dark") {
+    return (
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-0"
+        style={{ backgroundColor: "var(--background)" }}
+      />
+    );
+  }
   return (
     <div
       aria-hidden
