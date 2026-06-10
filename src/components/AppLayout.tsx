@@ -143,19 +143,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-3 border-t border-white/10 space-y-2">
-          <Button variant="outline" size="sm" className="w-full bg-white/5 border-white/15 text-slate-100 hover:bg-white/10" onClick={toggleTheme}>
+        <div className="p-3 border-t border-black/10 dark:border-white/10 space-y-2">
+          <Button variant="outline" size="sm" className="w-full bg-white/70 dark:bg-white/5 border-black/20 dark:border-white/15 text-slate-900 dark:text-slate-100 hover:bg-white" onClick={toggleTheme}>
             {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
             {theme === "dark" ? (lang === "bn" ? "লাইট মুড" : "Light") : (lang === "bn" ? "ডার্ক মুড" : "Dark")}
           </Button>
-          <Button variant="outline" size="sm" className="w-full bg-white/5 border-white/15 text-slate-100 hover:bg-white/10" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
+          <Button variant="outline" size="sm" className="w-full bg-white/70 dark:bg-white/5 border-black/20 dark:border-white/15 text-slate-900 dark:text-slate-100 hover:bg-white" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
             <Languages className="h-4 w-4 mr-2" />
             {lang === "bn" ? "English" : "বাংলা"}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-slate-200 hover:bg-white/5 hover:text-white"
+            className="w-full justify-start text-slate-900 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
             onClick={async () => {
               await supabase.auth.signOut();
               navigate({ to: "/login" });
