@@ -111,14 +111,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           borderRight: "1px solid rgba(0,0,0,0.08)",
         }}
       >
-        <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
-          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/40 to-teal-600/40 border border-white/20 flex items-center justify-center text-sm font-bold">
+        <div className="px-4 py-5 border-b border-black/10 dark:border-white/10 flex items-center gap-3">
+          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-300/60 to-teal-600/60 dark:from-cyan-300/40 dark:to-teal-600/40 border border-white/30 flex items-center justify-center text-sm font-bold text-slate-900 dark:text-slate-100">
             {t("brand").slice(0, 2)}
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold leading-tight truncate">{t("brand")}</h1>
-            <p className="text-[11px] text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
-            <p className="mt-1 inline-flex rounded border border-cyan-300/30 bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-200">
+            <h1 className="text-sm font-bold leading-tight truncate text-slate-900 dark:text-slate-100">{t("brand")}</h1>
+            <p className="text-[11px] text-slate-700/90 dark:text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
+            <p className="mt-1 inline-flex rounded border border-cyan-700/40 dark:border-cyan-300/30 bg-cyan-200/40 dark:bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-900 dark:text-cyan-200">
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
             </p>
           </div>
@@ -133,8 +133,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 to={n.to}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   active
-                    ? "bg-cyan-400/15 text-cyan-200 border-l-2 border-cyan-300"
-                    : "text-slate-200/90 hover:bg-white/5 border-l-2 border-transparent"
+                    ? "bg-cyan-500/25 dark:bg-cyan-400/15 text-cyan-950 dark:text-cyan-200 border-l-2 border-cyan-600 dark:border-cyan-300 font-semibold"
+                    : "text-slate-900/85 dark:text-slate-200/90 hover:bg-black/5 dark:hover:bg-white/5 border-l-2 border-transparent"
                 }`}
               >
                 <Icon className="h-4 w-4" />
