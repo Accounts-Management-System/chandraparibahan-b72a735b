@@ -256,7 +256,7 @@ function DashboardPage() {
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="text-sm font-semibold text-muted-foreground">{t("tripChart")}</div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
-              {(["balance", "debit", "deposit", "tripCount"] as const).map((m) => (
+              {(["tripCount", "deposit", "debit", "balance"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setChartMode(m)}
