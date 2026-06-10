@@ -55,7 +55,7 @@ const nav: NavItem[] = [
 
 
 function Watermark() {
-  // Soft white + light-ash embossed texture (no vehicles)
+  // Subtle grid pattern like Smart Vehicle template
   return (
     <div
       aria-hidden
@@ -63,12 +63,16 @@ function Watermark() {
       style={{
         backgroundColor: "var(--background)",
         backgroundImage:
-          "radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 0), linear-gradient(180deg, color-mix(in oklab, var(--foreground) 3%, transparent), transparent 60%)",
-        backgroundSize: "22px 22px, 100% 100%",
+          "linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px)",
+        backgroundSize: "32px 32px, 32px 32px",
       }}
     />
   );
 }
+
+const SIDEBAR_BG =
+  "linear-gradient(180deg, #0c2f3d 0%, #0a3d4d 40%, #0e4a5a 100%)";
+
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
