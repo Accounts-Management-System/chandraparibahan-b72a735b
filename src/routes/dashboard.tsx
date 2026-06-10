@@ -169,25 +169,26 @@ function DashboardPage() {
   const labelGradId = `labelGrad-${chartMode}`;
   const labelBlurId = `labelBlur-${chartMode}`;
 
-  // Custom vector label: rounded pill with gradient + glow behind the value
+  // Custom vector label: vertical (rotated) text in rounded pill with gradient + glow
   const ValueLabel = (props: any) => {
     const { x, y, width, value } = props;
     if (value == null) return null;
     const text = fmtNum(Number(value), lang);
     const cx = x + width / 2;
-    const cy = y - 14;
-    const padX = 8;
     const charW = 7;
-    const w = Math.max(28, text.length * charW + padX * 2);
-    const h = 18;
+    const padY = 6;
+    const h = Math.max(28, text.length * charW + padY * 2);
+    const w = 16;
+    const cy = y - h / 2 - 4;
     return (
-      <g>
-        <rect x={cx - w / 2} y={cy - h / 2} rx={9} ry={9} width={w} height={h}
+      <g transform={`translate(${cx}, ${cy})`}>
+        <rect x={-w / 2} y={-h / 2} rx={7} ry={7} width={w} height={h}
           fill={`url(#${labelGradId})`} filter={`url(#${labelBlurId})`} opacity={0.95} />
-        <rect x={cx - w / 2} y={cy - h / 2} rx={9} ry={9} width={w} height={h}
+        <rect x={-w / 2} y={-h / 2} rx={7} ry={7} width={w} height={h}
           fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
-        <text x={cx} y={cy + 3.5} textAnchor="middle"
-          style={{ fontSize: 10, fontWeight: 700, fill: "#fff", letterSpacing: 0.2 }}>
+        <text x={0} y={0} textAnchor="middle" transform="rotate(-90)"
+          dominantBaseline="middle"
+          style={{ fontSize: 10, fontWeight: 700, fill: "#fff", letterSpacing: 0.3 }}>
           {text}
         </text>
       </g>
@@ -243,40 +244,40 @@ function DashboardPage() {
           </p>
         </Card>
 
-        {/* Main / Owner account */}
-        <Card className="p-4 border-border/60 bg-card shadow-sm">
-          <div className="text-sm font-semibold text-muted-foreground mb-3 flex items-center justify-between border-b pb-2">
+        {/* Main / Owner account — compact pastel tiles, no big container */}
+        <div>
+          <div className="text-sm font-semibold text-muted-foreground mb-2 flex items-center justify-between">
             <span>🚌 {ownerId === "all" ? `${t("mainTransportAccount")} (${t("ownerless")})` : `${trBn("ওনার হিসাব", lang)} — ${owners.find((o) => o.id === ownerId)?.name ?? ""}`}</span>
             <span className="text-foreground text-xs">{t("totalTrips")}: <span className="text-primary font-bold">{fmtNum(mb.tripCount, lang)}</span></span>
           </div>
           {mb.mode === "main" ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-                <MiniStat label={t("dailyJama")} value={fmtNum(mb.jama, lang)} color="text-emerald-500" />
-                <MiniStat label={t("dena")} value={fmtNum(mb.dena, lang)} color="text-rose-500" />
-                <MiniStat label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} color={mb.incomeLoss >= 0 ? "text-emerald-600" : "text-rose-600"} />
-                <MiniStat label={trBn("অন্যান্য জমা", lang)} value={fmtNum(mb.otherIncome, lang)} color="text-emerald-500" />
-                <MiniStat label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} color="text-rose-500" />
-                <MiniStat label={t("mainBalance")} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+                <MiniStat tone="mint"     label={t("dailyJama")} value={fmtNum(mb.jama, lang)} />
+                <MiniStat tone="pink"     label={t("dena")} value={fmtNum(mb.dena, lang)} />
+                <MiniStat tone="lavender" label={t("incomeLoss")} value={fmtNum(mb.incomeLoss, lang)} />
+                <MiniStat tone="cyan"     label={trBn("অন্যান্য জমা", lang)} value={fmtNum(mb.otherIncome, lang)} />
+                <MiniStat tone="peach"    label={t("dailyExpense")} value={fmtNum(mb.expense, lang)} />
+                <MiniStat tone="blue"     label={t("mainBalance")} value={fmtNum(mb.balance, lang)} highlight />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+              <p className="text-[11px] text-muted-foreground mt-2 font-mono">
                 ({t("dailyJama")} − {t("dena")}) + {trBn("অন্যান্য জমা", lang)} − {t("dailyExpense")} = {t("mainBalance")}
               </p>
             </>
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <MiniStat label={trBn("গাড়ী ভাড়া", lang)} value={fmtNum(mb.fares, lang)} color="text-emerald-500" />
-                <MiniStat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(mb.jamaKhorochJama, lang)} color="text-emerald-500" />
-                <MiniStat label={trBn("জমা-খরচের খরচ", lang)} value={fmtNum(mb.jamaKhorochKhoroch, lang)} color="text-rose-500" />
-                <MiniStat label={trBn("ব্যালেন্স", lang)} value={fmtNum(mb.balance, lang)} color={mb.balance >= 0 ? "text-sky-600" : "text-rose-600"} highlight />
+                <MiniStat tone="mint"  label={trBn("গাড়ী ভাড়া", lang)} value={fmtNum(mb.fares, lang)} />
+                <MiniStat tone="cyan"  label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(mb.jamaKhorochJama, lang)} />
+                <MiniStat tone="pink"  label={trBn("জমা-খরচের খরচ", lang)} value={fmtNum(mb.jamaKhorochKhoroch, lang)} />
+                <MiniStat tone="blue"  label={trBn("ব্যালেন্স", lang)} value={fmtNum(mb.balance, lang)} highlight />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+              <p className="text-[11px] text-muted-foreground mt-2 font-mono">
                 গাড়ী ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ = ব্যালেন্স
               </p>
             </>
           )}
-        </Card>
+        </div>
 
         {/* Per-trip chart */}
         <Card className="p-4 border-border/60 bg-card shadow-sm">
