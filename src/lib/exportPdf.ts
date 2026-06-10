@@ -45,18 +45,22 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
 <style>
   *{box-sizing:border-box}
   body{font-family:'Noto Sans Bengali','Hind Siliguri',system-ui,-apple-system,sans-serif;padding:18px;color:#111;background:#fff}
-  h1{font-size:20px;margin:0 0 4px;letter-spacing:.3px}
+  .brand{text-align:center;font-size:22px;font-weight:800;letter-spacing:.5px;color:#0c2f3d;border-bottom:2px solid #0c2f3d;padding-bottom:6px;margin-bottom:10px}
+  h1{font-size:18px;margin:0 0 4px;letter-spacing:.3px}
   h2{font-size:14px;margin:14px 0 6px}
   .sub{font-size:12px;color:#555;margin-bottom:14px}
   table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
   th,td{border:1px solid #d0d5dd;padding:6px 8px;text-align:left;vertical-align:top}
-  thead{background:#f3f4f6}
-  tfoot td{font-weight:700;background:#f9fafb}
+  thead{background:#eaf1f7}
+  tbody tr:nth-child(odd) td{background:#ffffff}
+  tbody tr:nth-child(even) td{background:#f4f6f9}
+  tfoot td{font-weight:700;background:#e8eef5}
   .t-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .t-grid h3{margin:0 0 6px;font-size:13px;text-align:center;background:#eef2f7;padding:6px;border:1px solid #d0d5dd}
   .totals{margin-top:8px;display:flex;justify-content:space-between;font-weight:700;border-top:2px solid #111;padding-top:6px}
   @page{size:A4 ${orientation};margin:12mm}
 </style></head><body>
+  <div class="brand">চন্দ্রা পরিবহন</div>
   <h1>${esc(title)}</h1>
   ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
   ${body}

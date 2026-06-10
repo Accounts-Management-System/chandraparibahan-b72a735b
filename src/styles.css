@@ -214,11 +214,60 @@ html.light { color-scheme: light; }
     color: var(--destructive-foreground);
   }
 
-  /* Tables: classic software look */
+  /* Tables: classic software look with zebra rows */
   html.light table {
     background: var(--card);
   }
   html.light thead {
     background: linear-gradient(180deg, oklch(0.95 0.005 270), oklch(0.88 0.005 270));
   }
+  table tbody tr:nth-child(odd) td { background: color-mix(in oklab, var(--card) 100%, transparent); }
+  table tbody tr:nth-child(even) td { background: color-mix(in oklab, var(--muted) 55%, transparent); }
+}
+
+/* Pastel gradient stat tiles with bevel — matches Smart Vehicle template */
+.tile-3d {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    inset 0 -1px 0 rgba(0,0,0,0.06),
+    0 6px 14px -8px rgba(15,30,60,0.25),
+    0 2px 4px -2px rgba(15,30,60,0.15);
+}
+html.dark .tile-3d {
+  border-color: rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 6px 16px -8px rgba(0,0,0,0.6);
+}
+.tile-blue   { background: linear-gradient(135deg, #e8f1ff 0%, #f6f9ff 60%, #eef6ff 100%); }
+.tile-mint   { background: linear-gradient(135deg, #e6f8f1 0%, #f4fbf7 60%, #eaf7ef 100%); }
+.tile-peach  { background: linear-gradient(135deg, #fff1e8 0%, #fff8f1 60%, #ffeadd 100%); }
+.tile-lavender{background: linear-gradient(135deg, #f0eafc 0%, #f8f3ff 60%, #ece2fb 100%); }
+.tile-pink   { background: linear-gradient(135deg, #ffe8ee 0%, #fff2f5 60%, #ffdde6 100%); }
+.tile-cyan   { background: linear-gradient(135deg, #e3f6fb 0%, #f0fbfd 60%, #d9f1f7 100%); }
+.tile-amber  { background: linear-gradient(135deg, #fff6d9 0%, #fffbe9 60%, #ffefbf 100%); }
+html.dark .tile-blue    { background: linear-gradient(135deg, #1a2540 0%, #1d2a48 60%, #16203a 100%); }
+html.dark .tile-mint    { background: linear-gradient(135deg, #15302a 0%, #1a3a32 60%, #122b25 100%); }
+html.dark .tile-peach   { background: linear-gradient(135deg, #3a2620 0%, #422c25 60%, #321e18 100%); }
+html.dark .tile-lavender{ background: linear-gradient(135deg, #271e3c 0%, #2e2547 60%, #221a34 100%); }
+html.dark .tile-pink    { background: linear-gradient(135deg, #361f2a 0%, #3f2532 60%, #2e1923 100%); }
+html.dark .tile-cyan    { background: linear-gradient(135deg, #143040 0%, #173b4e 60%, #102836 100%); }
+html.dark .tile-amber   { background: linear-gradient(135deg, #3a2e15 0%, #45371a 60%, #322811 100%); }
+
+/* 3D bevel for general cards */
+.bevel-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    inset 0 -1px 0 rgba(0,0,0,0.05),
+    0 8px 20px -10px rgba(15,30,60,0.25);
+}
+html.dark .bevel-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 10px 24px -10px rgba(0,0,0,0.7);
 }
