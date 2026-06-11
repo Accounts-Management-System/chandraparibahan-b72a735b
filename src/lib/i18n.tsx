@@ -192,6 +192,18 @@ const dict = {
   month: { bn: "মাস", en: "Month" },
   filterAll: { bn: "সব", en: "All" },
   remarks: { bn: "বর্ণনা", en: "Remarks" },
+  supervisorDb: { bn: "সুপারভাইজার ডাটাবেইজ", en: "Supervisor Database" },
+  supervisorName: { bn: "সুপারভাইজার নাম", en: "Supervisor Name" },
+  topPerformers: { bn: "টপ পারফর্মার", en: "Top Performers" },
+  mostTrips: { bn: "বেশি ট্রিপ", en: "Most Trips" },
+  leastTrips: { bn: "কম ট্রিপ", en: "Least Trips" },
+  mostJama: { bn: "বেশি জমা", en: "Most Deposit" },
+  leastJama: { bn: "কম জমা", en: "Least Deposit" },
+  mostDena: { bn: "বেশি দেনা", en: "Most Debt" },
+  leastDena: { bn: "কম দেনা", en: "Least Debt" },
+  mostBalance: { bn: "বেশি ব্যালেন্স", en: "Most Balance" },
+  leastBalance: { bn: "কম ব্যালেন্স", en: "Least Balance" },
+  top10Vehicles: { bn: "টপ ১০ গাড়ি (ট্রিপ অনুযায়ী)", en: "Top 10 Vehicles (by Trips)" },
 } as const;
 
 type Key = keyof typeof dict;
