@@ -36,6 +36,16 @@ function Page() {
     queryKey: ["owners-list"],
     queryFn: async () => ((await supabase.from("owners").select("id,name").order("name")).data ?? []) as Owner[],
   });
+  const { data: tripsAll = [] } = useQuery({
+    queryKey: ["vehicles-trips-perf"],
+    queryFn: async () => ((await supabase.from("trips").select("vehicle_no").limit(100000)).data ?? []) as { vehicle_no: string }[],
+  });
+
+  const topPerformers = (() => {
+    const m = new Map<string, number>();
+    tripsAll.forEach((r) => m.set(r.vehicle_no, (m.get(r.vehicle_no) ?? 0) + 1));
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  })();
 
   const ownerName = (id: string | null) => owners.find((o) => o.id === id)?.name ?? "—";
 
@@ -55,6 +65,24 @@ function Page() {
             </Button>
           )}
         </div>
+
+        {topPerformers.length > 0 && (
+          <div className="rounded-lg border bg-card/70 backdrop-blur p-3">
+            <h2 className="text-sm font-semibold mb-2">{t("top10Vehicles")}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {topPerformers.map(([vno, count], i) => (
+                <div key={vno} className="flex items-center justify-between rounded-md border bg-background/60 px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-primary w-5">#{i + 1}</span>
+                    <span className="text-sm font-semibold truncate">{vno}</span>
+                  </div>
+                  <span className="text-xs font-mono text-muted-foreground">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <DataTable<Vehicle>
           rows={isLoading ? [] : rows}
           columns={[

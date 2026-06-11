@@ -141,6 +141,41 @@ function Page() {
     return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
   }, [tripRows]);
 
+  // Supervisor aggregation
+  type SupRow = { key: string; date: string; supervisor: string; trips: number; jama: number; dena: number; balance: number };
+  const supRowsByDate = useMemo<SupRow[]>(() => {
+    const m = new Map<string, SupRow>();
+    tripRows.forEach((r: any) => {
+      const sup = (r.supervisor || "—").trim() || "—";
+      const k = `${r.trip_date}__${sup}`;
+      const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      const cur = m.get(k) ?? { key: k, date: r.trip_date, supervisor: sup, trips: 0, jama: 0, dena: 0, balance: 0 };
+      cur.trips += 1; cur.jama += jama; cur.dena += dena; cur.balance += jama - dena;
+      m.set(k, cur);
+    });
+    return Array.from(m.values()).sort((a, b) => b.date.localeCompare(a.date) || a.supervisor.localeCompare(b.supervisor));
+  }, [tripRows]);
+  const supTotals = useMemo(() => {
+    const m = new Map<string, { supervisor: string; trips: number; jama: number; dena: number; balance: number }>();
+    tripRows.forEach((r: any) => {
+      const sup = (r.supervisor || "—").trim() || "—";
+      const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      const cur = m.get(sup) ?? { supervisor: sup, trips: 0, jama: 0, dena: 0, balance: 0 };
+      cur.trips += 1; cur.jama += jama; cur.dena += dena; cur.balance += jama - dena;
+      m.set(sup, cur);
+    });
+    return Array.from(m.values()).filter((s) => s.supervisor && s.supervisor !== "—");
+  }, [tripRows]);
+  const topBy = (key: "trips" | "jama" | "dena" | "balance", asc = false) => {
+    const arr = [...supTotals].sort((a, b) => asc ? a[key] - b[key] : b[key] - a[key]);
+    return arr[0];
+  };
+  const supTotalTrips = supRowsByDate.reduce((s, r) => s + r.trips, 0);
+  const supTotalJama = supRowsByDate.reduce((s, r) => s + r.jama, 0);
+  const supTotalDena = supRowsByDate.reduce((s, r) => s + r.dena, 0);
+
   const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, owner: ownerId || undefined } });
   const clear = () => { setDate(""); setMonth(""); setCar(""); setOwnerId(""); navigate({ search: {} }); };
 
@@ -204,6 +239,7 @@ function Page() {
             <TabsTrigger value="oth">{trBn("অন্যান্য জমা", lang)} ({fmtNum(totalOth, lang)})</TabsTrigger>
             <TabsTrigger value="exp">{trBn("দৈনিক খরচ", lang)} ({fmtNum(totalExp, lang)})</TabsTrigger>
             <TabsTrigger value="owner">{trBn("ওনার হিসাব", lang)}</TabsTrigger>
+            <TabsTrigger value="sup">{t("supervisorDb")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -232,9 +268,10 @@ function Page() {
                 ["__dena", t("denaTotal"), (_: any, r: any) => fmtNum(Number(r.dena_1 || 0) + Number(r.dena_2 || 0), lang)],
                 ["__bal", t("balance"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0) - Number(r.dena_1 || 0) - Number(r.dena_2 || 0), lang)],
                 ["__fare", t("fareTotal"), (_: any, r: any) => fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)],
+                ["__route", t("route"), (_: any, r: any) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "—"],
                 ["supervisor", t("supervisor")],
               ]}
-              footer={[t("grandTotal"), "", "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), ""]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), "", ""]}
             />
           </TabsContent>
 
@@ -342,9 +379,50 @@ function Page() {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent value="sup">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">{t("topPerformers")}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <RankCard label={t("mostTrips")} row={topBy("trips", false)} metric="trips" lang={lang} />
+                  <RankCard label={t("leastTrips")} row={topBy("trips", true)} metric="trips" lang={lang} />
+                  <RankCard label={t("mostJama")} row={topBy("jama", false)} metric="jama" lang={lang} />
+                  <RankCard label={t("leastJama")} row={topBy("jama", true)} metric="jama" lang={lang} />
+                  <RankCard label={t("mostDena")} row={topBy("dena", false)} metric="dena" lang={lang} />
+                  <RankCard label={t("leastDena")} row={topBy("dena", true)} metric="dena" lang={lang} />
+                  <RankCard label={t("mostBalance")} row={topBy("balance", false)} metric="balance" lang={lang} />
+                  <RankCard label={t("leastBalance")} row={topBy("balance", true)} metric="balance" lang={lang} />
+                </div>
+              </div>
+              <Tbl
+                rows={supRowsByDate.map((r, i) => ({ ...r, __serial: i + 1 }))}
+                cols={[
+                  ["__serial", t("serial"), (v: any) => fmtNum(v, lang)],
+                  ["date", t("date"), (v: any) => fmtDate(v, lang)],
+                  ["supervisor", t("supervisorName")],
+                  ["trips", t("totalTrips"), (v: any) => fmtNum(v, lang)],
+                  ["jama", t("jamaTotal"), (v: any) => fmtNum(v, lang)],
+                  ["dena", t("denaTotal"), (v: any) => fmtNum(v, lang)],
+                  ["balance", t("balance"), (v: any) => fmtNum(v, lang)],
+                ]}
+                footer={[t("grandTotal"), "", "", fmtNum(supTotalTrips, lang), fmtNum(supTotalJama, lang), fmtNum(supTotalDena, lang), fmtNum(supTotalJama - supTotalDena, lang)]}
+              />
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>
+  );
+}
+
+function RankCard({ label, row, metric, lang }: { label: string; row: any; metric: "trips" | "jama" | "dena" | "balance"; lang: "bn" | "en" }) {
+  return (
+    <div className="border bg-card/70 backdrop-blur rounded-lg p-3">
+      <div className="text-[10px] uppercase text-muted-foreground mb-1 font-semibold">{label}</div>
+      <div className="text-sm font-bold truncate">{row?.supervisor ?? "—"}</div>
+      <div className="text-xs text-primary font-mono">{row ? fmtNum(row[metric], lang) : "—"}</div>
+    </div>
   );
 }
 

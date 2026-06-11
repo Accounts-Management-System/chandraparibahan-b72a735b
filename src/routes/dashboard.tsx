@@ -23,6 +23,7 @@ import {
   Factory,
   BookOpen,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
 import { useMemo, useState } from "react";
@@ -41,6 +42,7 @@ const tiles = [
   { to: "/contacts", key: "shareholders" as const, icon: Users },
   { to: "/data-manufacturer", key: "dataManufacturer" as const, icon: Factory, writeOnly: true },
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
+  { to: "/data-bank", key: "supervisorDb" as const, icon: UserCog },
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
   { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
