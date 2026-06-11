@@ -254,7 +254,7 @@ function Page() {
               <Button variant="outline" onClick={exportJamaPdf}>
                 <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
               </Button>
-              {isAdmin && (
+              {canManage && (
               <Button onClick={() => { setEditJ(null); setOpenJ(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addJama")}
               </Button>
@@ -291,7 +291,7 @@ function Page() {
               <Button variant="outline" onClick={exportKhorochPdf}>
                 <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
               </Button>
-              {isAdmin && (
+              {canManage && (
               <Button onClick={() => { setEditE(null); setOpenE(true); }}>
                 <Plus className="h-4 w-4 mr-2" />{t("addExpense")}
               </Button>
