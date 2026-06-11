@@ -273,9 +273,9 @@ function Page() {
           <TabsContent value="owner">
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Stat label="গাড়ি ভাড়া" value={fmtNum(ownerFares, lang)} color="text-amber-400" />
-                <Stat label="জমা-খরচের জমা" value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
-                <Stat label="জমা-খরচের খরচ" value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
+                <Stat label={trBn("গাড়ি ভাড়া", lang)} value={fmtNum(ownerFares, lang)} color="text-amber-400" />
+                <Stat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(ownerJama, lang)} color="text-emerald-400" />
+                <Stat label={trBn("জমা-খরচের খরচ", lang)} value={fmtNum(ownerKhoroch, lang)} color="text-rose-400" />
                 <Stat label={t("totalTrips")} value={fmtNum(ownerTrips.length, lang)} color="text-sky-400" />
               </div>
 
