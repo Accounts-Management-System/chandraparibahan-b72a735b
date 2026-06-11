@@ -56,24 +56,17 @@ const nav: NavItem[] = [
 
 
 function Watermark({ theme }: { theme: string }) {
-  // Stepped grid in light mode only; plain background in dark mode
-  if (theme === "dark") {
-    return (
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-0"
-        style={{ backgroundColor: "var(--background)" }}
-      />
-    );
-  }
+  const lineColor =
+    theme === "dark"
+      ? "color-mix(in oklab, var(--foreground) 5%, transparent)"
+      : "color-mix(in oklab, var(--foreground) 7%, transparent)";
   return (
     <div
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-0"
       style={{
         backgroundColor: "var(--background)",
-        backgroundImage:
-          "linear-gradient(to right, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px)",
+        backgroundImage: `linear-gradient(to right, ${lineColor} 1px, transparent 1px), linear-gradient(to bottom, ${lineColor} 1px, transparent 1px)`,
         backgroundSize: "28px 28px, 28px 28px",
       }}
     />
