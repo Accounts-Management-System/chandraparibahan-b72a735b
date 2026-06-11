@@ -20,8 +20,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
-    });
-    return () => sub.subscription.unsubscribe();
+    }).catch(() => setLoading(false));
+    // Safety net: never stay stuck on the loading screen
+    const failsafe = setTimeout(() => setLoading(false), 8000);
+    return () => {
+      sub.subscription.unsubscribe();
+      clearTimeout(failsafe);
+    };
   }, []);
 
   return (
