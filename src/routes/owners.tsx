@@ -165,8 +165,8 @@ function Page() {
                 ) : null,
               },
             ]}
-            onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
-            onDelete={canWrite ? (r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); } : undefined}
+            onEdit={isAdmin ? (r) => { setEditing(r); setOpen(true); } : undefined}
+            onDelete={isAdmin ? (r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); } : undefined}
             emptyText={isLoading ? t("loading") : t("noData")}
           />
         )}
