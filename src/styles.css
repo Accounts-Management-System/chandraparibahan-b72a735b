@@ -266,20 +266,20 @@ html.dark .tile-3d {
 html.dark .tile-3d:hover {
   background: linear-gradient(135deg, rgba(71,85,105,0.5), rgba(51,65,85,0.5)) !important;
 }
-.tile-blue   { background: linear-gradient(135deg, rgba(232,241,255,0.4) 0%, rgba(246,249,255,0.4) 60%, rgba(238,246,255,0.4) 100%); }
-.tile-mint   { background: linear-gradient(135deg, rgba(230,248,241,0.4) 0%, rgba(244,251,247,0.4) 60%, rgba(234,247,239,0.4) 100%); }
-.tile-peach  { background: linear-gradient(135deg, rgba(255,241,232,0.4) 0%, rgba(255,248,241,0.4) 60%, rgba(255,234,221,0.4) 100%); }
-.tile-lavender{background: linear-gradient(135deg, rgba(240,234,252,0.4) 0%, rgba(248,243,255,0.4) 60%, rgba(236,226,251,0.4) 100%); }
-.tile-pink   { background: linear-gradient(135deg, rgba(255,232,238,0.4) 0%, rgba(255,242,245,0.4) 60%, rgba(255,221,230,0.4) 100%); }
-.tile-cyan   { background: linear-gradient(135deg, rgba(227,246,251,0.4) 0%, rgba(240,251,253,0.4) 60%, rgba(217,241,247,0.4) 100%); }
-.tile-amber  { background: linear-gradient(135deg, rgba(255,246,217,0.4) 0%, rgba(255,251,233,0.4) 60%, rgba(255,239,191,0.4) 100%); }
-html.dark .tile-blue    { background: linear-gradient(135deg, rgba(26,37,64,0.4) 0%, rgba(29,42,72,0.4) 60%, rgba(22,32,58,0.4) 100%); }
-html.dark .tile-mint    { background: linear-gradient(135deg, rgba(21,48,42,0.4) 0%, rgba(26,58,50,0.4) 60%, rgba(18,43,37,0.4) 100%); }
-html.dark .tile-peach   { background: linear-gradient(135deg, rgba(58,38,32,0.4) 0%, rgba(66,44,37,0.4) 60%, rgba(50,30,24,0.4) 100%); }
-html.dark .tile-lavender{ background: linear-gradient(135deg, rgba(39,30,60,0.4) 0%, rgba(46,37,71,0.4) 60%, rgba(34,26,52,0.4) 100%); }
-html.dark .tile-pink    { background: linear-gradient(135deg, rgba(54,31,42,0.4) 0%, rgba(63,37,50,0.4) 60%, rgba(46,25,35,0.4) 100%); }
-html.dark .tile-cyan    { background: linear-gradient(135deg, rgba(20,48,64,0.4) 0%, rgba(23,59,78,0.4) 60%, rgba(16,40,54,0.4) 100%); }
-html.dark .tile-amber   { background: linear-gradient(135deg, rgba(58,46,21,0.4) 0%, rgba(69,55,26,0.4) 60%, rgba(50,40,17,0.4) 100%); }
+.tile-blue,
+.tile-mint,
+.tile-peach,
+.tile-lavender,
+.tile-pink,
+.tile-cyan,
+.tile-amber { background: #ffffff; }
+html.dark .tile-blue,
+html.dark .tile-mint,
+html.dark .tile-peach,
+html.dark .tile-lavender,
+html.dark .tile-pink,
+html.dark .tile-cyan,
+html.dark .tile-amber { background: var(--background); }
 
 /* 3D bevel for general cards */
 .bevel-card {
