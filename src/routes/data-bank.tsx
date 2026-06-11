@@ -239,6 +239,7 @@ function Page() {
             <TabsTrigger value="oth">{trBn("অন্যান্য জমা", lang)} ({fmtNum(totalOth, lang)})</TabsTrigger>
             <TabsTrigger value="exp">{trBn("দৈনিক খরচ", lang)} ({fmtNum(totalExp, lang)})</TabsTrigger>
             <TabsTrigger value="owner">{trBn("ওনার হিসাব", lang)}</TabsTrigger>
+            <TabsTrigger value="sup">{t("supervisorDb")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
