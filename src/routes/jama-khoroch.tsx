@@ -223,9 +223,9 @@ function Page() {
   return (
     <AppLayout>
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{t("jamaKhoroch")} <span className="text-xs text-muted-foreground font-normal">{isAdmin ? "(প্রাইভেট)" : `(${t("guestReadOnly")})`}</span></h1>
+        <h1 className="text-2xl font-bold">{t("jamaKhoroch")} <span className="text-xs text-muted-foreground font-normal">{canManage ? "(প্রাইভেট)" : `(${t("guestReadOnly")})`}</span></h1>
 
-        {isAdmin ? (
+        {canPickScope ? (
           <div className="flex flex-wrap gap-2">
             <ScopeBtn active={ownerScope === "main"} onClick={() => setOwnerScope("main")} label={trBn("মূল হিসাব", lang)} />
             <ScopeBtn active={ownerScope === "all"} onClick={() => setOwnerScope("all")} label={trBn("সব", lang)} />
@@ -271,13 +271,13 @@ function Page() {
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
-              onEdit={isAdmin ? (r) => {
+              onEdit={canPickScope ? (r) => {
                 if (r.source !== "other") { toast.error(trBn("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে সম্পাদনা করুন", lang)); return; }
                 const oid = r.id.slice(2);
                 const oi = (otherIncomes as OIRow[]).find((x) => x.id === oid);
                 if (oi) { setEditJ(oi); setOpenJ(true); }
               } : undefined}
-              onDelete={isAdmin ? (r) => {
+              onDelete={canPickScope ? (r) => {
                 if (r.source !== "other") { toast.error(trBn("ভাড়ার এন্ট্রি দৈনিক হিসাব পেইজ থেকে মুছুন", lang)); return; }
                 delOI.mutate(r.id.slice(2));
               } : undefined}
@@ -308,8 +308,8 @@ function Page() {
                 { key: "description", header: t("description"), render: (r) => r.description ?? "—" },
                 { key: "amount", header: t("amount"), render: (r) => fmtNum(r.amount, lang) },
               ]}
-              onEdit={isAdmin ? (r) => { setEditE(r); setOpenE(true); } : undefined}
-              onDelete={isAdmin ? (r) => delE.mutate(r.id) : undefined}
+              onEdit={canPickScope ? (r) => { setEditE(r); setOpenE(true); } : undefined}
+              onDelete={canPickScope ? (r) => delE.mutate(r.id) : undefined}
             />
           </TabsContent>
         </Tabs>
