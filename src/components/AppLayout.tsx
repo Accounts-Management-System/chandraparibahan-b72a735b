@@ -72,19 +72,6 @@ function Watermark({ theme }: { theme: string }) {
     />
   );
 }
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 -z-0"
-      style={{
-        backgroundColor: "var(--background)",
-        backgroundImage:
-          "linear-gradient(to right, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px)",
-        backgroundSize: "28px 28px, 28px 28px",
-      }}
-    />
-  );
-}
 
 const SIDEBAR_BG_LIGHT = "#ffffff";
 const SIDEBAR_BG_DARK = "var(--background)";
