@@ -416,6 +416,16 @@ function Page() {
   );
 }
 
+function RankCard({ label, row, metric, lang }: { label: string; row: any; metric: "trips" | "jama" | "dena" | "balance"; lang: "bn" | "en" }) {
+  return (
+    <div className="border bg-card/70 backdrop-blur rounded-lg p-3">
+      <div className="text-[10px] uppercase text-muted-foreground mb-1 font-semibold">{label}</div>
+      <div className="text-sm font-bold truncate">{row?.supervisor ?? "—"}</div>
+      <div className="text-xs text-primary font-mono">{row ? fmtNum(row[metric], lang) : "—"}</div>
+    </div>
+  );
+}
+
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="border bg-card/70 backdrop-blur rounded-lg p-4">
