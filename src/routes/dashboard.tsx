@@ -283,12 +283,12 @@ function DashboardPage() {
         <Card className="p-4 border-border/60 bg-card shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="text-sm font-semibold text-muted-foreground">{t("tripChart")}</div>
-            <div className="inline-flex rounded-md border border-border/60 bg-muted/40 p-0.5 text-xs">
+            <div className="inline-flex rounded-md border border-border/60 bg-muted p-0.5 text-xs">
               {(["tripCount", "deposit", "debit", "balance"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setChartMode(m)}
-                  className={`px-3 py-1 rounded transition-colors ${chartMode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`px-3 py-1 rounded transition-colors ${chartMode === m ? "bg-background text-foreground" : "text-muted-foreground hover:bg-background hover:text-foreground"}`}
                 >
                   {m === "balance" ? t("chartBalance") : m === "debit" ? t("chartDebit") : m === "deposit" ? t("chartDeposit") : t("chartTripCount")}
                 </button>
