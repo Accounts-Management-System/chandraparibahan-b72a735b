@@ -379,6 +379,37 @@ function Page() {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent value="sup">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">{t("topPerformers")}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <RankCard label={t("mostTrips")} row={topBy("trips", false)} metric="trips" lang={lang} />
+                  <RankCard label={t("leastTrips")} row={topBy("trips", true)} metric="trips" lang={lang} />
+                  <RankCard label={t("mostJama")} row={topBy("jama", false)} metric="jama" lang={lang} />
+                  <RankCard label={t("leastJama")} row={topBy("jama", true)} metric="jama" lang={lang} />
+                  <RankCard label={t("mostDena")} row={topBy("dena", false)} metric="dena" lang={lang} />
+                  <RankCard label={t("leastDena")} row={topBy("dena", true)} metric="dena" lang={lang} />
+                  <RankCard label={t("mostBalance")} row={topBy("balance", false)} metric="balance" lang={lang} />
+                  <RankCard label={t("leastBalance")} row={topBy("balance", true)} metric="balance" lang={lang} />
+                </div>
+              </div>
+              <Tbl
+                rows={supRowsByDate.map((r, i) => ({ ...r, __serial: i + 1 }))}
+                cols={[
+                  ["__serial", t("serial"), (v: any) => fmtNum(v, lang)],
+                  ["date", t("date"), (v: any) => fmtDate(v, lang)],
+                  ["supervisor", t("supervisorName")],
+                  ["trips", t("totalTrips"), (v: any) => fmtNum(v, lang)],
+                  ["jama", t("jamaTotal"), (v: any) => fmtNum(v, lang)],
+                  ["dena", t("denaTotal"), (v: any) => fmtNum(v, lang)],
+                  ["balance", t("balance"), (v: any) => fmtNum(v, lang)],
+                ]}
+                footer={[t("grandTotal"), "", "", fmtNum(supTotalTrips, lang), fmtNum(supTotalJama, lang), fmtNum(supTotalDena, lang), fmtNum(supTotalJama - supTotalDena, lang)]}
+              />
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>
