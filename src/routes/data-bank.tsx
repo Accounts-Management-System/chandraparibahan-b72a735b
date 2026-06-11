@@ -232,9 +232,10 @@ function Page() {
                 ["__dena", t("denaTotal"), (_: any, r: any) => fmtNum(Number(r.dena_1 || 0) + Number(r.dena_2 || 0), lang)],
                 ["__bal", t("balance"), (_: any, r: any) => fmtNum(Number(r.jama_1 || 0) + Number(r.jama_2 || 0) - Number(r.dena_1 || 0) - Number(r.dena_2 || 0), lang)],
                 ["__fare", t("fareTotal"), (_: any, r: any) => fmtNum(Number(r.fare_1 || 0) + Number(r.fare_2 || 0), lang)],
+                ["__route", t("route"), (_: any, r: any) => [r.route_1, r.route_2].filter(Boolean).join(" / ") || "—"],
                 ["supervisor", t("supervisor")],
               ]}
-              footer={[t("grandTotal"), "", "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), ""]}
+              footer={[t("grandTotal"), "", "", "", fmtNum(totalDailyJama, lang), fmtNum(totalDena, lang), fmtNum(totalDailyJama - totalDena, lang), fmtNum(totalFare, lang), "", ""]}
             />
           </TabsContent>
 
