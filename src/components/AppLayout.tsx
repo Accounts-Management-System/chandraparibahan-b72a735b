@@ -98,9 +98,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
-        <div className="text-muted-foreground text-sm">{t("loading")}</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-muted-foreground">{t("loading")}</div>
       </div>
     );
   }
