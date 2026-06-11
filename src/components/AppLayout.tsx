@@ -92,13 +92,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     if (!loading && !user) navigate({ to: "/login" });
   }, [user, loading, navigate]);
 
-  if (loading || !user) {
+  if (!loading && !user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-muted-foreground">{t("loading")}</div>
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <div className="relative flex min-h-screen bg-background">
