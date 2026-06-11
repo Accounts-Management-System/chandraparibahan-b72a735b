@@ -149,6 +149,25 @@ function Page() {
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{t("dataBank")}</h1>
 
+        {/* Owner tabs: All + each owner */}
+        <div className="flex flex-wrap gap-1.5 rounded-lg border bg-card/60 p-2">
+          <button
+            onClick={() => { setOwnerId(""); navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined } }); }}
+            className={`px-3 py-1.5 text-xs rounded-md transition-colors ${ownerId === "" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent"}`}
+          >
+            {trBn("সকল", lang)} ({trBn("মূল", lang)})
+          </button>
+          {(owners as any[]).map((o) => (
+            <button
+              key={o.id}
+              onClick={() => { setOwnerId(o.id); navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, owner: o.id } }); }}
+              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${ownerId === o.id ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent"}`}
+            >
+              {o.name}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 rounded-lg border bg-card/60 p-3">
           <div>
             <label className="text-[10px] uppercase text-muted-foreground">{t("date")}</label>
@@ -168,7 +187,7 @@ function Page() {
           <div>
             <label className="text-[10px] uppercase text-muted-foreground">{t("searchByOwner")}</label>
             <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className="w-full h-9 rounded-md border border-input bg-input px-2 text-sm">
-              <option value="">{t("all")} (মূল)</option>
+              <option value="">{t("all")} ({trBn("মূল", lang)})</option>
               {(owners as any[]).map((s) => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
             </select>
           </div>
@@ -180,24 +199,26 @@ function Page() {
 
         <Tabs defaultValue="dashboard">
           <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
-            <TabsTrigger value="trips">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
-            <TabsTrigger value="oth">অন্যান্য জমা ({fmtNum(totalOth, lang)})</TabsTrigger>
-            <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(totalExp, lang)})</TabsTrigger>
-            <TabsTrigger value="owner">ওনার হিসাব</TabsTrigger>
+            <TabsTrigger value="dashboard">{trBn("ড্যাশবোর্ড", lang)}</TabsTrigger>
+            <TabsTrigger value="trips">{trBn("দৈনিক জমা", lang)} ({fmtNum(tripRows.length, lang)})</TabsTrigger>
+            <TabsTrigger value="oth">{trBn("অন্যান্য জমা", lang)} ({fmtNum(totalOth, lang)})</TabsTrigger>
+            <TabsTrigger value="exp">{trBn("দৈনিক খরচ", lang)} ({fmtNum(totalExp, lang)})</TabsTrigger>
+            <TabsTrigger value="owner">{trBn("ওনার হিসাব", lang)}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <Stat label="দৈনিক জমা" value={fmtNum(totalDailyJama, lang)} color="text-emerald-400" />
-              <Stat label="দেনা" value={fmtNum(totalDena, lang)} color="text-rose-400" />
-              <Stat label="অন্যান্য জমা" value={fmtNum(totalOth, lang)} color="text-emerald-400" />
-              <Stat label="জমা-খরচের জমা" value={fmtNum(mainJamaKhorochJama, lang)} color="text-emerald-400" />
-              <Stat label="দৈনিক খরচ" value={fmtNum(totalExp, lang)} color="text-rose-400" />
-              <Stat label="ব্যালেন্স" value={fmtNum(balance, lang)} color={balance >= 0 ? "text-primary" : "text-rose-500"} />
+              <Stat label={trBn("দৈনিক জমা", lang)} value={fmtNum(totalDailyJama, lang)} color="text-emerald-400" />
+              <Stat label={trBn("দেনা", lang)} value={fmtNum(totalDena, lang)} color="text-rose-400" />
+              <Stat label={trBn("অন্যান্য জমা", lang)} value={fmtNum(totalOth, lang)} color="text-emerald-400" />
+              <Stat label={trBn("জমা-খরচের জমা", lang)} value={fmtNum(mainJamaKhorochJama, lang)} color="text-emerald-400" />
+              <Stat label={trBn("দৈনিক খরচ", lang)} value={fmtNum(totalExp, lang)} color="text-rose-400" />
+              <Stat label={trBn("ব্যালেন্স", lang)} value={fmtNum(balance, lang)} color={balance >= 0 ? "text-primary" : "text-rose-500"} />
             </div>
-            <p className="text-xs text-muted-foreground mt-2">তারিখ অনুযায়ী ট্রিপ: {byDate.map(([d, c]) => `${fmtDate(d, lang)}: ${fmtNum(c, lang)}`).join(" · ")}</p>
+            <p className="text-xs text-muted-foreground mt-2">{trBn("তারিখ অনুযায়ী ট্রিপ", lang)}: {byDate.map(([d, c]) => `${fmtDate(d, lang)}: ${fmtNum(c, lang)}`).join(" · ")}</p>
           </TabsContent>
+
+
 
           <TabsContent value="trips">
             <Tbl
