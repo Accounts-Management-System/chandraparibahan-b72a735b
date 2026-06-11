@@ -55,7 +55,7 @@ function Page() {
   const trips = useQuery({
     queryKey: ["db-trips", date, month, car],
     queryFn: async () => {
-      const q: any = supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(2000);
+      const q: any = supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(100000);
       const { data } = await buildFilter(q, "trip_date");
       return (data ?? []) as any[];
     },
@@ -63,7 +63,7 @@ function Page() {
   const exp = useQuery({
     queryKey: ["db-exp", date, month, car],
     queryFn: async () => {
-      const q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(2000);
+      const q: any = supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(100000);
       const { data } = await buildFilter(q, "expense_date");
       return (data ?? []) as any[];
     },
@@ -71,7 +71,7 @@ function Page() {
   const oth = useQuery({
     queryKey: ["db-oth", date, month, car],
     queryFn: async () => {
-      const q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(2000);
+      const q: any = supabase.from("other_incomes").select("*").order("income_date", { ascending: false }).limit(100000);
       const { data } = await buildFilter(q, "income_date");
       return (data ?? []) as any[];
     },
