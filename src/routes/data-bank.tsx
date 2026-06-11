@@ -280,7 +280,7 @@ function Page() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">গাড়ি অনুযায়ী ভাড়া</h3>
+                <h3 className="text-sm font-semibold mb-2">{trBn("গাড়ি অনুযায়ী ভাড়া", lang)}</h3>
                 <Tbl
                   rows={ownerByVehicle}
                   cols={[
