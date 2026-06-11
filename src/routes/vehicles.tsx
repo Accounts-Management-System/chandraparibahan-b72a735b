@@ -65,6 +65,24 @@ function Page() {
             </Button>
           )}
         </div>
+
+        {topPerformers.length > 0 && (
+          <div className="rounded-lg border bg-card/70 backdrop-blur p-3">
+            <h2 className="text-sm font-semibold mb-2">{t("top10Vehicles")}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {topPerformers.map(([vno, count], i) => (
+                <div key={vno} className="flex items-center justify-between rounded-md border bg-background/60 px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-primary w-5">#{i + 1}</span>
+                    <span className="text-sm font-semibold truncate">{vno}</span>
+                  </div>
+                  <span className="text-xs font-mono text-muted-foreground">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <DataTable<Vehicle>
           rows={isLoading ? [] : rows}
           columns={[
