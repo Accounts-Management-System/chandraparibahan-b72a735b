@@ -141,6 +141,41 @@ function Page() {
     return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
   }, [tripRows]);
 
+  // Supervisor aggregation
+  type SupRow = { key: string; date: string; supervisor: string; trips: number; jama: number; dena: number; balance: number };
+  const supRowsByDate = useMemo<SupRow[]>(() => {
+    const m = new Map<string, SupRow>();
+    tripRows.forEach((r: any) => {
+      const sup = (r.supervisor || "—").trim() || "—";
+      const k = `${r.trip_date}__${sup}`;
+      const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      const cur = m.get(k) ?? { key: k, date: r.trip_date, supervisor: sup, trips: 0, jama: 0, dena: 0, balance: 0 };
+      cur.trips += 1; cur.jama += jama; cur.dena += dena; cur.balance += jama - dena;
+      m.set(k, cur);
+    });
+    return Array.from(m.values()).sort((a, b) => b.date.localeCompare(a.date) || a.supervisor.localeCompare(b.supervisor));
+  }, [tripRows]);
+  const supTotals = useMemo(() => {
+    const m = new Map<string, { supervisor: string; trips: number; jama: number; dena: number; balance: number }>();
+    tripRows.forEach((r: any) => {
+      const sup = (r.supervisor || "—").trim() || "—";
+      const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      const cur = m.get(sup) ?? { supervisor: sup, trips: 0, jama: 0, dena: 0, balance: 0 };
+      cur.trips += 1; cur.jama += jama; cur.dena += dena; cur.balance += jama - dena;
+      m.set(sup, cur);
+    });
+    return Array.from(m.values()).filter((s) => s.supervisor && s.supervisor !== "—");
+  }, [tripRows]);
+  const topBy = (key: "trips" | "jama" | "dena" | "balance", asc = false) => {
+    const arr = [...supTotals].sort((a, b) => asc ? a[key] - b[key] : b[key] - a[key]);
+    return arr[0];
+  };
+  const supTotalTrips = supRowsByDate.reduce((s, r) => s + r.trips, 0);
+  const supTotalJama = supRowsByDate.reduce((s, r) => s + r.jama, 0);
+  const supTotalDena = supRowsByDate.reduce((s, r) => s + r.dena, 0);
+
   const apply = () => navigate({ search: { date: date || undefined, month: month || undefined, car: car || undefined, owner: ownerId || undefined } });
   const clear = () => { setDate(""); setMonth(""); setCar(""); setOwnerId(""); navigate({ search: {} }); };
 
