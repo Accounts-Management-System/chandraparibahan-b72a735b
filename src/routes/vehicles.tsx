@@ -36,6 +36,16 @@ function Page() {
     queryKey: ["owners-list"],
     queryFn: async () => ((await supabase.from("owners").select("id,name").order("name")).data ?? []) as Owner[],
   });
+  const { data: tripsAll = [] } = useQuery({
+    queryKey: ["vehicles-trips-perf"],
+    queryFn: async () => ((await supabase.from("trips").select("vehicle_no").limit(100000)).data ?? []) as { vehicle_no: string }[],
+  });
+
+  const topPerformers = (() => {
+    const m = new Map<string, number>();
+    tripsAll.forEach((r) => m.set(r.vehicle_no, (m.get(r.vehicle_no) ?? 0) + 1));
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  })();
 
   const ownerName = (id: string | null) => owners.find((o) => o.id === id)?.name ?? "—";
 
