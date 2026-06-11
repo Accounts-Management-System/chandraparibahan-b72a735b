@@ -308,7 +308,7 @@ function Page() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold mb-2">জমা-খরচের জমা</h3>
+                <h3 className="text-sm font-semibold mb-2">{trBn("জমা-খরচের জমা", lang)}</h3>
                 <Tbl
                   rows={ownerOth}
                   cols={[
