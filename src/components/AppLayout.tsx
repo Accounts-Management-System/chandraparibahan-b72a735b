@@ -201,10 +201,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           {children}
-          <footer className="mt-8 pt-4 border-t text-center text-[11px] text-muted-foreground">
-            {lang === "bn"
-              ? "প্রোজেক্ট ডিজাইন ও ডাটাবেইজ ডেভেলপমেন্ট বাই জায়িম ভুইয়া • মোবাইল: ০১৭১২৮১১১১৮"
-              : "Project Design & Database Development by Zayim Bhuiya • Mobile: 01712811118"}
+          <footer className="mt-8 pt-4 border-t text-center text-[11px] text-muted-foreground leading-relaxed">
+            {lang === "bn" ? (
+              <>
+                <div>সর্বস্বত্ব সংরক্ষিত — জায়িম ভুইয়া</div>
+                <div>ডাটাবেইজ ডিজাইন ও প্রোজেক্ট ডেভেলপমেন্ট বাই জায়িম ভুইয়া • মোবাইল: ০১৭১২৮১১১১৮</div>
+              </>
+            ) : (
+              <>
+                <div>All Rights Received by Zayem Bhuiya</div>
+                <div>Database Design &amp; Project Developed By Zayem Bhuiya • Mobile: 01712811118</div>
+              </>
+            )}
           </footer>
         </main>
       </div>
