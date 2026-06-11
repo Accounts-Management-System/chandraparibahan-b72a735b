@@ -113,7 +113,7 @@ function Page() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("owners")}</h1>
-          {canWrite && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>}
+          {isAdmin && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>}
         </div>
 
         <SearchFilters value={filters} onChange={setFilters} show={{ date: true, owner: true, vehicle: true }} />
@@ -165,8 +165,8 @@ function Page() {
                 ) : null,
               },
             ]}
-            onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
-            onDelete={canWrite ? (r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); } : undefined}
+            onEdit={isAdmin ? (r) => { setEditing(r); setOpen(true); } : undefined}
+            onDelete={isAdmin ? (r) => { if (confirm(t("confirmDelete"))) del.mutate(r.id); } : undefined}
             emptyText={isLoading ? t("loading") : t("noData")}
           />
         )}
