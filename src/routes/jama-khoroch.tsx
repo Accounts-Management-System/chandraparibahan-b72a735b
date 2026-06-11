@@ -48,8 +48,10 @@ type JRow = {
 function Page() {
   const { t, lang } = useT();
   const qc = useQueryClient();
-  const { isAdmin, isOwner, ownerId, loading } = useRole();
-  const canView = isAdmin || isOwner;
+  const { isAdmin, isModerator, canWrite, isOwner, ownerId, loading } = useRole();
+  const canView = canWrite || isOwner;
+  const canManage = canWrite; // admin + moderator can add/edit/delete entries
+  const canPickScope = canWrite; // admin + moderator can switch between owner scopes
   const [tab, setTab] = useState("jama");
   const [editE, setEditE] = useState<ERow | null>(null);
   const [openE, setOpenE] = useState(false);
