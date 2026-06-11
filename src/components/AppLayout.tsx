@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, Navigate, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { useRole } from "@/lib/useRole";
@@ -92,13 +92,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     if (!loading && !user) navigate({ to: "/login" });
   }, [user, loading, navigate]);
 
-  if (loading || !user) {
+  if (!loading && !user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-muted-foreground">{t("loading")}</div>
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <div className="relative flex min-h-screen bg-background">
