@@ -367,10 +367,19 @@ function DashboardPage() {
 }
 
 function MiniStat({ label, value, tone = "blue", highlight }: { label: string; value: string; tone?: "blue"|"mint"|"peach"|"lavender"|"pink"|"cyan"|"amber"; highlight?: boolean }) {
+  const toneText: Record<string, string> = {
+    blue: "text-sky-600 dark:text-sky-400",
+    mint: "text-emerald-600 dark:text-emerald-400",
+    peach: "text-orange-600 dark:text-orange-400",
+    lavender: "text-violet-600 dark:text-violet-400",
+    pink: "text-rose-600 dark:text-rose-400",
+    cyan: "text-cyan-600 dark:text-cyan-400",
+    amber: "text-amber-600 dark:text-amber-400",
+  };
   return (
     <div className={`tile-3d tile-${tone} p-3 ${highlight ? "ring-2 ring-primary/50" : ""}`}>
       <div className="text-[10px] uppercase text-foreground/60 mb-1 font-semibold tracking-wide">{label}</div>
-      <div className="text-base md:text-lg font-extrabold text-foreground">{value}</div>
+      <div className={`text-base md:text-lg font-extrabold ${toneText[tone]}`}>{value}</div>
     </div>
   );
 }
