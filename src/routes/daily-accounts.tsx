@@ -105,9 +105,11 @@ function DailyAccountsPage() {
             })}>
               <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
             </Button>
-            <Button onClick={() => { setEditing(null); setOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />{t("add")}
-            </Button>
+            {canWrite && (
+              <Button onClick={() => { setEditing(null); setOpen(true); }}>
+                <Plus className="h-4 w-4 mr-2" />{t("add")}
+              </Button>
+            )}
           </div>
         </div>
 
