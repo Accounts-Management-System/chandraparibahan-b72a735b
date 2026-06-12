@@ -24,7 +24,7 @@ export function DataTable<T extends { id: string }>({
 }) {
   const { t } = useT();
   return (
-    <div className="rounded-md border bg-card max-w-full" style={{ overflowX: "auto", overflowY: "visible" }}>
+    <div className="rounded-md border bg-card w-full max-w-full">
       <table className="w-full text-sm">
         <thead className="bg-muted">
           <tr>
