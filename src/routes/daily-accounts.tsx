@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
 import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
+import { useRole } from "@/lib/useRole";
 import { exportPdf } from "@/lib/exportPdf";
 import {
   Select,
@@ -49,6 +50,7 @@ type Trip = {
 function DailyAccountsPage() {
   const { t, lang } = useT();
   const qc = useQueryClient();
+  const { canWrite } = useRole();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Trip | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
@@ -103,9 +105,11 @@ function DailyAccountsPage() {
             })}>
               <FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}
             </Button>
-            <Button onClick={() => { setEditing(null); setOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />{t("add")}
-            </Button>
+            {canWrite && (
+              <Button onClick={() => { setEditing(null); setOpen(true); }}>
+                <Plus className="h-4 w-4 mr-2" />{t("add")}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -141,8 +145,8 @@ function DailyAccountsPage() {
             { key: "fare_1", header: t("fareTotal"), render: (r) => fmtNum(Number(r.fare_1) + Number(r.fare_2), lang) },
             { key: "supervisor", header: t("supervisor") },
           ]}
-          onEdit={(r) => { setEditing(r); setOpen(true); }}
-          onDelete={(r) => del.mutate(r.id)}
+          onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
+          onDelete={canWrite ? (r) => del.mutate(r.id) : undefined}
           emptyText={isLoading ? t("loading") : t("noData")}
         />
       </div>

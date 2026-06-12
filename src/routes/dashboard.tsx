@@ -59,7 +59,7 @@ function monthRange(ym: string): { from: string; to: string } | null {
 
 function DashboardPage() {
   const { t, lang } = useT();
-  const { isAdmin, canWrite } = useRole();
+  const { isAdmin, canWrite, isOwner } = useRole();
   const yesterday = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
@@ -165,7 +165,7 @@ function DashboardPage() {
     : chartMode === "deposit"
       ? { from: "oklch(0.78 0.18 150)", to: "oklch(0.55 0.15 150)" }
       : chartMode === "tripCount"
-        ? { from: "#C9B6FF", to: "#7C5BD9" } // lavender
+        ? { from: "#67E8F9", to: "#0891B2" } // cyan
         : { from: "oklch(0.72 0.18 270)", to: "oklch(0.5 0.18 270)" };
   const gradId = `barGrad-${chartMode}`;
   const labelGradId = `labelGrad-${chartMode}`;
@@ -344,7 +344,7 @@ function DashboardPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {(() => {
               const tones = ["blue","mint","peach","lavender","pink","cyan","amber"] as const;
-              return tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite)).map((tile, i) => {
+              return tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite || isOwner)).map((tile, i) => {
                 const Icon = tile.icon;
                 const tone = tones[i % tones.length];
                 return (

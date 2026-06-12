@@ -81,12 +81,13 @@ const SIDEBAR_GRID =
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { role, isAdmin, canWrite } = useRole();
+  const { role, isAdmin, canWrite, isOwner } = useRole();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
   const { theme, toggle: toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite));
+  // Owners can VIEW every page except admin; only canWrite users see writeOnly pages too.
+  const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite || isOwner));
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
