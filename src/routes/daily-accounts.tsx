@@ -145,8 +145,8 @@ function DailyAccountsPage() {
             { key: "fare_1", header: t("fareTotal"), render: (r) => fmtNum(Number(r.fare_1) + Number(r.fare_2), lang) },
             { key: "supervisor", header: t("supervisor") },
           ]}
-          onEdit={(r) => { setEditing(r); setOpen(true); }}
-          onDelete={(r) => del.mutate(r.id)}
+          onEdit={canWrite ? (r) => { setEditing(r); setOpen(true); } : undefined}
+          onDelete={canWrite ? (r) => del.mutate(r.id) : undefined}
           emptyText={isLoading ? t("loading") : t("noData")}
         />
       </div>
