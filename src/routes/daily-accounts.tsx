@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
 import { SearchFilters, emptyFilters, matchesFilters, type FilterState } from "@/components/SearchFilters";
+import { useRole } from "@/lib/useRole";
 import { exportPdf } from "@/lib/exportPdf";
 import {
   Select,
