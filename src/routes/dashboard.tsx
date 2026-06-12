@@ -165,7 +165,7 @@ function DashboardPage() {
     : chartMode === "deposit"
       ? { from: "oklch(0.78 0.18 150)", to: "oklch(0.55 0.15 150)" }
       : chartMode === "tripCount"
-        ? { from: "#C9B6FF", to: "#7C5BD9" } // lavender
+        ? { from: "#67E8F9", to: "#0891B2" } // cyan
         : { from: "oklch(0.72 0.18 270)", to: "oklch(0.5 0.18 270)" };
   const gradId = `barGrad-${chartMode}`;
   const labelGradId = `labelGrad-${chartMode}`;
