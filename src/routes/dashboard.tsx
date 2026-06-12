@@ -349,7 +349,7 @@ function DashboardPage() {
                 const tone = tones[i % tones.length];
                 return (
                   <Link
-                    key={tile.to}
+                    key={`${tile.to}-${tile.key}`}
                     to={tile.to}
                     className={`tile-3d tile-${tone} group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-md`}
                   >
