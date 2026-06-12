@@ -300,3 +300,100 @@ html.dark .bevel-card {
     inset 0 -1px 0 rgba(0,0,0,0.4),
     0 10px 24px -10px rgba(0,0,0,0.7);
 }
+
+/* === Dark mode: cyber / virtual environment === */
+html.dark [data-slot="card"] {
+  background: linear-gradient(180deg, rgba(20,28,58,0.55), rgba(10,14,32,0.45));
+  border: 1px solid rgba(103,232,249,0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 0 rgba(103,232,249,0.08),
+    0 8px 30px -12px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(79,70,229,0.05);
+}
+html.dark input[data-slot="input"],
+html.dark textarea,
+html.dark [data-slot="select-trigger"] {
+  background: rgba(8,12,28,0.55) !important;
+  border-color: rgba(103,232,249,0.22) !important;
+  backdrop-filter: blur(6px);
+}
+
+/* Tabs / bars transparent in dark */
+html.dark [data-slot="tabs-list"] {
+  background: transparent !important;
+}
+html.dark button[data-slot="tabs-trigger"] {
+  background: rgba(10,16,36,0.4) !important;
+  border: 1px solid rgba(103,232,249,0.18);
+  color: rgba(226,232,240,0.85);
+  backdrop-filter: blur(6px);
+}
+html.dark button[data-slot="tabs-trigger"][data-state="active"] {
+  background: rgba(34,211,238,0.14) !important;
+  border-color: rgba(103,232,249,0.55);
+  color: #a5f3fc;
+  box-shadow: 0 0 0 1px rgba(103,232,249,0.25), 0 0 18px -4px rgba(34,211,238,0.45);
+}
+
+/* Tables transparent over body in dark */
+html.dark table { background: transparent; }
+html.dark thead {
+  background: linear-gradient(180deg, rgba(30,30,90,0.55), rgba(15,20,45,0.55));
+  backdrop-filter: blur(6px);
+}
+html.dark thead th {
+  color: #a5f3fc;
+  border-bottom: 1px solid rgba(103,232,249,0.3);
+}
+html.dark table tbody tr:nth-child(odd) td { background: rgba(10,16,36,0.35); }
+html.dark table tbody tr:nth-child(even) td { background: rgba(20,28,58,0.30); }
+html.dark table tbody tr:hover td { background: rgba(34,211,238,0.10) !important; }
+
+/* Dashboard quick-entry tiles: cyan highlight on hover/active matching sidebar */
+html.dark .tile-3d {
+  background: linear-gradient(180deg, rgba(20,28,58,0.5), rgba(10,14,32,0.4)) !important;
+  border-color: rgba(103,232,249,0.18);
+  backdrop-filter: blur(8px);
+}
+html.dark .tile-3d:hover,
+html.dark .tile-3d:active,
+html.dark .tile-3d:focus {
+  background: rgba(34,211,238,0.15) !important;
+  border-color: rgba(103,232,249,0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(103,232,249,0.15),
+    0 0 22px -4px rgba(34,211,238,0.45);
+}
+
+/* Sticky page title — applies to the first heading in <main> */
+main > h1:first-child,
+main > h2:first-child,
+main > div:first-child > h1:first-child,
+main > div:first-child > h2:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-top: -0.5rem;
+  background: color-mix(in oklab, var(--background) 80%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html.dark main > h1:first-child,
+html.dark main > h2:first-child,
+html.dark main > div:first-child > h1:first-child,
+html.dark main > div:first-child > h2:first-child {
+  background: linear-gradient(180deg, rgba(5,8,22,0.85), rgba(5,8,22,0.6));
+  border-bottom: 1px solid rgba(103,232,249,0.2);
+  color: #a5f3fc;
+  text-shadow: 0 0 12px rgba(34,211,238,0.35);
+}
+
+/* Sidebar accent in dark — cyber glow */
+html.dark aside {
+  border-right: 1px solid rgba(103,232,249,0.18) !important;
+}
+
