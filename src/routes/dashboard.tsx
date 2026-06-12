@@ -59,7 +59,7 @@ function monthRange(ym: string): { from: string; to: string } | null {
 
 function DashboardPage() {
   const { t, lang } = useT();
-  const { isAdmin, canWrite } = useRole();
+  const { isAdmin, canWrite, isOwner } = useRole();
   const yesterday = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
