@@ -49,6 +49,7 @@ type Trip = {
 function DailyAccountsPage() {
   const { t, lang } = useT();
   const qc = useQueryClient();
+  const { canWrite } = useRole();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Trip | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
