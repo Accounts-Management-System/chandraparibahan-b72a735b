@@ -13,20 +13,24 @@ export function useRole() {
   const q = useQuery({
     queryKey: ["my-role", user?.id ?? "none"],
     enabled: !!user?.id,
+    retry: 2,
     queryFn: async (): Promise<Role> => {
       if (!user?.id) return null;
-      const { data: mine } = await supabase
+      const { data: mine, error: mineErr } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id);
+      // Don't silently treat a failed request as "no role" — let react-query retry.
+      if (mineErr) throw mineErr;
       if (mine && mine.length > 0) {
         if (mine.some((r) => r.role === "admin")) return "admin";
         if (mine.some((r) => r.role === "moderator")) return "moderator";
         if (mine.some((r) => r.role === "shareholder")) return "shareholder";
       }
-      const { count } = await supabase
+      const { count, error: countErr } = await supabase
         .from("user_roles")
         .select("*", { count: "exact", head: true });
+      if (countErr) throw countErr;
       if ((count ?? 0) === 0) {
         await bootstrapAdmin({});
         return "admin";
@@ -38,13 +42,15 @@ export function useRole() {
   const ownerQ = useQuery({
     queryKey: ["my-owner", user?.id ?? "none"],
     enabled: !!user?.id,
+    retry: 2,
     queryFn: async (): Promise<string | null> => {
       if (!user?.id) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("owners")
         .select("id")
         .eq("auth_user_id", user.id)
         .maybeSingle();
+      if (error) throw error;
       return data?.id ?? null;
     },
   });
