@@ -344,7 +344,7 @@ function DashboardPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {(() => {
               const tones = ["blue","mint","peach","lavender","pink","cyan","amber"] as const;
-              return tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite)).map((tile, i) => {
+              return tiles.filter((tile) => (!("adminOnly" in tile) || !tile.adminOnly || isAdmin) && (!("writeOnly" in tile) || !tile.writeOnly || canWrite || isOwner)).map((tile, i) => {
                 const Icon = tile.icon;
                 const tone = tones[i % tones.length];
                 return (
