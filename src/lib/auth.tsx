@@ -25,6 +25,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     };
 
+    const clearBrokenSession = async () => {
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        /* ignore */
+      }
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("sb-"))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch {
+        /* ignore */
+      }
+      finish(null);
+    };
+
     const fallback = window.setTimeout(() => {
       if (!settled) finish(null);
     }, AUTH_TIMEOUT_MS);
@@ -35,7 +51,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     supabase.auth
       .getSession()
-      .then(({ data }) => finish(data.session))
+      .then(async ({ data }) => {
+        if (data.session) {
+          // Validate the stored session against the auth server.
+          // A stale/expired session otherwise leaves the user "logged in"
+          // while every data request silently fails.
+          const { error } = await supabase.auth.getUser();
+          if (error) {
+            await clearBrokenSession();
+            return;
+          }
+        }
+        finish(data.session);
+      })
       .catch(() => finish(null));
 
     return () => {

@@ -89,6 +89,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   // Owners can VIEW every page except admin; only canWrite users see writeOnly pages too.
   const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite || isOwner));
 
+  const handleLogout = async () => {
+    // Always clear the local session even if the server call fails (expired/broken token).
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      /* ignore */
+    }
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      /* ignore */
+    }
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-"))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {
+      /* ignore */
+    }
+    window.location.href = "/login";
+  };
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [user, loading, navigate]);
@@ -132,6 +154,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <p className="mt-1 inline-flex rounded border border-cyan-700/40 dark:border-cyan-300/30 bg-cyan-200/40 dark:bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-900 dark:text-cyan-200">
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
             </p>
+            <p className="mt-0.5 text-[10px] text-slate-600 dark:text-slate-400 truncate">{user.email}</p>
           </div>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
@@ -167,10 +190,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             variant="ghost"
             size="sm"
             className="w-full justify-start text-slate-900 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate({ to: "/login" });
-            }}
+            onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
             {t("logout")}
@@ -185,6 +205,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="font-bold text-primary">{t("brand")}</h1>
             <p className="text-[10px] text-muted-foreground">
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
+              {user.email ? ` • ${user.email}` : ""}
             </p>
           </div>
           <div className="flex gap-2">
@@ -194,14 +215,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Button variant="outline" size="sm" onClick={() => setLang(lang === "bn" ? "en" : "bn")}>
               {lang === "bn" ? "EN" : "বাং"}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                navigate({ to: "/login" });
-              }}
-            >
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
