@@ -17,6 +17,7 @@ export const Route = createFileRoute("/data-bank")({
       car: z.string().optional(),
       date: z.string().optional(),
       month: z.string().optional(),
+      tab: z.string().optional(),
     }).parse(s),
 });
 
