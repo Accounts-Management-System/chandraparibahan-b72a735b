@@ -104,6 +104,7 @@ function Page() {
           <table className="w-full text-sm">
             <thead className="bg-muted/60">
               <tr>
+                <th className="text-left px-3 py-2 w-12">#</th>
                 <th className="text-left px-3 py-2">{t("date")}</th>
                 <th className="text-left px-3 py-2">ওনার</th>
                 <th className="text-left px-3 py-2">{t("head")}</th>
@@ -114,10 +115,11 @@ function Page() {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
+                <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
               )}
-              {rows.map((r) => (
+              {rows.map((r, i) => (
                 <tr key={r.id} className="border-t">
+                  <td className="px-3 py-2 text-muted-foreground">{fmtNum(i + 1, lang)}</td>
                   <td className="px-3 py-2">{fmtDate(r.date, lang)}</td>
                   <td className="px-3 py-2">{r.owner}</td>
                   <td className="px-3 py-2">{r.head ?? "—"}</td>
@@ -130,7 +132,7 @@ function Page() {
             {rows.length > 0 && (
               <tfoot className="bg-muted/40 font-semibold">
                 <tr>
-                  <td className="px-3 py-2" colSpan={5}>{t("totalExpense")}</td>
+                  <td className="px-3 py-2" colSpan={6}>{t("totalExpense")}</td>
                   <td className="px-3 py-2 text-right text-rose-500">{fmtNum(totalExpense, lang)}</td>
                 </tr>
               </tfoot>
