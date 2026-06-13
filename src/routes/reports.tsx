@@ -332,10 +332,9 @@ function Page() {
             <h1 className="text-2xl font-bold">{t("reports")}</h1>
             <p className="text-sm text-muted-foreground">{fmtDate(from, lang)} → {fmtDate(to, lang)}{ownerId ? ` · ${ownerName(ownerId)}` : ""}</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
-            <Button variant="outline" onClick={exportFullPdf}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
-            <Button variant="outline" onClick={exportOwnerPdf}><FileDown className="h-4 w-4 mr-2" />ওনার PDF</Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" onClick={handleCsv}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
+            <Button variant="outline" onClick={handlePdf}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
             <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
           </div>
         </div>
