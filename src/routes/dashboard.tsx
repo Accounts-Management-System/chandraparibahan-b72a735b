@@ -126,7 +126,7 @@ function DashboardPage() {
           mode: "main" as const,
           trips, jama, dena, incomeLoss, otherIncome, expense,
           balance: incomeLoss + otherIncome - expense,
-          tripCount: new Set(trips.map((r) => r.vehicle_no)).size,
+          tripCount: trips.length,
         };
       }
       // ওনার হিসাব: গাড়ী ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ
