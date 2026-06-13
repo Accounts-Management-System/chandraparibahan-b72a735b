@@ -31,6 +31,8 @@ type DetailRow = {
   id: string;
   trip_date: string;
   vehicle_no: string;
+  jama: number;
+  dena: number;
   balance: number;
   fare: number;
   route: string;
@@ -86,7 +88,9 @@ function Page() {
   const detailRows = useMemo<DetailRow[]>(() => {
     const out: DetailRow[] = [];
     for (const tr of trips) {
-      const bal = Number(tr.jama_1 || 0) + Number(tr.jama_2 || 0) - Number(tr.dena_1 || 0) - Number(tr.dena_2 || 0);
+      const jamaTotal = Number(tr.jama_1 || 0) + Number(tr.jama_2 || 0);
+      const denaTotal = Number(tr.dena_1 || 0) + Number(tr.dena_2 || 0);
+      const bal = jamaTotal - denaTotal;
       const entries: { route: string | null; fare: number }[] = [
         { route: tr.route_1, fare: Number(tr.fare_1 || 0) },
         { route: tr.route_2, fare: Number(tr.fare_2 || 0) },
@@ -96,6 +100,8 @@ function Page() {
           id: `${tr.id}-${idx}`,
           trip_date: tr.trip_date,
           vehicle_no: tr.vehicle_no,
+          jama: idx === 0 ? jamaTotal : 0,
+          dena: idx === 0 ? denaTotal : 0,
           balance: idx === 0 ? bal : 0,
           fare: e.fare,
           route: e.route ?? "—",
@@ -114,8 +120,15 @@ function Page() {
     });
   }, [detailRows, dateFrom, dateTo, routeFilter]);
 
+  const totalJama = filteredDetails.reduce((s, r) => s + r.jama, 0);
+  const totalDena = filteredDetails.reduce((s, r) => s + r.dena, 0);
   const totalBalance = filteredDetails.reduce((s, r) => s + r.balance, 0);
   const totalFare = filteredDetails.reduce((s, r) => s + r.fare, 0);
+  const tripCount = useMemo(() => {
+    const ids = new Set<string>();
+    for (const r of filteredDetails) ids.add(r.id.split("-").slice(0, -1).join("-"));
+    return ids.size;
+  }, [filteredDetails]);
 
   return (
     <AppLayout>
@@ -147,9 +160,12 @@ function Page() {
             <div className="flex gap-2 flex-wrap print:hidden">
               <Button variant="outline" size="sm" onClick={() => {
                 const escq = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-                const headers = [t("date"), t("vehicleNo"), t("balance"), t("fare"), t("routeName")];
-                const dataRows = filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.balance, r.fare, r.route]);
-                const footer = [t("grandTotal"), "", totalBalance, totalFare, ""];
+                const jamaLabel = lang === "bn" ? "জমা" : "Jama";
+                const denaLabel = lang === "bn" ? "দেনা" : "Dena";
+                const tripsLabel = lang === "bn" ? "মোট ট্রিপ" : "Total Trips";
+                const headers = [t("date"), t("vehicleNo"), jamaLabel, denaLabel, t("balance"), t("fare"), t("routeName")];
+                const dataRows = filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.jama, r.dena, r.balance, r.fare, r.route]);
+                const footer = [t("grandTotal"), `${tripsLabel}: ${tripCount}`, totalJama, totalDena, totalBalance, totalFare, ""];
                 const csv = "\uFEFF" + [headers, ...dataRows, footer].map((row) => row.map(escq).join(",")).join("\n");
                 const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
@@ -158,14 +174,42 @@ function Page() {
                 URL.revokeObjectURL(url);
               }}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
               <Button variant="outline" size="sm" onClick={() => {
-                exportPdf({
+                const jamaLabel = lang === "bn" ? "জমা" : "Jama";
+                const denaLabel = lang === "bn" ? "দেনা" : "Dena";
+                const tripsLabel = lang === "bn" ? "মোট ট্রিপ" : "Total Trips";
+                const headers = [t("date"), t("vehicleNo"), jamaLabel, denaLabel, t("balance"), t("fare"), t("routeName")];
+                const bodyRows = filteredDetails.map((r) => [
+                  fmtDate(r.trip_date, lang),
+                  r.vehicle_no,
+                  r.jama ? fmtNum(r.jama, lang) : "—",
+                  r.dena ? fmtNum(r.dena, lang) : "—",
+                  r.balance ? fmtNum(r.balance, lang) : "—",
+                  fmtNum(r.fare, lang),
+                  r.route,
+                ]);
+                const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const body = `
+                  <table>
+                    <thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+                    <tbody>${bodyRows.map((r) => `<tr>${r.map((c, i) => `<td style="text-align:${i>=2 && i<=5 ? "right" : "left"}">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>
+                    <tfoot>
+                      <tr>
+                        <td style="text-align:left">${esc(t("grandTotal"))}</td>
+                        <td style="text-align:left">${esc(tripsLabel)}: ${esc(fmtNum(tripCount, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalJama, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalDena, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalBalance, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalFare, lang))}</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>`;
+                import("@/lib/exportPdf").then(({ exportPdfHtml }) => exportPdfHtml({
                   title: `${t("brand") ?? "চন্দ্রা পরিবহন"} — ${lang === "bn" ? "রুটের বিস্তারিত" : "Route Details"}`,
                   subtitle: `${dateFrom ? fmtDate(dateFrom, lang) : "—"} → ${dateTo ? fmtDate(dateTo, lang) : "—"}${routeFilter ? " · " + routeFilter : ""}`,
-                  headers: [t("date"), t("vehicleNo"), t("balance"), t("fare"), t("routeName")],
-                  rows: filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.balance ? fmtNum(r.balance, lang) : "—", fmtNum(r.fare, lang), r.route]),
-                  footer: `${t("grandTotal")} — ${t("balance")}: ${fmtNum(totalBalance, lang)} | ${t("fare")}: ${fmtNum(totalFare, lang)}`,
+                  body,
                   orientation: "landscape",
-                });
+                }));
               }}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
               <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
             </div>
@@ -198,6 +242,8 @@ function Page() {
                 <tr>
                   <th className="text-left px-3 py-2 font-semibold">{t("date")}</th>
                   <th className="text-left px-3 py-2 font-semibold">{t("vehicleNo")}</th>
+                  <th className="text-right px-3 py-2 font-semibold">{lang === "bn" ? "জমা" : "Jama"}</th>
+                  <th className="text-right px-3 py-2 font-semibold">{lang === "bn" ? "দেনা" : "Dena"}</th>
                   <th className="text-right px-3 py-2 font-semibold">{t("balance")}</th>
                   <th className="text-right px-3 py-2 font-semibold">{t("fare")}</th>
                   <th className="text-left px-3 py-2 font-semibold">{t("routeName")}</th>
@@ -205,11 +251,13 @@ function Page() {
               </thead>
               <tbody>
                 {filteredDetails.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
+                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
                 ) : filteredDetails.map((r) => (
                   <tr key={r.id} className="border-t hover:bg-muted/30">
                     <td className="px-3 py-2">{fmtDate(r.trip_date, lang)}</td>
                     <td className="px-3 py-2">{r.vehicle_no}</td>
+                    <td className="px-3 py-2 text-right">{r.jama ? fmtNum(r.jama, lang) : "—"}</td>
+                    <td className="px-3 py-2 text-right">{r.dena ? fmtNum(r.dena, lang) : "—"}</td>
                     <td className="px-3 py-2 text-right">{r.balance ? fmtNum(r.balance, lang) : "—"}</td>
                     <td className="px-3 py-2 text-right">{fmtNum(r.fare, lang)}</td>
                     <td className="px-3 py-2">{r.route}</td>
@@ -219,7 +267,10 @@ function Page() {
               {filteredDetails.length > 0 && (
                 <tfoot className="bg-muted/50 font-semibold">
                   <tr>
-                    <td className="px-3 py-2" colSpan={2}>{t("grandTotal")}</td>
+                    <td className="px-3 py-2">{t("grandTotal")}</td>
+                    <td className="px-3 py-2">{(lang === "bn" ? "মোট ট্রিপ" : "Total Trips")}: {fmtNum(tripCount, lang)}</td>
+                    <td className="px-3 py-2 text-right">{fmtNum(totalJama, lang)}</td>
+                    <td className="px-3 py-2 text-right">{fmtNum(totalDena, lang)}</td>
                     <td className="px-3 py-2 text-right">{fmtNum(totalBalance, lang)}</td>
                     <td className="px-3 py-2 text-right">{fmtNum(totalFare, lang)}</td>
                     <td className="px-3 py-2"></td>
