@@ -33,21 +33,22 @@ import cpLogo from "@/assets/cp-logo.png";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
 
-const nav: NavItem[] = [
+type SearchObj = Record<string, string>;
+const nav: (NavItem & { search?: SearchObj })[] = [
   { to: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
   { to: "/daily-accounts", icon: Receipt, key: "dailyAccounts" },
-  { to: "/jama-khoroch", icon: BookOpen, key: "jamaKhoroch", writeOnly: true },
   { to: "/expenses", icon: Wallet, key: "expenses" },
   { to: "/other-income", icon: Coins, key: "otherIncome" },
-  
+  { to: "/jama-khoroch", icon: BookOpen, key: "jamaKhoroch", writeOnly: true },
   { to: "/daily-report", icon: FileText, key: "dailyReport" },
   { to: "/daily-income", icon: TrendingUp, key: "dailyIncome" },
   { to: "/daily-expense", icon: TrendingDown, key: "dailyExpense" },
-  { to: "/owner-accounts", icon: UserCheck, key: "ownerAccounts" },
   { to: "/vehicles", icon: Bus, key: "vehicles" },
-  { to: "/owners", icon: Users, key: "owners" },
-  { to: "/vendors", icon: Store, key: "vendors" },
   { to: "/routes", icon: RouteIcon, key: "routes" },
+  { to: "/owners", icon: Users, key: "owners" },
+  { to: "/owner-accounts", icon: UserCheck, key: "ownerAccounts" },
+  { to: "/vendors", icon: Store, key: "vendors" },
+  { to: "/data-bank", icon: UserCheck, key: "supervisorDb", search: { tab: "sup" } },
   { to: "/data-manufacturer", icon: Factory, key: "dataManufacturer", writeOnly: true },
   { to: "/data-bank", icon: Database, key: "dataBank" },
   { to: "/reports", icon: FileBarChart, key: "reports" },
@@ -163,8 +164,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             const active = pathname === n.to || (n.to !== "/dashboard" && pathname.startsWith(n.to));
             return (
               <Link
-                key={n.to}
+                key={n.key}
                 to={n.to}
+                search={n.search as any}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   active
                     ? "bg-slate-300/70 dark:bg-cyan-400/15 text-slate-900 dark:text-cyan-200 border-l-2 border-slate-500 dark:border-cyan-300 font-semibold"
@@ -244,8 +246,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           const active = pathname === n.to;
           return (
             <Link
-              key={n.to}
+              key={n.key}
               to={n.to}
+              search={n.search as any}
               className={`flex-shrink-0 flex flex-col items-center px-3 py-2 text-[10px] ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
