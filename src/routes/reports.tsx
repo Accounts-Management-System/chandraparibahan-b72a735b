@@ -472,6 +472,35 @@ function Page() {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent value="supervisor">
+            <div className="mb-3 text-xs text-muted-foreground">
+              {trBn("তারিখঃ", lang)} {fmtDate(from, lang)} → {fmtDate(to, lang)}
+              {" · "}{trBn("সফলতার হার = (ব্যালেন্স ÷ মোট জমা) × ১০০", lang)}
+            </div>
+            <Section
+              headers={[t("serial"), trBn("সুপারভাইজার", lang), trBn("মোট ট্রিপ", lang), trBn("মোট জমা", lang), trBn("মোট দেনা", lang), trBn("মোট ব্যালেন্স", lang), trBn("সফলতার হার (%)", lang)]}
+              rows={supervisorRows.map((s, i) => ({ ...s, serial: i + 1 }))}
+              cells={(s: any) => [
+                fmtNum(s.serial, lang),
+                s.name,
+                fmtNum(s.trips, lang),
+                fmtNum(s.jama, lang),
+                fmtNum(s.dena, lang),
+                fmtNum(s.balance, lang),
+                `${fmtNum(Number(s.successRate.toFixed(2)), lang)}%`,
+              ]}
+              footer={[
+                t("grandTotal"),
+                "",
+                fmtNum(supervisorRows.reduce((a, s) => a + s.trips, 0), lang),
+                fmtNum(supervisorRows.reduce((a, s) => a + s.jama, 0), lang),
+                fmtNum(supervisorRows.reduce((a, s) => a + s.dena, 0), lang),
+                fmtNum(supervisorRows.reduce((a, s) => a + s.balance, 0), lang),
+                "",
+              ]}
+            />
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>
