@@ -138,7 +138,7 @@ function DashboardPage() {
         mode: "owner" as const,
         trips: ownerTrips, fares, jamaKhorochJama, jamaKhorochKhoroch,
         balance: fares + jamaKhorochJama - jamaKhorochKhoroch,
-        tripCount: new Set(ownerTrips.map((r) => r.vehicle_no)).size,
+        tripCount: ownerTrips.length,
       };
     },
   });
