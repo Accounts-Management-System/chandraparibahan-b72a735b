@@ -140,9 +140,36 @@ function Page() {
         />
 
         <div className="space-y-3 pt-4 border-t">
-          <h2 className="text-xl font-bold">
-            {lang === "bn" ? "রুটের বিস্তারিত" : "Route Details"}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-bold">
+              {lang === "bn" ? "রুটের বিস্তারিত" : "Route Details"}
+            </h2>
+            <div className="flex gap-2 flex-wrap print:hidden">
+              <Button variant="outline" size="sm" onClick={() => {
+                const escq = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+                const headers = [t("date"), t("vehicleNo"), t("balance"), t("fare"), t("routeName")];
+                const dataRows = filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.balance, r.fare, r.route]);
+                const footer = [t("grandTotal"), "", totalBalance, totalFare, ""];
+                const csv = "\uFEFF" + [headers, ...dataRows, footer].map((row) => row.map(escq).join(",")).join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url; a.download = `route-details-${dateFrom || "all"}_${dateTo || "all"}.csv`; a.click();
+                URL.revokeObjectURL(url);
+              }}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                exportPdf({
+                  title: `${t("brand") ?? "চন্দ্রা পরিবহন"} — ${lang === "bn" ? "রুটের বিস্তারিত" : "Route Details"}`,
+                  subtitle: `${dateFrom ? fmtDate(dateFrom, lang) : "—"} → ${dateTo ? fmtDate(dateTo, lang) : "—"}${routeFilter ? " · " + routeFilter : ""}`,
+                  headers: [t("date"), t("vehicleNo"), t("balance"), t("fare"), t("routeName")],
+                  rows: filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.balance ? fmtNum(r.balance, lang) : "—", fmtNum(r.fare, lang), r.route]),
+                  footer: `${t("grandTotal")} — ${t("balance")}: ${fmtNum(totalBalance, lang)} | ${t("fare")}: ${fmtNum(totalFare, lang)}`,
+                  orientation: "landscape",
+                });
+              }}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
+              <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
+            </div>
+          </div>
           <Card className="p-3 border-border/50 bg-card/60">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <label className="flex flex-col gap-1">
