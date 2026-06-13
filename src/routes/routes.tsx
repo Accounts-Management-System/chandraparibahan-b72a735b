@@ -31,6 +31,8 @@ type DetailRow = {
   id: string;
   trip_date: string;
   vehicle_no: string;
+  jama: number;
+  dena: number;
   balance: number;
   fare: number;
   route: string;
