@@ -164,8 +164,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             const active = pathname === n.to || (n.to !== "/dashboard" && pathname.startsWith(n.to));
             return (
               <Link
-                key={n.to}
+                key={n.key}
                 to={n.to}
+                search={n.search as any}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   active
                     ? "bg-slate-300/70 dark:bg-cyan-400/15 text-slate-900 dark:text-cyan-200 border-l-2 border-slate-500 dark:border-cyan-300 font-semibold"
