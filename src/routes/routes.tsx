@@ -208,7 +208,7 @@ function Page() {
                   title: `${t("brand") ?? "চন্দ্রা পরিবহন"} — ${lang === "bn" ? "রুটের বিস্তারিত" : "Route Details"}`,
                   subtitle: `${dateFrom ? fmtDate(dateFrom, lang) : "—"} → ${dateTo ? fmtDate(dateTo, lang) : "—"}${routeFilter ? " · " + routeFilter : ""}`,
                   body,
-                  orientation: "landscape",
+                  orientation: "portrait",
                 }));
               }}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
               <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
