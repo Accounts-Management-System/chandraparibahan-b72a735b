@@ -93,6 +93,26 @@ function Page() {
   const ownerKhoroch = ownerExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const mainJamaKhorochJama = 0; // মূল হিসাবে জমা-খরচের জমা যোগ হবে না
 
+  // === সুপারভাইজার অনুযায়ী সারাংশ ===
+  const supervisorRows = useMemo(() => {
+    const m = new Map<string, { name: string; trips: number; jama: number; dena: number }>();
+    tripRows.forEach((r: any) => {
+      const name = (r.supervisor ?? "").trim() || "—";
+      const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      const cur = m.get(name) ?? { name, trips: 0, jama: 0, dena: 0 };
+      cur.trips += 1; cur.jama += j; cur.dena += d;
+      m.set(name, cur);
+    });
+    return Array.from(m.values())
+      .map((s) => {
+        const balance = s.jama - s.dena;
+        const successRate = s.jama > 0 ? (balance / s.jama) * 100 : 0;
+        return { id: s.name, ...s, balance, successRate };
+      })
+      .sort((a, b) => b.balance - a.balance);
+  }, [tripRows]);
+
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
     ownerTrips.forEach((r: any) => {
@@ -331,7 +351,8 @@ function Page() {
             <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
             <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(expTotal, lang)})</TabsTrigger>
-            <TabsTrigger value="owner">${trBn("ওনার হিসাব", lang)}</TabsTrigger>
+            <TabsTrigger value="owner">{trBn("ওনার হিসাব", lang)}</TabsTrigger>
+            <TabsTrigger value="supervisor">{trBn("সুপারভাইজার", lang)} ({fmtNum(supervisorRows.length, lang)})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -450,6 +471,35 @@ function Page() {
                 />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="supervisor">
+            <div className="mb-3 text-xs text-muted-foreground">
+              {trBn("তারিখঃ", lang)} {fmtDate(from, lang)} → {fmtDate(to, lang)}
+              {" · "}{trBn("সফলতার হার = (ব্যালেন্স ÷ মোট জমা) × ১০০", lang)}
+            </div>
+            <Section
+              headers={[t("serial"), trBn("সুপারভাইজার", lang), trBn("মোট ট্রিপ", lang), trBn("মোট জমা", lang), trBn("মোট দেনা", lang), trBn("মোট ব্যালেন্স", lang), trBn("সফলতার হার (%)", lang)]}
+              rows={supervisorRows.map((s, i) => ({ ...s, serial: i + 1 }))}
+              cells={(s: any) => [
+                fmtNum(s.serial, lang),
+                s.name,
+                fmtNum(s.trips, lang),
+                fmtNum(s.jama, lang),
+                fmtNum(s.dena, lang),
+                fmtNum(s.balance, lang),
+                `${fmtNum(Number(s.successRate.toFixed(2)), lang)}%`,
+              ]}
+              footer={[
+                t("grandTotal"),
+                "",
+                fmtNum(supervisorRows.reduce((a, s) => a + s.trips, 0), lang),
+                fmtNum(supervisorRows.reduce((a, s) => a + s.jama, 0), lang),
+                fmtNum(supervisorRows.reduce((a, s) => a + s.dena, 0), lang),
+                fmtNum(supervisorRows.reduce((a, s) => a + s.balance, 0), lang),
+                "",
+              ]}
+            />
           </TabsContent>
         </Tabs>
       </div>
