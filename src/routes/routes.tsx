@@ -88,7 +88,9 @@ function Page() {
   const detailRows = useMemo<DetailRow[]>(() => {
     const out: DetailRow[] = [];
     for (const tr of trips) {
-      const bal = Number(tr.jama_1 || 0) + Number(tr.jama_2 || 0) - Number(tr.dena_1 || 0) - Number(tr.dena_2 || 0);
+      const jamaTotal = Number(tr.jama_1 || 0) + Number(tr.jama_2 || 0);
+      const denaTotal = Number(tr.dena_1 || 0) + Number(tr.dena_2 || 0);
+      const bal = jamaTotal - denaTotal;
       const entries: { route: string | null; fare: number }[] = [
         { route: tr.route_1, fare: Number(tr.fare_1 || 0) },
         { route: tr.route_2, fare: Number(tr.fare_2 || 0) },
@@ -98,6 +100,8 @@ function Page() {
           id: `${tr.id}-${idx}`,
           trip_date: tr.trip_date,
           vehicle_no: tr.vehicle_no,
+          jama: idx === 0 ? jamaTotal : 0,
+          dena: idx === 0 ? denaTotal : 0,
           balance: idx === 0 ? bal : 0,
           fare: e.fare,
           route: e.route ?? "—",
@@ -116,8 +120,15 @@ function Page() {
     });
   }, [detailRows, dateFrom, dateTo, routeFilter]);
 
+  const totalJama = filteredDetails.reduce((s, r) => s + r.jama, 0);
+  const totalDena = filteredDetails.reduce((s, r) => s + r.dena, 0);
   const totalBalance = filteredDetails.reduce((s, r) => s + r.balance, 0);
   const totalFare = filteredDetails.reduce((s, r) => s + r.fare, 0);
+  const tripCount = useMemo(() => {
+    const ids = new Set<string>();
+    for (const r of filteredDetails) ids.add(r.id.split("-").slice(0, -1).join("-"));
+    return ids.size;
+  }, [filteredDetails]);
 
   return (
     <AppLayout>
