@@ -93,6 +93,26 @@ function Page() {
   const ownerKhoroch = ownerExp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const mainJamaKhorochJama = 0; // মূল হিসাবে জমা-খরচের জমা যোগ হবে না
 
+  // === সুপারভাইজার অনুযায়ী সারাংশ ===
+  const supervisorRows = useMemo(() => {
+    const m = new Map<string, { name: string; trips: number; jama: number; dena: number }>();
+    tripRows.forEach((r: any) => {
+      const name = (r.supervisor ?? "").trim() || "—";
+      const j = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
+      const d = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
+      const cur = m.get(name) ?? { name, trips: 0, jama: 0, dena: 0 };
+      cur.trips += 1; cur.jama += j; cur.dena += d;
+      m.set(name, cur);
+    });
+    return Array.from(m.values())
+      .map((s) => {
+        const balance = s.jama - s.dena;
+        const successRate = s.jama > 0 ? (balance / s.jama) * 100 : 0;
+        return { id: s.name, ...s, balance, successRate };
+      })
+      .sort((a, b) => b.balance - a.balance);
+  }, [tripRows]);
+
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
     ownerTrips.forEach((r: any) => {
