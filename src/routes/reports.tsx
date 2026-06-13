@@ -351,7 +351,8 @@ function Page() {
             <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
             <TabsTrigger value="other">অন্যান্য জমা ({fmtNum(othTotal, lang)})</TabsTrigger>
             <TabsTrigger value="exp">দৈনিক খরচ ({fmtNum(expTotal, lang)})</TabsTrigger>
-            <TabsTrigger value="owner">${trBn("ওনার হিসাব", lang)}</TabsTrigger>
+            <TabsTrigger value="owner">{trBn("ওনার হিসাব", lang)}</TabsTrigger>
+            <TabsTrigger value="supervisor">{trBn("সুপারভাইজার", lang)} ({fmtNum(supervisorRows.length, lang)})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
