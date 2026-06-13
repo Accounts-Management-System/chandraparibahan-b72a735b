@@ -160,9 +160,12 @@ function Page() {
             <div className="flex gap-2 flex-wrap print:hidden">
               <Button variant="outline" size="sm" onClick={() => {
                 const escq = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-                const headers = [t("date"), t("vehicleNo"), t("balance"), t("fare"), t("routeName")];
-                const dataRows = filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.balance, r.fare, r.route]);
-                const footer = [t("grandTotal"), "", totalBalance, totalFare, ""];
+                const jamaLabel = lang === "bn" ? "জমা" : "Jama";
+                const denaLabel = lang === "bn" ? "দেনা" : "Dena";
+                const tripsLabel = lang === "bn" ? "মোট ট্রিপ" : "Total Trips";
+                const headers = [t("date"), t("vehicleNo"), jamaLabel, denaLabel, t("balance"), t("fare"), t("routeName")];
+                const dataRows = filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.jama, r.dena, r.balance, r.fare, r.route]);
+                const footer = [t("grandTotal"), `${tripsLabel}: ${tripCount}`, totalJama, totalDena, totalBalance, totalFare, ""];
                 const csv = "\uFEFF" + [headers, ...dataRows, footer].map((row) => row.map(escq).join(",")).join("\n");
                 const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
@@ -171,14 +174,42 @@ function Page() {
                 URL.revokeObjectURL(url);
               }}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
               <Button variant="outline" size="sm" onClick={() => {
-                exportPdf({
+                const jamaLabel = lang === "bn" ? "জমা" : "Jama";
+                const denaLabel = lang === "bn" ? "দেনা" : "Dena";
+                const tripsLabel = lang === "bn" ? "মোট ট্রিপ" : "Total Trips";
+                const headers = [t("date"), t("vehicleNo"), jamaLabel, denaLabel, t("balance"), t("fare"), t("routeName")];
+                const bodyRows = filteredDetails.map((r) => [
+                  fmtDate(r.trip_date, lang),
+                  r.vehicle_no,
+                  r.jama ? fmtNum(r.jama, lang) : "—",
+                  r.dena ? fmtNum(r.dena, lang) : "—",
+                  r.balance ? fmtNum(r.balance, lang) : "—",
+                  fmtNum(r.fare, lang),
+                  r.route,
+                ]);
+                const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const body = `
+                  <table>
+                    <thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+                    <tbody>${bodyRows.map((r) => `<tr>${r.map((c, i) => `<td style="text-align:${i>=2 && i<=5 ? "right" : "left"}">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>
+                    <tfoot>
+                      <tr>
+                        <td style="text-align:left">${esc(t("grandTotal"))}</td>
+                        <td style="text-align:left">${esc(tripsLabel)}: ${esc(fmtNum(tripCount, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalJama, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalDena, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalBalance, lang))}</td>
+                        <td style="text-align:right">${esc(fmtNum(totalFare, lang))}</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>`;
+                import("@/lib/exportPdf").then(({ exportPdfHtml }) => exportPdfHtml({
                   title: `${t("brand") ?? "চন্দ্রা পরিবহন"} — ${lang === "bn" ? "রুটের বিস্তারিত" : "Route Details"}`,
                   subtitle: `${dateFrom ? fmtDate(dateFrom, lang) : "—"} → ${dateTo ? fmtDate(dateTo, lang) : "—"}${routeFilter ? " · " + routeFilter : ""}`,
-                  headers: [t("date"), t("vehicleNo"), t("balance"), t("fare"), t("routeName")],
-                  rows: filteredDetails.map((r) => [fmtDate(r.trip_date, lang), r.vehicle_no, r.balance ? fmtNum(r.balance, lang) : "—", fmtNum(r.fare, lang), r.route]),
-                  footer: `${t("grandTotal")} — ${t("balance")}: ${fmtNum(totalBalance, lang)} | ${t("fare")}: ${fmtNum(totalFare, lang)}`,
+                  body,
                   orientation: "landscape",
-                });
+                }));
               }}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
               <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
             </div>
