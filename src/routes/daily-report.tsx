@@ -229,7 +229,7 @@ function Page() {
     exportPdfHtml({
       title: trBn("চন্দ্রা পরিবহন — প্রতিদিনের জমা ও খরচ হিসাব", lang),
       body: extraStyle + body,
-      orientation: "landscape",
+      orientation: "portrait",
     });
   };
 

@@ -214,7 +214,7 @@ function Page() {
   const sub = () => `${fmtDate(from, lang)} → ${fmtDate(to, lang)}${ownerId ? " · " + trBn("ওনার:", lang) + " " + ownerName(ownerId) : ""}`;
 
   // === tab-specific dataset builders ===
-  const tabData = (): { name: string; headers: string[]; rows: any[][]; footer?: (string | number)[]; orientation?: "portrait" | "landscape"; extraHtml?: string } => {
+  const tabData = (): { name: string; headers: string[]; rows: any[][]; footer?: (string | number)[]; orientation?: "portrait" | "portrait"; extraHtml?: string } => {
     switch (tab) {
       case "jama": {
         const headers = [t("serial"), t("date"), t("vehicleNo"), t("owner"), t("jamaTotal"), t("denaTotal"), trBn("আয়/লস", lang), t("fareTotal"), t("route"), t("supervisor")];
@@ -224,7 +224,7 @@ function Page() {
           const f = Number(r.fare_1 || 0) + Number(r.fare_2 || 0);
           return [fmtNum(r.serial_no, lang), fmtDate(r.trip_date, lang), r.vehicle_no, ownerName(ownerVehNos.get(r.vehicle_no)), fmtNum(j, lang), fmtNum(d, lang), fmtNum(j - d, lang), fmtNum(f, lang), [r.route_1, r.route_2].filter(Boolean).join(" / ") || "-", r.supervisor ?? "-"];
         });
-        return { name: "daily-jama", headers, rows, footer: [t("grandTotal"), "", "", "", fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(dailyJama - dena, lang), fmtNum(fares, lang), "", ""], orientation: "landscape" };
+        return { name: "daily-jama", headers, rows, footer: [t("grandTotal"), "", "", "", fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(dailyJama - dena, lang), fmtNum(fares, lang), "", ""], orientation: "portrait" };
       }
       case "other": {
         const headers = [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")];
@@ -244,7 +244,7 @@ function Page() {
         const sumBal = supervisorRows.reduce((a, s) => a + s.balance, 0);
         const sumTrips = supervisorRows.reduce((a, s) => a + s.trips, 0);
         const overallRate = sumJama > 0 ? ((sumBal / sumJama) * 100).toFixed(2) : "0";
-        return { name: "supervisor-report", headers, rows, footer: [t("grandTotal"), "", fmtNum(sumTrips, lang), fmtNum(sumJama, lang), fmtNum(sumDena, lang), fmtNum(sumBal, lang), `${fmtNum(Number(overallRate), lang)}%`], orientation: "landscape" };
+        return { name: "supervisor-report", headers, rows, footer: [t("grandTotal"), "", fmtNum(sumTrips, lang), fmtNum(sumJama, lang), fmtNum(sumDena, lang), fmtNum(sumBal, lang), `${fmtNum(Number(overallRate), lang)}%`], orientation: "portrait" };
       }
       case "owner": {
         // multi-table — handled via extraHtml; csv uses combined headers fallback
@@ -269,7 +269,7 @@ function Page() {
           tbl(trBn("জমা-খরচের জমা", lang), [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], jamaRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerJama, lang)]) +
           tbl(trBn("জমা-খরচের খরচ", lang), [t("date"), t("owner"), t("vehicleNo"), t("category"), t("head"), t("description"), t("amount")], khorochRows, [t("grandTotal"), "", "", "", "", "", fmtNum(ownerKhoroch, lang)]);
         const csvHeaders = [t("vehicleNo"), t("owner"), t("tripCount"), t("fareTotal")];
-        return { name: "owner-report", headers: csvHeaders, rows: vehRows, footer: [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)], orientation: "landscape", extraHtml };
+        return { name: "owner-report", headers: csvHeaders, rows: vehRows, footer: [t("grandTotal"), "", fmtNum(ownerTrips.length, lang), fmtNum(ownerFares, lang)], orientation: "portrait", extraHtml };
       }
       default: {
         // dashboard — full combined PDF
@@ -293,7 +293,7 @@ function Page() {
         const extraHtml = summaryBlock() + tripBody + othBody + expBody;
         const csvHeaders = [t("date"), trBn("ট্রিপ", lang), trBn("দৈনিক জমা", lang), trBn("দেনা", lang), trBn("অন্যান্য জমা", lang), trBn("দৈনিক খরচ", lang)];
         const csvRows = byDate.map(([d, v]) => [fmtDate(d, lang), fmtNum(v.trips, lang), fmtNum(v.jama, lang), fmtNum(v.dena, lang), fmtNum(v.oth, lang), fmtNum(v.exp, lang)]);
-        return { name: "dashboard", headers: csvHeaders, rows: csvRows, footer: [t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(othTotal, lang), fmtNum(expTotal, lang)], orientation: "landscape", extraHtml };
+        return { name: "dashboard", headers: csvHeaders, rows: csvRows, footer: [t("grandTotal"), fmtNum(tripRows.length, lang), fmtNum(dailyJama, lang), fmtNum(dena, lang), fmtNum(othTotal, lang), fmtNum(expTotal, lang)], orientation: "portrait", extraHtml };
       }
     }
   };
