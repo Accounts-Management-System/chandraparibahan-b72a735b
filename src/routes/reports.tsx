@@ -367,7 +367,7 @@ function Page() {
           </div>
         </div>
 
-        <Tabs defaultValue="dashboard">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger value="jama">দৈনিক জমা ({fmtNum(tripRows.length, lang)})</TabsTrigger>
