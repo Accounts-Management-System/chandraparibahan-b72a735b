@@ -242,6 +242,8 @@ function Page() {
                 <tr>
                   <th className="text-left px-3 py-2 font-semibold">{t("date")}</th>
                   <th className="text-left px-3 py-2 font-semibold">{t("vehicleNo")}</th>
+                  <th className="text-right px-3 py-2 font-semibold">{lang === "bn" ? "জমা" : "Jama"}</th>
+                  <th className="text-right px-3 py-2 font-semibold">{lang === "bn" ? "দেনা" : "Dena"}</th>
                   <th className="text-right px-3 py-2 font-semibold">{t("balance")}</th>
                   <th className="text-right px-3 py-2 font-semibold">{t("fare")}</th>
                   <th className="text-left px-3 py-2 font-semibold">{t("routeName")}</th>
@@ -249,11 +251,13 @@ function Page() {
               </thead>
               <tbody>
                 {filteredDetails.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
+                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">{t("noData")}</td></tr>
                 ) : filteredDetails.map((r) => (
                   <tr key={r.id} className="border-t hover:bg-muted/30">
                     <td className="px-3 py-2">{fmtDate(r.trip_date, lang)}</td>
                     <td className="px-3 py-2">{r.vehicle_no}</td>
+                    <td className="px-3 py-2 text-right">{r.jama ? fmtNum(r.jama, lang) : "—"}</td>
+                    <td className="px-3 py-2 text-right">{r.dena ? fmtNum(r.dena, lang) : "—"}</td>
                     <td className="px-3 py-2 text-right">{r.balance ? fmtNum(r.balance, lang) : "—"}</td>
                     <td className="px-3 py-2 text-right">{fmtNum(r.fare, lang)}</td>
                     <td className="px-3 py-2">{r.route}</td>
@@ -263,7 +267,10 @@ function Page() {
               {filteredDetails.length > 0 && (
                 <tfoot className="bg-muted/50 font-semibold">
                   <tr>
-                    <td className="px-3 py-2" colSpan={2}>{t("grandTotal")}</td>
+                    <td className="px-3 py-2">{t("grandTotal")}</td>
+                    <td className="px-3 py-2">{(lang === "bn" ? "মোট ট্রিপ" : "Total Trips")}: {fmtNum(tripCount, lang)}</td>
+                    <td className="px-3 py-2 text-right">{fmtNum(totalJama, lang)}</td>
+                    <td className="px-3 py-2 text-right">{fmtNum(totalDena, lang)}</td>
                     <td className="px-3 py-2 text-right">{fmtNum(totalBalance, lang)}</td>
                     <td className="px-3 py-2 text-right">{fmtNum(totalFare, lang)}</td>
                     <td className="px-3 py-2"></td>
