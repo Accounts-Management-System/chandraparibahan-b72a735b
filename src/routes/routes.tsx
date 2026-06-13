@@ -10,8 +10,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Download, FileDown, Printer } from "lucide-react";
 import { useRole } from "@/lib/useRole";
+import { exportPdf } from "@/lib/exportPdf";
 
 export const Route = createFileRoute("/routes")({ component: Page });
 
