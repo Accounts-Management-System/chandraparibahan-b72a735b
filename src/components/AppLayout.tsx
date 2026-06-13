@@ -246,8 +246,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           const active = pathname === n.to;
           return (
             <Link
-              key={n.to}
+              key={n.key}
               to={n.to}
+              search={n.search as any}
               className={`flex-shrink-0 flex flex-col items-center px-3 py-2 text-[10px] ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
