@@ -233,7 +233,7 @@ function Page() {
           </div>
         </div>
 
-        <Tabs defaultValue="dashboard">
+        <Tabs value={search.tab ?? "dashboard"} onValueChange={(v) => navigate({ search: (p: any) => ({ ...p, tab: v }) })}>
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">{trBn("ড্যাশবোর্ড", lang)}</TabsTrigger>
             <TabsTrigger value="trips">{trBn("দৈনিক জমা", lang)} ({fmtNum(tripRows.length, lang)})</TabsTrigger>
