@@ -229,7 +229,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
-          {children}
+          {isGuest ? (
+            <div className="max-w-xl mx-auto mt-10 rounded-lg border border-amber-500/40 bg-amber-50/60 dark:bg-amber-500/10 p-6 text-center space-y-3">
+              <h2 className="text-lg font-bold text-amber-900 dark:text-amber-200">{t("guestNoAccessTitle")}</h2>
+              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{t("guestNoAccessBody")}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          ) : (
+            children
+          )}
           <footer className="mt-8 pt-4 border-t text-center text-[11px] text-muted-foreground leading-relaxed">
             {lang === "bn" ? (
               <>
