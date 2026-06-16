@@ -124,6 +124,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    installQueryPersister(queryClient);
+    installSync(queryClient);
+    registerServiceWorker();
+  }, [queryClient]);
+
+
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
