@@ -157,6 +157,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
             </p>
             <p className="mt-0.5 text-[10px] text-slate-600 dark:text-slate-400 truncate">{user.email}</p>
+            <div className="mt-1.5"><OfflineIndicator /></div>
           </div>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
@@ -211,7 +212,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {user.email ? ` • ${user.email}` : ""}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <OfflineIndicator />
             <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="theme">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
