@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireAdmin } from "./admin.helpers.server";
 
-/** Persist first logged-in user as admin so write access works immediately. */
+** Persist first logged-in user as admin so write access works immediately. *
 export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -12,7 +12,7 @@ export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Create a moderator account (email/password). */
+** Create a moderator account (email/password). *
 export const createModerator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -41,7 +41,7 @@ export const createModerator = createServerFn({ method: "POST" })
     return { id: uid, email: data.email };
   });
 
-/** Create a shareholder login (login_id + pin) and link to a contacts row. */
+** Create a shareholder login (login_id + pin) and link to a contacts row. *
 export const createShareholderLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -123,42 +123,6 @@ export const resetUserPin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-
-/** Update an owner's login ID (changes synthetic auth email and owners.login_id). */
-export const updateOwnerLoginId = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
-    z
-      .object({
-        ownerId: z.string().uuid(),
-        loginId: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_.-]+$/),
-      })
-      .parse(d),
-  )
-  .handler(async ({ data, context }) => {
-    await requireAdmin(context.userId);
-    const { data: owner, error: oErr } = await supabaseAdmin
-      .from("owners")
-      .select("auth_user_id")
-      .eq("id", data.ownerId)
-      .single();
-    if (oErr) throw new Error(oErr.message);
-    const newEmail = `${data.loginId.toLowerCase()}@owners.local`;
-    if (owner?.auth_user_id) {
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(owner.auth_user_id, {
-        email: newEmail,
-        user_metadata: { login_id: data.loginId, owner_id: data.ownerId },
-      });
-      if (error) throw new Error(error.message);
-    }
-    const { error: uErr } = await supabaseAdmin
-      .from("owners")
-      .update({ login_id: data.loginId })
-      .eq("id", data.ownerId);
-    if (uErr) throw new Error(uErr.message);
-    return { ok: true };
-  });
-
 
 /** List moderator + shareholder users with their emails for admin UI. */
 export const listManagedUsers = createServerFn({ method: "GET" })

@@ -1,71 +1,74 @@
-## লক্ষ্য
+# পরিকল্পনা
 
-অ্যাপটি অফলাইনে চলবে — Trips, Expenses, Other Income সহ সব এন্ট্রি পেইজে ডাটা এন্ট্রি করা যাবে, পুরাতন ডাটা ক্যাশ থেকে দেখা যাবে, এবং ইন্টারনেট ফিরলে অফলাইনে জমা হওয়া এন্ট্রি স্বয়ংক্রিয়ভাবে নির্দিষ্ট টেবিলে সিঙ্ক হবে। কনফ্লিক্ট হলে শেষ এন্ট্রি জিতবে।
+## ১. ডাটা সোর্স কঠোরভাবে আলাদা করা (কোনো ডবল গণনা নয়)
 
-## ব্যবহারকারীর অভিজ্ঞতা
+**মুল পরিবহন হিসাব (ওনার ছাড়া গাড়ি):**
+- দৈনিক জমা → `trips` (যেসব গাড়ির `owner_id` নাই)
+  - জমা = jama_1 + jama_2
+  - দেনা = dena_1 + dena_2
+  - **আয়/লস = জমা − দেনা**
+- অন্যান্য জমা → `office_deposits` টেবিল (একমাত্র সোর্স)
+- দৈনিক খরচ → `expenses` যেখানে `owner_id IS NULL`
+- **মুল ব্যালেন্স = (জমা − দেনা) + অন্যান্য জমা − দৈনিক খরচ**
 
-- ইন্টারনেট না থাকলেও অ্যাপ খোলা যাবে (হোম স্ক্রিনে ইনস্টলযোগ্য PWA)
-- উপরে একটি ছোট ইন্ডিকেটর: `অনলাইন` / `অফলাইন (N pending)`
-- অফলাইনে সেভ করলে টোস্ট: "অফলাইনে সেভ হয়েছে, নেটওয়ার্ক এলে সিঙ্ক হবে"
-- নেট এলে অটোমেটিক ব্যাকগ্রাউন্ডে সিঙ্ক + টোস্ট: "N টি এন্ট্রি সিঙ্ক হয়েছে"
-- ব্যর্থ সিঙ্ক হলে সেই এন্ট্রি Pending থাকবে, পরবর্তী চেষ্টায় আবার যাবে
+**ওনার হিসাব (প্রতি ওনার আলাদা):**
+- দৈনিক জমা (গাড়ী ভাড়া) → ঐ ওনারের গাড়ির `trips.fare_1 + fare_2`
+- জমা-খরচ (জমা) → `jama_khoroch` বা `other_incomes` যেখানে `owner_id = ঐ ওনার` (office_deposits কখনোই না)
+- জমা-খরচ (খরচ) → `expenses` যেখানে `owner_id = ঐ ওনার`
+- **ওনার ব্যালেন্স = গাড়ী ভাড়া + জমা − খরচ**
 
-## কী যুক্ত হবে
+**গুরুত্বপূর্ণ নিয়ম:**
+- `other_incomes` থেকে owner_id null সারিগুলো মুল হিসাবে আনব না (শুধু `office_deposits` ব্যবহার হবে)
+- `trips`-এর jama/dena কখনোই জমা-খরচ পেইজে ইমপোর্ট হবে না
+- রিপোর্টে date ফিল্টার + owner ফিল্টার আলাদা পথে query হবে
 
-### ১. PWA / Service Worker
-- `vite-plugin-pwa` যোগ — অ্যাপ শেল ক্যাশ, অফলাইনে লোড
-- প্রিভিউ/ডেভে service worker বন্ধ (Lovable preview-safe)
-- পাবলিশ করা সাইটেই কাজ করবে
+## ২. ড্যাশবোর্ড পুনঃডিজাইন
 
-### ২. ডাটা ক্যাশ (পড়া)
-- React Query এর জন্য IndexedDB persister
-- সব select queries (trips, expenses, other_incomes, owners, vehicles, lookups ইত্যাদি) লোকালি ক্যাশ হবে
-- অফলাইনে পেইজ খুললে ক্যাশ থেকে দেখাবে
+উপরে দুই বড় সেকশন:
 
-### ৩. মিউটেশন কিউ (লেখা)
-- নতুন helper: `queueOrRun(table, payload, op)` 
-- অনলাইন → সরাসরি supabase insert/update/delete
-- অফলাইন → IndexedDB এর `pending_mutations` স্টোরে জমা, UI তে optimistic update
-- প্রভাবিত পেইজ: Daily Accounts (trips), Daily Expense (expenses), Other Income, Jama-Khoroch, Owners, Vehicles, Routes, Vendors, Contacts, Admin Diary, Data Bank
-
-### ৪. অটো-সিঙ্ক
-- `navigator.onLine` + `online` event লিসেনার
-- অনলাইন হলে queue FIFO ক্রমে drain — প্রতিটি mutation আসল টেবিলে যাবে
-- সফল হলে queue থেকে মুছবে, React Query invalidate
-- ব্যর্থ হলে retry count বাড়িয়ে রাখবে, পরে আবার
-
-### ৫. কনফ্লিক্ট রেজোলিউশন
-- শেষ লেখা জিতবে (Supabase server timestamp ভিত্তিক) — কোনো বিশেষ merge logic না, সাধারণ upsert/update
-
-## টেকনিক্যাল ডিটেইল
-
-```text
-src/
-├── lib/
-│   ├── offline/
-│   │   ├── db.ts              # idb (IndexedDB) wrapper, stores: pending_mutations
-│   │   ├── queue.ts           # enqueue/drain/retry logic
-│   │   ├── sync.ts            # online listener + drain trigger
-│   │   ├── persister.ts       # React Query IDB persister
-│   │   └── useOnline.ts       # hook for status
-│   └── data/
-│       └── mutate.ts          # queueOrRun(table, op, payload) helper
-├── components/
-│   └── OfflineIndicator.tsx   # top bar chip
-└── routes/__root.tsx          # mount persister + sync + indicator
+**A) মুল পরিবহন কার্ড:**
+```
+দৈনিক জমা: [জমা] [দেনা] [আয়/লস]
+অন্যান্য জমা (মুল): [অফিস কতৃক জমা]
+দৈনিক খরচ: [খরচ]
+─────────────────
+মুল ব্যালেন্স: (জমা−দেনা)+অন্যান্য জমা−দৈনিক খরচ
 ```
 
-- প্যাকেজ: `idb`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`, `vite-plugin-pwa`
-- Vite PWA: `registerType: "autoUpdate"`, navigation `NetworkFirst`, preview/iframe/dev এ register বন্ধ
-- সব existing `supabase.from(...).insert/update/delete` কল গুলো `mutate.ts` helper দিয়ে রিপ্লেস
-- ID generation: অফলাইন insert এর জন্য client-side `crypto.randomUUID()` ব্যবহার (যেসব টেবিলে uuid PK)
-- Trips এর `serial_no` ট্রিগার সার্ভারে আছে — অফলাইনে temporary serial, সিঙ্কের সময় সার্ভার ঠিক করবে (insert এ serial_no পাঠাব না)
+**B) প্রতি ওনারের জন্য আলাদা কার্ড (অটো-জেনারেটেড):**
+```
+ওনারের নাম: বিপ্লব ভুইয়া
+গাড়ী ভাড়া: xxx | জমা-খরচ(জমা): xxx | জমা-খরচ(খরচ): xxx
+ব্যালেন্স: xxx
+```
+নতুন ওনার যোগ হলে অটো কার্ড আসবে (owners টেবিল থেকে map)।
 
-## সীমাবদ্ধতা (জানিয়ে রাখা)
+## ৩. রিপোর্ট PDF এক্সপোর্ট
 
-- অফলাইনে নতুন রেকর্ড দেখাবে কিন্তু server-generated fields (auto serial) সিঙ্কের পর আপডেট হবে
-- File/image আপলোড অফলাইনে সাপোর্ট হবে না (এই অ্যাপে নেই, তাই সমস্যা না)
-- প্রথমবার অ্যাপ অফলাইনে চালাতে হলে একবার অনলাইনে খুলে নিতে হবে (অ্যাপ শেল ও ডাটা ক্যাশ করার জন্য)
-- iOS Safari এ PWA install করতে "Add to Home Screen" দিতে হবে
+**মুল রিপোর্ট PDF (ল্যান্ডস্কেপ):**
+- টেবিল ১: প্রতিদিন/গাড়িভিত্তিক জমা, দেনা, **আয়/লস (জমা−দেনা)**, ব্যালেন্স
+- টেবিল ২: অন্যান্য জমা (office_deposits)
+- টেবিল ৩: দৈনিক খরচ
+- নিচে সারাংশ: মুল ব্যালেন্স ফরমুলা সহ
 
-অনুমোদন দিলে কাজ শুরু করছি।
+**ওনার রিপোর্ট PDF:**
+- ওনার ফিল্টার দিলে শুধু ঐ ওনার, না দিলে প্রতিটা ওনারের আলাদা সেকশন
+- কলাম: গাড়ী ভাড়া | জমা | খরচ | ব্যালেন্স
+
+## ৪. সফটওয়্যার-লুক UI
+
+- বডি ব্যাকগ্রাউন্ড: হালকা অ্যাশ (gray-100 / muted)
+- ট্যাব/বাটনগুলো 3D সফটওয়্যার বাটনের মত: subtle border + inner highlight + shadow, hover এ pressed effect
+- কার্ডে সাদা/অফহোয়াইট ব্যাকগ্রাউন্ড, soft shadow
+- `src/styles.css`-এ নতুন টোকেন: `--app-surface`, `--app-bg`, `--btn-3d-shadow`
+- `Button` ও Tab styling আপডেট
+
+## ফাইল পরিবর্তন
+- `src/routes/dashboard.tsx` — owner কার্ড অটো + মুল কার্ড পরিষ্কার
+- `src/routes/reports.tsx` — আয়/লস কলাম + আলাদা sourcing
+- `src/routes/daily-report.tsx` — PDF এ আয়/লস
+- `src/routes/jama-khoroch.tsx` — trips থেকে কিছু না নিচ্ছে নিশ্চিত
+- `src/styles.css` + `src/components/AppLayout.tsx` — সফটওয়্যার থিম
+- `src/components/ui/button.tsx` — 3D variant
+
+কনফার্ম করলে শুরু করব।

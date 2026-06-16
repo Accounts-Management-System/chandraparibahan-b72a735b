@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 
@@ -40,7 +39,7 @@ export function LookupSelect({
   const upsert = useMutation({
     mutationFn: async (v: string) => {
       if (!v || options.includes(v)) return;
-      await offlineFrom("entry_lookups").insert({ kind, value: v });
+      await supabase.from("entry_lookups").insert({ kind, value: v });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["entry_lookups", kind] }),
   });
