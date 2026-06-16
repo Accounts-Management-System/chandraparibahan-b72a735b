@@ -12,6 +12,10 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { installSync } from "@/lib/offline/sync";
+import { installQueryPersister } from "@/lib/offline/persister";
+import { registerServiceWorker } from "@/lib/offline/registerSW";
 
 function NotFoundComponent() {
   return (
@@ -75,6 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0b1220" },
       { title: "Chandra Paribahan — Management System" },
       { name: "description", content: "Chandra Paribahan transport management system: daily accounts, expenses, vehicles, contacts and reports." },
       { property: "og:title", content: "Chandra Paribahan — Management System" },
@@ -87,10 +92,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
