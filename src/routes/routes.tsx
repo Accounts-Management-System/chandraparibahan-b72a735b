@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Download, FileDown, Printer } from "lucide-react";
@@ -75,7 +76,7 @@ function Page() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("vehicle_routes").delete().eq("id", id);
+      const { error } = await offlineFrom("vehicle_routes").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -307,10 +308,10 @@ function RouteDialog({
     mutationFn: async () => {
       const payload = { name: name.trim(), fare: Number(fare || 0), vehicle_id: null as string | null };
       if (editing) {
-        const { error } = await supabase.from("vehicle_routes").update(payload).eq("id", editing.id);
+        const { error } = await offlineFrom("vehicle_routes").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("vehicle_routes").insert(payload);
+        const { error } = await offlineFrom("vehicle_routes").insert(payload);
         if (error) throw error;
       }
     },
