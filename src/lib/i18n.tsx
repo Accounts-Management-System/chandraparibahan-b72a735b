@@ -204,6 +204,18 @@ const dict = {
   mostBalance: { bn: "বেশি ব্যালেন্স", en: "Most Balance" },
   leastBalance: { bn: "কম ব্যালেন্স", en: "Least Balance" },
   top10Vehicles: { bn: "টপ ১০ গাড়ি (ট্রিপ অনুযায়ী)", en: "Top 10 Vehicles (by Trips)" },
+  showPassword: { bn: "পাসওয়ার্ড দেখান", en: "Show password" },
+  hidePassword: { bn: "পাসওয়ার্ড লুকান", en: "Hide password" },
+  forgotPassword: { bn: "পাসওয়ার্ড ভুলে গেছেন?", en: "Forgot password?" },
+  resetPasswordTitle: { bn: "পাসওয়ার্ড রিসেট", en: "Reset Password" },
+  resetEmailDesc: { bn: "শুধু এডমিন ইমেইল দিয়ে পাসওয়ার্ড রিসেট সম্ভব। ওনার/শেয়ারহোল্ডার পিন এডমিনের কাছে রিসেট করাতে হবে।", en: "Only admin emails can reset password. Owners/shareholders must ask admin to reset PIN." },
+  sendResetLink: { bn: "রিসেট লিংক পাঠান", en: "Send reset link" },
+  resetEmailSent: { bn: "রিসেট লিংক ইমেইলে পাঠানো হয়েছে", en: "Reset link sent to your email" },
+  ownerCannotReset: { bn: "ওনার/শেয়ারহোল্ডার এডমিনের মাধ্যমে পিন রিসেট করুন", en: "Owners/shareholders: ask admin to reset PIN" },
+  newPassword: { bn: "নতুন পাসওয়ার্ড", en: "New password" },
+  confirmPassword: { bn: "পাসওয়ার্ড নিশ্চিত করুন", en: "Confirm password" },
+  updatePassword: { bn: "পাসওয়ার্ড আপডেট", en: "Update password" },
+  passwordUpdated: { bn: "পাসওয়ার্ড আপডেট হয়েছে", en: "Password updated" },
 } as const;
 
 type Key = keyof typeof dict;
