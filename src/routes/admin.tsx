@@ -10,12 +10,11 @@ import {
 import { useT, fmtNum } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createModerator, listManagedUsers, deleteManagedUser, createOwnerLogin, resetUserPin, updateOwnerLoginId } from "@/lib/admin.functions";
+import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
 
@@ -47,12 +46,10 @@ function Page() {
           <TabsList>
             <TabsTrigger value="calc">{t("calculation")}</TabsTrigger>
             <TabsTrigger value="mods">{t("moderator")}</TabsTrigger>
-            <TabsTrigger value="owners">{t("owners")}</TabsTrigger>
             <TabsTrigger value="diary">{t("myDiary")}</TabsTrigger>
           </TabsList>
           <TabsContent value="calc"><CalcPanel /></TabsContent>
           <TabsContent value="mods"><ModeratorPanel /></TabsContent>
-          <TabsContent value="owners"><OwnerLoginPanel /></TabsContent>
           <TabsContent value="diary"><DiaryPanel /></TabsContent>
         </Tabs>
       </div>
@@ -302,10 +299,10 @@ function DiaryPanel() {
   const save = useMutation({
     mutationFn: async (form: any) => {
       if (editing) {
-        const { error } = await offlineFrom("admin_diary").update(form).eq("id", editing.id);
+        const { error } = await supabase.from("admin_diary").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await offlineFrom("admin_diary").insert({ ...form, user_id: user!.id });
+        const { error } = await supabase.from("admin_diary").insert({ ...form, user_id: user!.id });
         if (error) throw error;
       }
     },
@@ -319,7 +316,7 @@ function DiaryPanel() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await offlineFrom("admin_diary").delete().eq("id", id);
+      const { error } = await supabase.from("admin_diary").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -367,129 +364,6 @@ function DiaryPanel() {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
               <Button type="submit">{editing ? t("update") : t("submit")}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-type OwnerRow = { id: string; name: string; login_id: string | null; auth_user_id: string | null };
-
-function OwnerLoginPanel() {
-  const { t } = useT();
-  const qc = useQueryClient();
-  const [createFor, setCreateFor] = useState<OwnerRow | null>(null);
-  const [resetFor, setResetFor] = useState<OwnerRow | null>(null);
-  const [editFor, setEditFor] = useState<OwnerRow | null>(null);
-
-  const doCreate = useServerFn(createOwnerLogin);
-  const doReset = useServerFn(resetUserPin);
-  const doEdit = useServerFn(updateOwnerLoginId);
-
-  const { data: owners = [] } = useQuery({
-    queryKey: ["admin-owners"],
-    queryFn: async () =>
-      ((await supabase.from("owners").select("id,name,login_id,auth_user_id").order("name")).data ?? []) as OwnerRow[],
-  });
-
-  return (
-    <div className="space-y-3">
-      <div className="overflow-x-auto rounded-md border bg-card">
-        <table className="w-full text-sm">
-          <thead className="bg-muted"><tr>
-            <th className="text-left px-3 py-2">{t("name")}</th>
-            <th className="text-left px-3 py-2">{t("loginId")}</th>
-            <th className="text-right px-3 py-2">{t("actions")}</th>
-          </tr></thead>
-          <tbody>
-            {owners.length === 0 && <tr><td colSpan={3} className="text-center py-6 text-muted-foreground">{t("noData")}</td></tr>}
-            {owners.map((o) => (
-              <tr key={o.id} className="border-t">
-                <td className="px-3 py-2">{o.name}</td>
-                <td className="px-3 py-2">{o.login_id ?? "—"}</td>
-                <td className="px-3 py-2 text-right">
-                  <div className="flex justify-end flex-wrap gap-1">
-                    {o.auth_user_id ? (
-                      <>
-                        <Button size="sm" variant="ghost" onClick={() => setEditFor(o)}>{t("loginId")}</Button>
-                        <Button size="sm" variant="ghost" onClick={() => setResetFor(o)}>{t("resetPin")}</Button>
-                      </>
-                    ) : (
-                      <Button size="sm" onClick={() => setCreateFor(o)}>{t("createLogin")}</Button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <Dialog open={!!createFor} onOpenChange={(v) => !v && setCreateFor(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{t("createLogin")} — {createFor?.name}</DialogTitle></DialogHeader>
-          <form className="space-y-3" onSubmit={async (e) => {
-            e.preventDefault();
-            const f = new FormData(e.currentTarget);
-            try {
-              await doCreate({ data: { ownerId: createFor!.id, loginId: String(f.get("loginId") || ""), pin: String(f.get("pin") || "") } });
-              toast.success(t("saved"));
-              setCreateFor(null);
-              qc.invalidateQueries({ queryKey: ["admin-owners"] });
-              qc.invalidateQueries({ queryKey: ["owners"] });
-            } catch (err: any) { toast.error(err.message); }
-          }}>
-            <Input name="loginId" placeholder={t("loginId")} required minLength={3} className="h-11" />
-            <Input name="pin" placeholder={t("pin")} required minLength={4} className="h-11" />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateFor(null)}>{t("cancel")}</Button>
-              <Button type="submit">{t("submit")}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!resetFor} onOpenChange={(v) => !v && setResetFor(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{t("resetPin")} — {resetFor?.name}</DialogTitle></DialogHeader>
-          <form className="space-y-3" onSubmit={async (e) => {
-            e.preventDefault();
-            const f = new FormData(e.currentTarget);
-            try {
-              await doReset({ data: { authUserId: resetFor!.auth_user_id!, pin: String(f.get("pin") || "") } });
-              toast.success(t("pinSet"));
-              setResetFor(null);
-            } catch (err: any) { toast.error(err.message); }
-          }}>
-            <Input name="pin" placeholder={t("newPin")} required minLength={4} className="h-11" />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setResetFor(null)}>{t("cancel")}</Button>
-              <Button type="submit">{t("submit")}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!editFor} onOpenChange={(v) => !v && setEditFor(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{t("loginId")} — {editFor?.name}</DialogTitle></DialogHeader>
-          <form className="space-y-3" onSubmit={async (e) => {
-            e.preventDefault();
-            const f = new FormData(e.currentTarget);
-            try {
-              await doEdit({ data: { ownerId: editFor!.id, loginId: String(f.get("loginId") || "") } });
-              toast.success(t("saved"));
-              setEditFor(null);
-              qc.invalidateQueries({ queryKey: ["admin-owners"] });
-              qc.invalidateQueries({ queryKey: ["owners"] });
-            } catch (err: any) { toast.error(err.message); }
-          }}>
-            <Input name="loginId" defaultValue={editFor?.login_id ?? ""} placeholder={t("loginId")} required minLength={3} className="h-11" />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditFor(null)}>{t("cancel")}</Button>
-              <Button type="submit">{t("update")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

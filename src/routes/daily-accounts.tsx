@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
@@ -67,7 +66,7 @@ function DailyAccountsPage() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await offlineFrom("trips").delete().eq("id", id);
+      const { error } = await supabase.from("trips").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["trips"] }); toast.success(t("deleted")); },
@@ -281,10 +280,10 @@ function TripDialog({
         supervisor: supervisor || null,
       };
       if (editing) {
-        const { error } = await offlineFrom("trips").update(payload).eq("id", editing.id);
+        const { error } = await supabase.from("trips").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await offlineFrom("trips").insert(payload);
+        const { error } = await supabase.from("trips").insert(payload);
         if (error) throw error;
       }
     },

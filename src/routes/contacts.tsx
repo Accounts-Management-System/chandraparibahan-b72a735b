@@ -9,7 +9,6 @@ import {
 import { useT } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, KeyRound, Eye } from "lucide-react";
@@ -60,7 +59,7 @@ function Page() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await offlineFrom("contacts").delete().eq("id", id);
+      const { error } = await supabase.from("contacts").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -72,7 +71,7 @@ function Page() {
   const save = useMutation({
     mutationFn: async (form: any) => {
       if (editing) {
-        const { error } = await offlineFrom("contacts").update(form).eq("id", editing.id);
+        const { error } = await supabase.from("contacts").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
         const { error } = await supabase

@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendorsRouteImport } from './routes/vendors'
 import { Route as VehiclesRouteImport } from './routes/vehicles'
 import { Route as RoutesRouteImport } from './routes/routes'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OwnersRouteImport } from './routes/owners'
 import { Route as OwnerAccountsRouteImport } from './routes/owner-accounts'
@@ -44,11 +43,6 @@ const VehiclesRoute = VehiclesRouteImport.update({
 const RoutesRoute = RoutesRouteImport.update({
   id: '/routes',
   path: '/routes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -155,7 +149,6 @@ export interface FileRoutesByFullPath {
   '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/routes': typeof RoutesRoute
   '/vehicles': typeof VehiclesRoute
   '/vendors': typeof VendorsRoute
@@ -178,7 +171,6 @@ export interface FileRoutesByTo {
   '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/routes': typeof RoutesRoute
   '/vehicles': typeof VehiclesRoute
   '/vendors': typeof VendorsRoute
@@ -202,7 +194,6 @@ export interface FileRoutesById {
   '/owner-accounts': typeof OwnerAccountsRoute
   '/owners': typeof OwnersRoute
   '/reports': typeof ReportsRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/routes': typeof RoutesRoute
   '/vehicles': typeof VehiclesRoute
   '/vendors': typeof VendorsRoute
@@ -227,7 +218,6 @@ export interface FileRouteTypes {
     | '/owner-accounts'
     | '/owners'
     | '/reports'
-    | '/reset-password'
     | '/routes'
     | '/vehicles'
     | '/vendors'
@@ -250,7 +240,6 @@ export interface FileRouteTypes {
     | '/owner-accounts'
     | '/owners'
     | '/reports'
-    | '/reset-password'
     | '/routes'
     | '/vehicles'
     | '/vendors'
@@ -273,7 +262,6 @@ export interface FileRouteTypes {
     | '/owner-accounts'
     | '/owners'
     | '/reports'
-    | '/reset-password'
     | '/routes'
     | '/vehicles'
     | '/vendors'
@@ -297,7 +285,6 @@ export interface RootRouteChildren {
   OwnerAccountsRoute: typeof OwnerAccountsRoute
   OwnersRoute: typeof OwnersRoute
   ReportsRoute: typeof ReportsRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   RoutesRoute: typeof RoutesRoute
   VehiclesRoute: typeof VehiclesRoute
   VendorsRoute: typeof VendorsRoute
@@ -324,13 +311,6 @@ declare module '@tanstack/react-router' {
       path: '/routes'
       fullPath: '/routes'
       preLoaderRoute: typeof RoutesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -473,7 +453,6 @@ const rootRouteChildren: RootRouteChildren = {
   OwnerAccountsRoute: OwnerAccountsRoute,
   OwnersRoute: OwnersRoute,
   ReportsRoute: ReportsRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   RoutesRoute: RoutesRoute,
   VehiclesRoute: VehiclesRoute,
   VendorsRoute: VendorsRoute,

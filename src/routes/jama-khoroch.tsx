@@ -10,7 +10,6 @@ import {
 import { useT, fmtNum, fmtDate, trBn } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
@@ -180,11 +179,11 @@ function Page() {
   const totalE = khorochFiltered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   const delE = useMutation({
-    mutationFn: async (id: string) => { const { error } = await offlineFrom("expenses").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from("expenses").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-khoroch"] }); toast.success(t("deleted")); },
   });
   const delOI = useMutation({
-    mutationFn: async (id: string) => { const { error } = await offlineFrom("other_incomes").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from("other_incomes").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["jk-other-incomes"] }); toast.success(t("deleted")); },
   });
 
@@ -355,10 +354,10 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
     mutationFn: async (form: any) => {
       if (!form.owner_id) throw new Error(trBn("ওনার নির্বাচন করুন", lang));
       if (editing) {
-        const { error } = await offlineFrom("expenses").update(form).eq("id", editing.id);
+        const { error } = await supabase.from("expenses").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await offlineFrom("expenses").insert(form);
+        const { error } = await supabase.from("expenses").insert(form);
         if (error) throw error;
       }
     },
@@ -443,10 +442,10 @@ function IncomeDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: b
     mutationFn: async (form: any) => {
       if (!form.owner_id) throw new Error(trBn("ওনার নির্বাচন করুন", lang));
       if (editing) {
-        const { error } = await offlineFrom("other_incomes").update(form).eq("id", editing.id);
+        const { error } = await supabase.from("other_incomes").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await offlineFrom("other_incomes").insert(form);
+        const { error } = await supabase.from("other_incomes").insert(form);
         if (error) throw error;
       }
     },
