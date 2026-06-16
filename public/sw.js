@@ -3,7 +3,7 @@
 //  - HTML navigations: NetworkFirst with cached fallback
 //  - Same-origin static assets (js/css/img/font): StaleWhileRevalidate
 //  - Supabase / cross-origin API: never cache, let the app handle offline via IDB queue
-const VERSION = "cp-v2";
+const VERSION = "cp-v3";
 const APP_SHELL = `app-shell-${VERSION}`;
 const STATIC = `static-${VERSION}`;
 
