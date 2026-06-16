@@ -30,6 +30,7 @@ import {
   FileText,
 } from "lucide-react";
 import cpLogo from "@/assets/cp-logo.png";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
 
