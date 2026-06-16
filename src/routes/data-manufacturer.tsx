@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
@@ -39,7 +40,7 @@ function Page() {
     mutationFn: async () => {
       const v = newCat.trim();
       if (!v) return;
-      const { error } = await supabase.from("expense_categories").insert({ name: v });
+      const { error } = await offlineFrom("expense_categories").insert({ name: v });
       if (error) throw error;
     },
     onSuccess: () => { setNewCat(""); qc.invalidateQueries({ queryKey: ["expense_categories"] }); toast.success(t("saved")); },
@@ -47,7 +48,7 @@ function Page() {
   });
 
   const delCat = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("expense_categories").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("expense_categories").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { setSelected(null); qc.invalidateQueries({ queryKey: ["expense_categories"] }); },
   });
 
@@ -57,7 +58,7 @@ function Page() {
       const lines = headsText.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
       if (!lines.length) return;
       const rows = lines.map((name) => ({ category_id: selected, name }));
-      const { error } = await supabase.from("expense_heads").insert(rows);
+      const { error } = await offlineFrom("expense_heads").insert(rows);
       if (error) throw error;
     },
     onSuccess: () => { setHeadsText(""); qc.invalidateQueries({ queryKey: ["expense_heads", selected] }); toast.success(t("saved")); },
@@ -65,7 +66,7 @@ function Page() {
   });
 
   const delHead = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("expense_heads").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("expense_heads").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["expense_heads", selected] }),
   });
 
@@ -152,7 +153,7 @@ function LookupManager({ kind, titleKey }: { kind: "vendor"; titleKey: "vendors"
       const v = value.trim();
       if (!v) throw new Error("নাম লিখুন");
       if (items.some((i) => i.value.toLowerCase() === v.toLowerCase())) throw new Error("এই নাম আগে থেকেই আছে");
-      const { error } = await supabase.from("entry_lookups").insert({ kind, value: v });
+      const { error } = await offlineFrom("entry_lookups").insert({ kind, value: v });
       if (error) throw error;
     },
     onSuccess: () => { setValue(""); qc.invalidateQueries({ queryKey: ["entry_lookups", kind] }); toast.success(t("saved")); },
@@ -160,7 +161,7 @@ function LookupManager({ kind, titleKey }: { kind: "vendor"; titleKey: "vendors"
   });
 
   const del = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("entry_lookups").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("entry_lookups").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["entry_lookups", kind] }),
   });
 
@@ -204,7 +205,7 @@ function SupervisorManager() {
       if (items.some((i) => i.value.toLowerCase() === v.toLowerCase())) {
         throw new Error("এই নাম আগে থেকেই আছে");
       }
-      const { error } = await supabase.from("entry_lookups").insert({ kind: "supervisor", value: v });
+      const { error } = await offlineFrom("entry_lookups").insert({ kind: "supervisor", value: v });
       if (error) throw error;
     },
     onSuccess: () => { setValue(""); qc.invalidateQueries({ queryKey: ["entry_lookups", "supervisor"] }); toast.success(t("saved")); },
@@ -212,7 +213,7 @@ function SupervisorManager() {
   });
 
   const del = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("entry_lookups").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("entry_lookups").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["entry_lookups", "supervisor"] }),
   });
 

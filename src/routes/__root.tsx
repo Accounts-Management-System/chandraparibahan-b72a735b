@@ -12,6 +12,10 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { installSync } from "@/lib/offline/sync";
+import { installQueryPersister } from "@/lib/offline/persister";
+import { registerServiceWorker } from "@/lib/offline/registerSW";
 
 function NotFoundComponent() {
   return (
@@ -75,6 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0b1220" },
       { title: "Chandra Paribahan — Management System" },
       { name: "description", content: "Chandra Paribahan transport management system: daily accounts, expenses, vehicles, contacts and reports." },
       { property: "og:title", content: "Chandra Paribahan — Management System" },
@@ -87,10 +92,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -120,6 +123,35 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    installQueryPersister(queryClient);
+    installSync(queryClient);
+    registerServiceWorker();
+
+    // After a new deploy, previously-loaded HTML may reference chunk hashes
+    // that no longer exist. When a dynamic import fails, drop the SW cache
+    // and hard-reload so the user gets the fresh asset graph.
+    const onPreloadError = async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {
+        /* ignore */
+      }
+      window.location.reload();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+  }, [queryClient]);
+
+
 
   return (
     <QueryClientProvider client={queryClient}>

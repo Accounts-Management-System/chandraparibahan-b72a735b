@@ -7,12 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, KeyRound } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { useServerFn } from "@tanstack/react-start";
-import { createOwnerLogin, resetUserPin } from "@/lib/admin.functions";
+import { createOwnerLogin, resetUserPin, updateOwnerLoginId } from "@/lib/admin.functions";
 import { SearchFilters, MiniDashboard, emptyFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/owners")({ component: Page });
@@ -37,10 +38,12 @@ function Page() {
   const [editing, setEditing] = useState<Owner | null>(null);
   const [loginFor, setLoginFor] = useState<Owner | null>(null);
   const [resetFor, setResetFor] = useState<Owner | null>(null);
+  const [editLoginFor, setEditLoginFor] = useState<Owner | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
 
   const doCreateLogin = useServerFn(createOwnerLogin);
   const doResetPin = useServerFn(resetUserPin);
+  const doUpdateLoginId = useServerFn(updateOwnerLoginId);
 
   const { data: owners = [], isLoading } = useQuery({
     queryKey: ["owners"],
@@ -102,7 +105,7 @@ function Page() {
   const totalFare = fareRows.reduce((s, r) => s + r.fare, 0);
 
   const del = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("owners").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("owners").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["owners"] }); qc.invalidateQueries({ queryKey: ["vehicles-with-owner"] }); toast.success(t("deleted")); },
   });
 
@@ -151,11 +154,16 @@ function Page() {
                 key: "actions2",
                 header: t("actions"),
                 render: (r) => isAdmin ? (
-                  <div className="flex gap-1">
+                  <div className="flex flex-wrap gap-1">
                     {r.auth_user_id ? (
-                      <Button size="sm" variant="ghost" onClick={() => setResetFor(r)}>
-                        <KeyRound className="h-3 w-3 mr-1" />{t("resetPin")}
-                      </Button>
+                      <>
+                        <Button size="sm" variant="ghost" onClick={() => setEditLoginFor(r)}>
+                          {t("loginId")}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setResetFor(r)}>
+                          <KeyRound className="h-3 w-3 mr-1" />{t("resetPin")}
+                        </Button>
+                      </>
                     ) : (
                       <Button size="sm" variant="ghost" onClick={() => setLoginFor(r)}>
                         {t("createLogin")}
@@ -240,6 +248,39 @@ function Page() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Login ID */}
+      <Dialog open={!!editLoginFor} onOpenChange={(v) => !v && setEditLoginFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t("loginId")} — {editLoginFor?.name}</DialogTitle></DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              try {
+                await doUpdateLoginId({
+                  data: {
+                    ownerId: editLoginFor!.id,
+                    loginId: String(f.get("loginId") || ""),
+                  },
+                });
+                toast.success(t("saved"));
+                setEditLoginFor(null);
+                qc.invalidateQueries({ queryKey: ["owners"] });
+              } catch (err: any) {
+                toast.error(err.message);
+              }
+            }}
+          >
+            <Input name="loginId" defaultValue={editLoginFor?.login_id ?? ""} placeholder={t("loginId")} required minLength={3} className="h-11" />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditLoginFor(null)}>{t("cancel")}</Button>
+              <Button type="submit">{t("update")}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
@@ -257,10 +298,10 @@ function OwnerDialog({ open, onOpenChange, editing }: { open: boolean; onOpenCha
     mutationFn: async () => {
       const payload = { name };
       if (editing) {
-        const { error } = await supabase.from("owners").update(payload).eq("id", editing.id);
+        const { error } = await offlineFrom("owners").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("owners").insert(payload);
+        const { error } = await offlineFrom("owners").insert(payload);
         if (error) throw error;
       }
     },

@@ -30,6 +30,7 @@ import {
   FileText,
 } from "lucide-react";
 import cpLogo from "@/assets/cp-logo.png";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 type NavItem = { to: string; icon: any; key: any; adminOnly?: boolean; writeOnly?: boolean };
 
@@ -82,13 +83,16 @@ const SIDEBAR_GRID =
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { role, isAdmin, canWrite, isOwner } = useRole();
+  const { role, isAdmin, isModerator, isShareholder, canWrite, isOwner, loading: roleLoading } = useRole();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
   const { theme, toggle: toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Owners can VIEW every page except admin; only canWrite users see writeOnly pages too.
-  const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite || isOwner));
+  const isGuest = !roleLoading && !isAdmin && !isModerator && !isShareholder && !isOwner;
+  // Guests see no tabs and no data. Owners can VIEW every page except admin; only canWrite users see writeOnly pages.
+  const visibleNav = isGuest
+    ? []
+    : nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite || isOwner));
 
   const handleLogout = async () => {
     // Always clear the local session even if the server call fails (expired/broken token).
@@ -156,6 +160,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
             </p>
             <p className="mt-0.5 text-[10px] text-slate-600 dark:text-slate-400 truncate">{user.email}</p>
+            <div className="mt-1.5"><OfflineIndicator /></div>
           </div>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
@@ -210,7 +215,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {user.email ? ` • ${user.email}` : ""}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <OfflineIndicator />
             <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="theme">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
@@ -223,7 +229,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
-          {children}
+          {isGuest ? (
+            <div className="max-w-xl mx-auto mt-10 rounded-lg border border-amber-500/40 bg-amber-50/60 dark:bg-amber-500/10 p-6 text-center space-y-3">
+              <h2 className="text-lg font-bold text-amber-900 dark:text-amber-200">{t("guestNoAccessTitle")}</h2>
+              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{t("guestNoAccessBody")}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          ) : (
+            children
+          )}
           <footer className="mt-8 pt-4 border-t text-center text-[11px] text-muted-foreground leading-relaxed">
             {lang === "bn" ? (
               <>
