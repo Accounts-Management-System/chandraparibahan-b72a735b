@@ -83,13 +83,16 @@ const SIDEBAR_GRID =
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { role, isAdmin, canWrite, isOwner } = useRole();
+  const { role, isAdmin, isModerator, isShareholder, canWrite, isOwner, loading: roleLoading } = useRole();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
   const { theme, toggle: toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Owners can VIEW every page except admin; only canWrite users see writeOnly pages too.
-  const visibleNav = nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite || isOwner));
+  const isGuest = !roleLoading && !isAdmin && !isModerator && !isShareholder && !isOwner;
+  // Guests see no tabs and no data. Owners can VIEW every page except admin; only canWrite users see writeOnly pages.
+  const visibleNav = isGuest
+    ? []
+    : nav.filter((n) => (!n.adminOnly || isAdmin) && (!n.writeOnly || canWrite || isOwner));
 
   const handleLogout = async () => {
     // Always clear the local session even if the server call fails (expired/broken token).
