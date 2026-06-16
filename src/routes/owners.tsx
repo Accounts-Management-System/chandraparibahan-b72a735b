@@ -154,11 +154,16 @@ function Page() {
                 key: "actions2",
                 header: t("actions"),
                 render: (r) => isAdmin ? (
-                  <div className="flex gap-1">
+                  <div className="flex flex-wrap gap-1">
                     {r.auth_user_id ? (
-                      <Button size="sm" variant="ghost" onClick={() => setResetFor(r)}>
-                        <KeyRound className="h-3 w-3 mr-1" />{t("resetPin")}
-                      </Button>
+                      <>
+                        <Button size="sm" variant="ghost" onClick={() => setEditLoginFor(r)}>
+                          {t("loginId")}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setResetFor(r)}>
+                          <KeyRound className="h-3 w-3 mr-1" />{t("resetPin")}
+                        </Button>
+                      </>
                     ) : (
                       <Button size="sm" variant="ghost" onClick={() => setLoginFor(r)}>
                         {t("createLogin")}
