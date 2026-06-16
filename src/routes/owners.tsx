@@ -38,10 +38,12 @@ function Page() {
   const [editing, setEditing] = useState<Owner | null>(null);
   const [loginFor, setLoginFor] = useState<Owner | null>(null);
   const [resetFor, setResetFor] = useState<Owner | null>(null);
+  const [editLoginFor, setEditLoginFor] = useState<Owner | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
 
   const doCreateLogin = useServerFn(createOwnerLogin);
   const doResetPin = useServerFn(resetUserPin);
+  const doUpdateLoginId = useServerFn(updateOwnerLoginId);
 
   const { data: owners = [], isLoading } = useQuery({
     queryKey: ["owners"],
