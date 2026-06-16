@@ -20,6 +20,7 @@ function LoginPage() {
   const { user, loading } = useAuth();
   const { t, lang, setLang } = useT();
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [loginType, setLoginType] = useState<"admin" | "owner">("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -102,10 +103,37 @@ function LoginPage() {
           <h1 className="text-3xl font-bold mb-1 text-center" style={{ fontFamily: "serif" }}>
             {t("loginForm")}
           </h1>
-          <p className="text-center text-slate-400 mb-8 text-sm">{t("tagline")}</p>
+          <p className="text-center text-slate-400 mb-4 text-sm">{t("tagline")}</p>
+
+          {mode === "login" && (
+            <div className="max-w-xs mx-auto w-full mb-3 grid grid-cols-2 rounded-md overflow-hidden border border-white/20 text-xs">
+              <button
+                type="button"
+                onClick={() => setLoginType("admin")}
+                className={`py-2 ${loginType === "admin" ? "bg-white text-black font-semibold" : "bg-transparent text-slate-300 hover:bg-white/10"}`}
+              >
+                {t("loginAsAdmin")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginType("owner")}
+                className={`py-2 ${loginType === "owner" ? "bg-white text-black font-semibold" : "bg-transparent text-slate-300 hover:bg-white/10"}`}
+              >
+                {t("loginAsOwner")}
+              </button>
+            </div>
+          )}
+          {mode === "login" && (
+            <p className="text-center text-slate-400 text-[11px] mb-3 max-w-xs mx-auto">
+              {loginType === "admin" ? t("loginHelpAdmin") : t("loginHelpOwner")}
+            </p>
+          )}
+
           <form onSubmit={submit} className="space-y-4 max-w-xs mx-auto w-full">
             <div>
-              <Label className="text-white text-xs">{t("email")}</Label>
+              <Label className="text-white text-xs">
+                {mode === "login" && loginType === "owner" ? t("loginId") : t("email")}
+              </Label>
               <Input
                 type="text"
                 value={email}
@@ -113,11 +141,13 @@ function LoginPage() {
                 required
                 className="bg-white text-black"
                 autoComplete="username"
-                placeholder={t("email") + " / " + t("loginId")}
+                placeholder={mode === "login" && loginType === "owner" ? t("loginId") : t("email")}
               />
             </div>
             <div>
-              <Label className="text-white text-xs">{t("password")}</Label>
+              <Label className="text-white text-xs">
+                {mode === "login" && loginType === "owner" ? t("pin") : t("password")}
+              </Label>
               <div className="relative">
                 <Input
                   type={showPw ? "text" : "password"}
@@ -141,7 +171,7 @@ function LoginPage() {
             <Button type="submit" disabled={busy} className="w-full bg-slate-200 text-black hover:bg-white">
               {busy ? "..." : mode === "login" ? t("login") : t("signup")}
             </Button>
-            {mode === "login" && (
+            {mode === "login" && loginType === "admin" && (
               <button
                 type="button"
                 onClick={() => { setForgotEmail(email.includes("@") ? email : ""); setForgotOpen(true); }}
@@ -157,6 +187,12 @@ function LoginPage() {
             >
               {mode === "login" ? t("signup") : t("login")}
             </button>
+            {mode === "signup" && (
+              <div className="mt-3 rounded-md border border-amber-400/40 bg-amber-400/10 p-3 text-[11px] text-amber-100 leading-relaxed">
+                <p className="font-semibold mb-1">{t("signupNoteHeader")}</p>
+                <p>{t("signupNoteBody")}</p>
+              </div>
+            )}
           </form>
         </div>
         <div className="bg-black hidden md:flex items-center justify-center p-8">

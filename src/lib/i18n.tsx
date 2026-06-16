@@ -216,6 +216,14 @@ const dict = {
   confirmPassword: { bn: "পাসওয়ার্ড নিশ্চিত করুন", en: "Confirm password" },
   updatePassword: { bn: "পাসওয়ার্ড আপডেট", en: "Update password" },
   passwordUpdated: { bn: "পাসওয়ার্ড আপডেট হয়েছে", en: "Password updated" },
+  loginAsAdmin: { bn: "এডমিন / মডারেটর লগইন", en: "Admin / Moderator login" },
+  loginAsOwner: { bn: "ওনার লগইন", en: "Owner login" },
+  loginHelpAdmin: { bn: "ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন", en: "Login with email & password" },
+  loginHelpOwner: { bn: "এডমিনের দেওয়া আইডি ও পিন দিয়ে লগইন করুন", en: "Use the ID & PIN given by admin" },
+  signupNoteHeader: { bn: "নতুন অ্যাকাউন্ট তৈরি করলে কী হবে?", en: "What happens if you sign up?" },
+  signupNoteBody: { bn: "যেকোনো ইমেইল দিয়ে নতুন অ্যাকাউন্ট তৈরি করা যাবে, কিন্তু এডমিন অনুমতি না দেওয়া পর্যন্ত কোনো ডাটা দেখা যাবে না — সকল ট্যাব ইনএকটিভ থাকবে।", en: "Anyone can sign up, but no data is visible until an admin grants access — all tabs stay inactive." },
+  guestNoAccessTitle: { bn: "এক্সেস নেই", en: "No access yet" },
+  guestNoAccessBody: { bn: "আপনার অ্যাকাউন্টে এখনো কোনো ভূমিকা (Role) দেওয়া হয়নি। এডমিন অনুমতি দিলে আপনি ডাটা দেখতে পারবেন। ততক্ষণ পর্যন্ত সকল ট্যাব ইনএকটিভ থাকবে।", en: "Your account has not been assigned a role yet. Once an admin grants access, you will be able to view data. Until then all tabs remain inactive." },
 } as const;
 
 type Key = keyof typeof dict;
