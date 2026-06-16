@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Plus, KeyRound } from "lucide-react";
 import { useRole } from "@/lib/useRole";
 import { useServerFn } from "@tanstack/react-start";
-import { createOwnerLogin, resetUserPin } from "@/lib/admin.functions";
+import { createOwnerLogin, resetUserPin, updateOwnerLoginId } from "@/lib/admin.functions";
 import { SearchFilters, MiniDashboard, emptyFilters, type FilterState } from "@/components/SearchFilters";
 
 export const Route = createFileRoute("/owners")({ component: Page });
