@@ -128,6 +128,27 @@ function RootComponent() {
     installQueryPersister(queryClient);
     installSync(queryClient);
     registerServiceWorker();
+
+    // After a new deploy, previously-loaded HTML may reference chunk hashes
+    // that no longer exist. When a dynamic import fails, drop the SW cache
+    // and hard-reload so the user gets the fresh asset graph.
+    const onPreloadError = async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {
+        /* ignore */
+      }
+      window.location.reload();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
   }, [queryClient]);
 
 
