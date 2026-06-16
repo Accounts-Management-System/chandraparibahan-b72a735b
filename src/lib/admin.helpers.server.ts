@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-/** Ensure caller has admin role (with bootstrap exception: first user is admin). */
+** Ensure caller has admin role (with bootstrap exception: first user is admin). */
 export async function requireAdmin(userId: string) {
   const { data: mine } = await supabaseAdmin
     .from("user_roles")
