@@ -10,6 +10,7 @@ import {
 import { useT, fmtNum } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
@@ -299,10 +300,10 @@ function DiaryPanel() {
   const save = useMutation({
     mutationFn: async (form: any) => {
       if (editing) {
-        const { error } = await supabase.from("admin_diary").update(form).eq("id", editing.id);
+        const { error } = await offlineFrom("admin_diary").update(form).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("admin_diary").insert({ ...form, user_id: user!.id });
+        const { error } = await offlineFrom("admin_diary").insert({ ...form, user_id: user!.id });
         if (error) throw error;
       }
     },
@@ -316,7 +317,7 @@ function DiaryPanel() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("admin_diary").delete().eq("id", id);
+      const { error } = await offlineFrom("admin_diary").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

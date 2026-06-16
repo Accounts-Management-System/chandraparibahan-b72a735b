@@ -8,6 +8,7 @@ import { CategorySelect, HeadSelect } from "@/components/CategoryHeadSelect";
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, FileDown } from "lucide-react";
@@ -106,7 +107,7 @@ function Page() {
   };
 
   const del = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("expenses").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("expenses").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["expenses"] }); toast.success(t("deleted")); },
   });
 
@@ -121,8 +122,8 @@ function Page() {
         amount: Number(amount || 0),
         vendor: vendor || null,
       };
-      if (editing) { const { error } = await supabase.from("expenses").update(form).eq("id", editing.id); if (error) throw error; }
-      else { const { error } = await supabase.from("expenses").insert(form); if (error) throw error; }
+      if (editing) { const { error } = await offlineFrom("expenses").update(form).eq("id", editing.id); if (error) throw error; }
+      else { const { error } = await offlineFrom("expenses").insert(form); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["expenses"] }); toast.success(t("saved")); setOpen(false); },
     onError: (e: any) => toast.error(e.message),

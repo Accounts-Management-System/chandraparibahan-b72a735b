@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useT, fmtNum, fmtDate, trBn } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useMemo, useState } from "react";
 import { FileDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { exportPdf } from "@/lib/exportPdf";
@@ -88,7 +89,7 @@ function Page() {
       if (!form.vendor.trim()) throw new Error(t("vendorReq"));
       const amt = Number(form.amount);
       if (!amt) throw new Error(t("amountReq"));
-      const { error } = await supabase.from("vendor_receivables").insert({
+      const { error } = await offlineFrom("vendor_receivables").insert({
         entry_date: form.entry_date,
         vendor: form.vendor.trim(),
         owner_id: isMain ? null : ownerId,
@@ -109,7 +110,7 @@ function Page() {
   const updateRec = useMutation({
     mutationFn: async () => {
       if (!editing) return;
-      const { error } = await supabase.from("vendor_receivables").update({
+      const { error } = await offlineFrom("vendor_receivables").update({
         entry_date: editing.entry_date,
         vendor: editing.vendor,
         amount: Number(editing.amount) || 0,
@@ -127,7 +128,7 @@ function Page() {
 
   const delRec = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("vendor_receivables").delete().eq("id", id);
+      const { error } = await offlineFrom("vendor_receivables").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["vendor-receivables"] }),

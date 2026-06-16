@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useT, fmtNum, fmtDate } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineFrom } from "@/lib/offline/supabaseWrite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, KeyRound } from "lucide-react";
@@ -102,7 +103,7 @@ function Page() {
   const totalFare = fareRows.reduce((s, r) => s + r.fare, 0);
 
   const del = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("owners").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await offlineFrom("owners").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["owners"] }); qc.invalidateQueries({ queryKey: ["vehicles-with-owner"] }); toast.success(t("deleted")); },
   });
 
@@ -257,10 +258,10 @@ function OwnerDialog({ open, onOpenChange, editing }: { open: boolean; onOpenCha
     mutationFn: async () => {
       const payload = { name };
       if (editing) {
-        const { error } = await supabase.from("owners").update(payload).eq("id", editing.id);
+        const { error } = await offlineFrom("owners").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("owners").insert(payload);
+        const { error } = await offlineFrom("owners").insert(payload);
         if (error) throw error;
       }
     },
