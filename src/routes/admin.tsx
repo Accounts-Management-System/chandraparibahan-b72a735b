@@ -47,10 +47,12 @@ function Page() {
           <TabsList>
             <TabsTrigger value="calc">{t("calculation")}</TabsTrigger>
             <TabsTrigger value="mods">{t("moderator")}</TabsTrigger>
+            <TabsTrigger value="owners">{t("owners")}</TabsTrigger>
             <TabsTrigger value="diary">{t("myDiary")}</TabsTrigger>
           </TabsList>
           <TabsContent value="calc"><CalcPanel /></TabsContent>
           <TabsContent value="mods"><ModeratorPanel /></TabsContent>
+          <TabsContent value="owners"><OwnerLoginPanel /></TabsContent>
           <TabsContent value="diary"><DiaryPanel /></TabsContent>
         </Tabs>
       </div>
