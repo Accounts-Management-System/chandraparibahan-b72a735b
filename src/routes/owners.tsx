@@ -248,6 +248,39 @@ function Page() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Login ID */}
+      <Dialog open={!!editLoginFor} onOpenChange={(v) => !v && setEditLoginFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t("loginId")} — {editLoginFor?.name}</DialogTitle></DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              try {
+                await doUpdateLoginId({
+                  data: {
+                    ownerId: editLoginFor!.id,
+                    loginId: String(f.get("loginId") || ""),
+                  },
+                });
+                toast.success(t("saved"));
+                setEditLoginFor(null);
+                qc.invalidateQueries({ queryKey: ["owners"] });
+              } catch (err: any) {
+                toast.error(err.message);
+              }
+            }}
+          >
+            <Input name="loginId" defaultValue={editLoginFor?.login_id ?? ""} placeholder={t("loginId")} required minLength={3} className="h-11" />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditLoginFor(null)}>{t("cancel")}</Button>
+              <Button type="submit">{t("update")}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
