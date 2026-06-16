@@ -14,7 +14,7 @@ export function installQueryPersister(queryClient: QueryClient) {
       throttleTime: 1000,
     });
     persistQueryClient({
-      queryClient,
+      queryClient: queryClient as any,
       persister,
       maxAge: 1000 * 60 * 60 * 24 * 14, // 14 days
       buster: "v1",
