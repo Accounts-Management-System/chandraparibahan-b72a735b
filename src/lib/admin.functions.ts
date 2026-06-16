@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireAdmin } from "./admin.helpers.server";
 
-** Persist first logged-in user as admin so write access works immediately. *
+/** Persist first logged-in user as admin so write access works immediately. */
 export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -12,7 +12,7 @@ export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-** Create a moderator account (email/password). *
+/** Create a moderator account (email/password). */
 export const createModerator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -41,7 +41,7 @@ export const createModerator = createServerFn({ method: "POST" })
     return { id: uid, email: data.email };
   });
 
-** Create a shareholder login (login_id + pin) and link to a contacts row. *
+/** Create a shareholder login (login_id + pin) and link to a contacts row. */
 export const createShareholderLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
