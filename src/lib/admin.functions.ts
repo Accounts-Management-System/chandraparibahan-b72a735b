@@ -154,10 +154,23 @@ export const deleteManagedUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { requireAdmin } = await import("./admin.helpers.server");
+    const { requireAdmin, countAdmins } = await import("./admin.helpers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     if (data.userId === context.userId) throw new Error("Cannot delete yourself");
+
+    // Refuse to delete the last remaining admin so the bootstrap path can
+    // never re-open as a privilege-escalation vector.
+    const { data: targetRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.userId);
+    const targetIsAdmin = (targetRoles ?? []).some((r) => r.role === "admin");
+    if (targetIsAdmin) {
+      const admins = await countAdmins();
+      if (admins <= 1) throw new Error("Cannot delete the last remaining admin");
+    }
+
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     await supabaseAdmin
       .from("contacts")
@@ -167,3 +180,4 @@ export const deleteManagedUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
