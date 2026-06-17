@@ -15,40 +15,40 @@ export const signInWithLoginId = createServerFn({ method: "POST" })
       .object({
         loginId: z.string().trim().min(1).max(255),
         password: z.string().min(1).max(200),
+        role: z.enum(["admin", "moderator", "owner"]).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const url = process.env.SUPABASE_URL!;
     const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
 
-    // Build the list of candidate emails to try.
+    // Build the list of candidate emails to try. Synthetic account emails stay
+    // server-side; the browser only submits the user's login id + password.
     const raw = data.loginId.trim();
     const candidates: string[] = [];
+    const addCandidate = (email: string) => {
+      if (!candidates.includes(email)) candidates.push(email);
+    };
+
     if (raw.includes("@")) {
-      candidates.push(raw);
+      addCandidate(raw);
     } else {
       const lower = raw.toLowerCase();
-      // Look up real auth user via owners / contacts login_id mapping.
-      const { data: ow } = await supabaseAdmin
-        .from("owners")
-        .select("auth_user_id")
-        .eq("login_id", lower)
-        .maybeSingle();
-      const { data: ct } = await supabaseAdmin
-        .from("contacts")
-        .select("auth_user_id")
-        .eq("login_id", lower)
-        .maybeSingle();
-      for (const row of [ow, ct]) {
-        const uid = row?.auth_user_id as string | undefined;
-        if (!uid) continue;
-        const { data: u } = await supabaseAdmin.auth.admin.getUserById(uid);
-        const email = u?.user?.email;
-        if (email && !candidates.includes(email)) candidates.push(email);
+      if (data.role === "owner") {
+        addCandidate(`${lower}@owners.local`);
+        addCandidate(`${lower}@shareholders.local`);
+      } else if (data.role === "moderator") {
+        addCandidate(`${lower}@moderators.local`);
+      } else if (data.role === "admin") {
+        addCandidate(`${lower}@admins.local`);
+      } else {
+        addCandidate(`${lower}@owners.local`);
+        addCandidate(`${lower}@shareholders.local`);
+        addCandidate(`${lower}@moderators.local`);
+        addCandidate(`${lower}@admins.local`);
       }
     }
 
@@ -60,7 +60,6 @@ export const signInWithLoginId = createServerFn({ method: "POST" })
       auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     });
 
-    let lastErr: string | null = null;
     for (const email of candidates) {
       const { data: res, error } = await anon.auth.signInWithPassword({
         email,
@@ -72,7 +71,6 @@ export const signInWithLoginId = createServerFn({ method: "POST" })
           refresh_token: res.session.refresh_token,
         };
       }
-      lastErr = error?.message ?? "Login failed";
     }
-    throw new Error(lastErr ?? "Invalid login credentials");
+    throw new Error("Invalid login credentials");
   });
