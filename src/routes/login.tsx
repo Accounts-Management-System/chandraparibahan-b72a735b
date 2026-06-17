@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
+import { signInWithLoginId } from "@/lib/auth.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,10 +20,10 @@ function LoginPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { t, lang, setLang } = useT();
-  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const signIn = useServerFn(signInWithLoginId);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard" });
@@ -31,31 +33,16 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        toast.success(t("signupCheckEmail"));
-      } else {
-        const candidates = email.includes("@")
-          ? [email]
-          : [`${email.toLowerCase()}@owners.local`, `${email.toLowerCase()}@shareholders.local`];
-        let lastErr: any = null;
-        let ok = false;
-        for (const e2 of candidates) {
-          const { error } = await supabase.auth.signInWithPassword({ email: e2, password });
-          if (!error) { ok = true; break; }
-          lastErr = error;
-        }
-        if (!ok) throw lastErr ?? new Error("Login failed");
-        toast.success(t("loginSuccess"));
-        navigate({ to: "/dashboard" });
-      }
+      const tokens = await signIn({ data: { loginId: email, password } });
+      const { error } = await supabase.auth.setSession({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+      });
+      if (error) throw error;
+      toast.success(t("loginSuccess"));
+      navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err.message ?? "Error");
+      toast.error(err?.message ?? "Invalid login credentials");
     } finally {
       setBusy(false);
     }
@@ -95,21 +82,14 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={4}
                 className="bg-white text-black"
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                autoComplete="current-password"
               />
             </div>
             <Button type="submit" disabled={busy} className="w-full bg-slate-200 text-black hover:bg-white">
-              {busy ? "..." : mode === "login" ? t("login") : t("signup")}
+              {busy ? "..." : t("login")}
             </Button>
-            <button
-              type="button"
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="text-xs text-slate-400 hover:text-white block mx-auto"
-            >
-              {mode === "login" ? t("signup") : t("login")}
-            </button>
           </form>
         </div>
         <div className="bg-black hidden md:flex items-center justify-center p-8">
@@ -119,3 +99,4 @@ function LoginPage() {
     </div>
   );
 }
+
