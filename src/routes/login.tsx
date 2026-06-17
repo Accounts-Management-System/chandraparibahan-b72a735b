@@ -36,12 +36,18 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      const tokens = await signIn({ data: { loginId: email, password, role } });
-      const { error } = await supabase.auth.setSession({
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-      });
-      if (error) throw error;
+      const loginId = email.trim();
+      if (loginId.includes("@") && role !== "owner") {
+        const { error } = await supabase.auth.signInWithPassword({ email: loginId, password });
+        if (error) throw error;
+      } else {
+        const tokens = await signIn({ data: { loginId, password, role } });
+        const { error } = await supabase.auth.setSession({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+        });
+        if (error) throw error;
+      }
       toast.success(t("loginSuccess"));
       navigate({ to: "/dashboard" });
     } catch (err: any) {
