@@ -145,10 +145,10 @@ function DashboardPage() {
   const mb: any = mainAcc.data ?? { mode: "main", trips: [] as any[], jama: 0, dena: 0, incomeLoss: 0, otherIncome: 0, expense: 0, balance: 0, tripCount: 0 };
 
   const tripRows = (mb.trips ?? []) as any[];
-  // Find last date in range, filter only last-date rows for sum-per-vehicle
+  // Find last date in range for display only; chart totals must use the full
+  // selected day/month range for every mode.
   const lastDate = tripRows.reduce<string>((mx, r: any) => (r.trip_date > mx ? r.trip_date : mx), "");
-  const lastDateRows = lastDate ? tripRows.filter((r: any) => r.trip_date === lastDate) : tripRows;
-  const aggSource = chartMode === "tripCount" ? tripRows : lastDateRows;
+  const aggSource = tripRows;
   const aggregated = aggSource.reduce<Record<string, number>>((acc, r: any) => {
     const jama = Number(r.jama_1 || 0) + Number(r.jama_2 || 0);
     const dena = Number(r.dena_1 || 0) + Number(r.dena_2 || 0);
