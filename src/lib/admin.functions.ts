@@ -1,18 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { requireAdmin } from "./admin.helpers.server";
 
-** Persist first logged-in user as admin so write access works immediately. *
+/** Persist first logged-in user as admin so write access works immediately. */
 export const ensureBootstrapAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
     await requireAdmin(context.userId);
     return { ok: true };
   });
 
-** Create a moderator account (email/password). *
+/** Create a moderator account (email/password). */
 export const createModerator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -25,6 +24,8 @@ export const createModerator = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
@@ -41,7 +42,7 @@ export const createModerator = createServerFn({ method: "POST" })
     return { id: uid, email: data.email };
   });
 
-** Create a shareholder login (login_id + pin) and link to a contacts row. *
+/** Create a shareholder login (login_id + pin) and link to a contacts row. */
 export const createShareholderLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -54,6 +55,8 @@ export const createShareholderLogin = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     const synthEmail = `${data.loginId.toLowerCase()}@shareholders.local`;
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
@@ -88,6 +91,8 @@ export const createOwnerLogin = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     const synthEmail = `${data.loginId.toLowerCase()}@owners.local`;
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
@@ -116,6 +121,8 @@ export const resetUserPin = createServerFn({ method: "POST" })
     z.object({ authUserId: z.string().uuid(), pin: z.string().min(4).max(72) }).parse(d),
   )
   .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.authUserId, {
       password: data.pin,
@@ -128,6 +135,8 @@ export const resetUserPin = createServerFn({ method: "POST" })
 export const listManagedUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
@@ -145,6 +154,8 @@ export const deleteManagedUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAdmin(context.userId);
     if (data.userId === context.userId) throw new Error("Cannot delete yourself");
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
