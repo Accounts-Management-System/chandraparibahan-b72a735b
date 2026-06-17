@@ -1,5 +1,61 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export type AccessRole = "admin" | "moderator" | "shareholder" | null;
+
+function pickRole(roles: string[]): AccessRole {
+  if (roles.includes("admin")) return "admin";
+  if (roles.includes("moderator")) return "moderator";
+  if (roles.includes("shareholder")) return "shareholder";
+  return null;
+}
+
+/** Resolve the current user's role/owner link on the server, with RLS fallback. */
+export const getMyAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const userId = context.userId;
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: roleRows, error: roleErr } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (roleErr) throw roleErr;
+
+      let roles = (roleRows ?? []).map((r) => String(r.role));
+      const { count } = await supabaseAdmin
+        .from("user_roles")
+        .select("*", { count: "exact", head: true });
+      if (roles.length === 0 && (count ?? 0) === 0) {
+        await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
+        roles = ["admin"];
+      }
+
+      const { data: owner } = await supabaseAdmin
+        .from("owners")
+        .select("id")
+        .eq("auth_user_id", userId)
+        .maybeSingle();
+
+      return { role: pickRole(roles), ownerId: owner?.id ?? null };
+    } catch {
+      const { data: roleRows, error: roleErr } = await context.supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (roleErr) throw roleErr;
+      const { data: owner, error: ownerErr } = await context.supabase
+        .from("owners")
+        .select("id")
+        .eq("auth_user_id", userId)
+        .maybeSingle();
+      if (ownerErr) throw ownerErr;
+      return { role: pickRole((roleRows ?? []).map((r) => String(r.role))), ownerId: owner?.id ?? null };
+    }
+  });
 
 /**
  * Resolve a login id (or email) + password to a Supabase session.
