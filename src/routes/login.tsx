@@ -58,14 +58,14 @@ function LoginPage() {
   ];
 
   const fieldLabel =
-    role === "admin"
+    role === "admin" || role === "moderator"
       ? lang === "bn" ? "ইমেইল" : "Email"
       : lang === "bn" ? "লগইন আইডি" : "Login ID";
   const fieldPlaceholder =
     role === "admin"
       ? lang === "bn" ? "আপনার ইমেইল লিখুন" : "Enter your email"
       : role === "moderator"
-        ? lang === "bn" ? "মডারেটর লগইন আইডি" : "Moderator login ID"
+        ? lang === "bn" ? "মডারেটর ইমেইল লিখুন" : "Enter moderator email"
         : lang === "bn" ? "মালিকের লগইন আইডি" : "Owner login ID";
 
   return (
@@ -104,7 +104,7 @@ function LoginPage() {
               {role === "admin"
                 ? lang === "bn" ? "এডমিন ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন" : "Sign in with admin email & password"
                 : role === "moderator"
-                  ? lang === "bn" ? "মডারেটরকে দেয়া লগইন আইডি ও পাসওয়ার্ড দিন" : "Use the moderator login ID & password"
+                  ? lang === "bn" ? "মডারেটরের ইমেইল ও পাসওয়ার্ড দিন" : "Use the moderator email & password"
                   : lang === "bn" ? "মালিকের জন্য নির্ধারিত লগইন আইডি ও পাসওয়ার্ড দিন" : "Use the owner login ID & password"}
             </p>
           </div>
