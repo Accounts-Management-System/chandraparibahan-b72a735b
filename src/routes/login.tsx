@@ -16,10 +16,13 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+type LoginRole = "admin" | "moderator" | "owner";
+
 function LoginPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { t, lang, setLang } = useT();
+  const [role, setRole] = useState<LoginRole>("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,6 +51,23 @@ function LoginPage() {
     }
   };
 
+  const roleTabs: { key: LoginRole; bn: string; en: string }[] = [
+    { key: "admin", bn: "এডমিন", en: "Admin" },
+    { key: "moderator", bn: "মডারেটর", en: "Moderator" },
+    { key: "owner", bn: "মালিক", en: "Owner" },
+  ];
+
+  const fieldLabel =
+    role === "admin"
+      ? lang === "bn" ? "ইমেইল" : "Email"
+      : lang === "bn" ? "লগইন আইডি" : "Login ID";
+  const fieldPlaceholder =
+    role === "admin"
+      ? lang === "bn" ? "আপনার ইমেইল লিখুন" : "Enter your email"
+      : role === "moderator"
+        ? lang === "bn" ? "মডারেটর লগইন আইডি" : "Moderator login ID"
+        : lang === "bn" ? "মালিকের লগইন আইডি" : "Owner login ID";
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Card className="w-full max-w-4xl grid md:grid-cols-2 overflow-hidden border-0 shadow-2xl">
@@ -61,10 +81,37 @@ function LoginPage() {
           <h1 className="text-3xl font-bold mb-1 text-center" style={{ fontFamily: "serif" }}>
             {t("loginForm")}
           </h1>
-          <p className="text-center text-slate-400 mb-8 text-sm">{t("tagline")}</p>
+          <p className="text-center text-slate-400 mb-6 text-sm">{t("tagline")}</p>
+
+          <div className="max-w-xs mx-auto w-full mb-4">
+            <div className="grid grid-cols-3 gap-1 rounded-md bg-white/10 p-1">
+              {roleTabs.map((r) => (
+                <button
+                  key={r.key}
+                  type="button"
+                  onClick={() => { setRole(r.key); setEmail(""); }}
+                  className={`text-xs py-1.5 rounded transition-colors ${
+                    role === r.key
+                      ? "bg-white text-black font-semibold"
+                      : "text-slate-200 hover:bg-white/10"
+                  }`}
+                >
+                  {lang === "bn" ? r.bn : r.en}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-2 text-center">
+              {role === "admin"
+                ? lang === "bn" ? "এডমিন ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন" : "Sign in with admin email & password"
+                : role === "moderator"
+                  ? lang === "bn" ? "মডারেটরকে দেয়া লগইন আইডি ও পাসওয়ার্ড দিন" : "Use the moderator login ID & password"
+                  : lang === "bn" ? "মালিকের জন্য নির্ধারিত লগইন আইডি ও পাসওয়ার্ড দিন" : "Use the owner login ID & password"}
+            </p>
+          </div>
+
           <form onSubmit={submit} className="space-y-4 max-w-xs mx-auto w-full">
             <div>
-              <Label className="text-white text-xs">{t("email")}</Label>
+              <Label className="text-white text-xs">{fieldLabel}</Label>
               <Input
                 type="text"
                 value={email}
@@ -72,7 +119,7 @@ function LoginPage() {
                 required
                 className="bg-white text-black"
                 autoComplete="username"
-                placeholder={t("email") + " / " + t("loginId")}
+                placeholder={fieldPlaceholder}
               />
             </div>
             <div>
@@ -99,4 +146,5 @@ function LoginPage() {
     </div>
   );
 }
+
 
