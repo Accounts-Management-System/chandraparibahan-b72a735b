@@ -36,7 +36,7 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      const tokens = await signIn({ data: { loginId: email, password } });
+      const tokens = await signIn({ data: { loginId: email, password, role } });
       const { error } = await supabase.auth.setSession({
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
