@@ -3,12 +3,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
 import { ensureBootstrapAdmin } from "./admin.functions";
+import { getMyAccess } from "./auth.functions";
 
 export type Role = "admin" | "moderator" | "shareholder" | null;
 
 export function useRole() {
   const { user } = useAuth();
   const bootstrapAdmin = useServerFn(ensureBootstrapAdmin);
+  const fetchAccess = useServerFn(getMyAccess);
 
   const q = useQuery({
     queryKey: ["my-role", user?.id ?? "none"],
@@ -16,24 +18,30 @@ export function useRole() {
     retry: 2,
     queryFn: async (): Promise<Role> => {
       if (!user?.id) return null;
-      const { data: mine, error: mineErr } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
-      // Don't silently treat a failed request as "no role" — let react-query retry.
-      if (mineErr) throw mineErr;
-      if (mine && mine.length > 0) {
-        if (mine.some((r) => r.role === "admin")) return "admin";
-        if (mine.some((r) => r.role === "moderator")) return "moderator";
-        if (mine.some((r) => r.role === "shareholder")) return "shareholder";
-      }
-      const { count, error: countErr } = await supabase
-        .from("user_roles")
-        .select("*", { count: "exact", head: true });
-      if (countErr) throw countErr;
-      if ((count ?? 0) === 0) {
-        await bootstrapAdmin({});
-        return "admin";
+      try {
+        const access = await fetchAccess({});
+        if (access.role) return access.role;
+      } catch {
+        // Fall back to direct RLS reads so preview/editor still works if the
+        // latest server function has not been published yet.
+        const { data: mine, error: mineErr } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id);
+        if (mineErr) throw mineErr;
+        if (mine && mine.length > 0) {
+          if (mine.some((r) => r.role === "admin")) return "admin";
+          if (mine.some((r) => r.role === "moderator")) return "moderator";
+          if (mine.some((r) => r.role === "shareholder")) return "shareholder";
+        }
+        const { count, error: countErr } = await supabase
+          .from("user_roles")
+          .select("*", { count: "exact", head: true });
+        if (countErr) throw countErr;
+        if ((count ?? 0) === 0) {
+          await bootstrapAdmin({});
+          return "admin";
+        }
       }
       return null;
     },
@@ -45,6 +53,12 @@ export function useRole() {
     retry: 2,
     queryFn: async (): Promise<string | null> => {
       if (!user?.id) return null;
+      try {
+        const access = await fetchAccess({});
+        return access.ownerId ?? null;
+      } catch {
+        // Continue with direct RLS read below.
+      }
       const { data, error } = await supabase
         .from("owners")
         .select("id")
