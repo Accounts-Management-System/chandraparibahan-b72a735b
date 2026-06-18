@@ -315,8 +315,8 @@ function Page() {
         </Tabs>
       </div>
 
-      <ExpenseDialog open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
-      <IncomeDialog open={openJ} onOpenChange={setOpenJ} editing={editJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
+      <ExpenseDialog key={`e:${editE?.id ?? "new"}:${openE}`} open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
+      <IncomeDialog key={`j:${editJ?.id ?? "new"}:${openJ}`} open={openJ} onOpenChange={setOpenJ} editing={editJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
     </AppLayout>
   );
 }
