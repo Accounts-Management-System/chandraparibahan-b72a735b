@@ -315,8 +315,8 @@ function Page() {
         </Tabs>
       </div>
 
-      <ExpenseDialog open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
-      <IncomeDialog open={openJ} onOpenChange={setOpenJ} editing={editJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
+      <ExpenseDialog key={`e:${editE?.id ?? "new"}:${openE}`} open={openE} onOpenChange={setOpenE} editing={editE} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
+      <IncomeDialog key={`j:${editJ?.id ?? "new"}:${openJ}`} open={openJ} onOpenChange={setOpenJ} editing={editJ} defaultOwnerId={ownerScope !== "main" && ownerScope !== "all" ? ownerScope : ""} />
     </AppLayout>
   );
 }
@@ -368,7 +368,7 @@ function ExpenseDialog({ open, onOpenChange, editing, defaultOwnerId }: { open: 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{t("addExpense")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? t("edit") : t("addExpense")} <span className="text-xs text-muted-foreground">(ওনার বাধ্যতামূলক)</span></DialogTitle></DialogHeader>
         <form
           className="space-y-3"
           onSubmit={(e) => {
