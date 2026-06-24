@@ -175,15 +175,32 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
         if(!confirm('এই নাম্বার মুছে ফেলবেন?')) return;
         save(load().filter(function(x){return x.num!==v;})); refresh();
       };
+      var statusEl=document.getElementById('wa-status');
+      var pdfSaved=false;
+      function setStatus(kind,msg){
+        statusEl.className='status show '+kind;
+        statusEl.textContent=msg;
+      }
       document.getElementById('wa-send').onclick=function(){
         var num=clean(sel.value)||clean(document.getElementById('wa-new').value);
-        if(!num){ alert('আগে একটি WhatsApp নাম্বার নির্বাচন বা যোগ করুন'); return; }
+        if(!num){ setStatus('failed','❌ Failed — আগে একটি WhatsApp নাম্বার নির্বাচন বা যোগ করুন'); return; }
+        if(!pdfSaved){ setStatus('failed','❌ Failed — আগে "Print / Save PDF" ক্লিক করে PDF সেভ করুন, তারপর আবার পাঠান'); return; }
         var msg=${JSON.stringify(waMsg)};
         var url='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
-        window.open(url,'_blank');
+        var win=window.open(url,'_blank');
+        if(!win){ setStatus('failed','❌ Failed — পপআপ ব্লক হয়েছে, অনুমতি দিন'); return; }
+        setStatus('ready','✅ Ready — WhatsApp চ্যাট খোলা হয়েছে। এখন সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।');
       };
-      document.getElementById('wa-print').onclick=function(){ window.print(); };
+      document.getElementById('wa-print').onclick=function(){
+        setStatus('ready','🖨️ Print ডায়ালগ খোলা হচ্ছে — "Save as PDF" নির্বাচন করুন...');
+        window.print();
+      };
+      window.addEventListener('afterprint',function(){
+        pdfSaved=true;
+        setStatus('saved','✅ Saved — PDF সেভ হয়েছে। এখন "WhatsApp এ পাঠান" ক্লিক করুন।');
+      });
     })();
+
   <\/script>
 </body></html>`;
 
