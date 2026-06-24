@@ -232,26 +232,35 @@ function Page() {
       .banner{background:#dbeafe;border:1px solid #94a3b8;padding:8px;text-align:center;font-weight:700;font-size:16px;margin:6px 0}
       .green-banner{background:#c6e0b4;border:3px solid #525252;font-size:22px;color:#111}
       .meta{text-align:center;font-size:11px;margin-bottom:8px}
-      table.month-report{font-size:15px;border:2px solid #525252;margin-bottom:10px}
+      table{table-layout:auto}
+      table.month-report{font-size:14px;border:2px solid #525252;margin-bottom:10px}
       table.month-report th,table.month-report td{border:2px solid #525252;text-align:center;padding:4px 8px}
-      table.month-report th{background:#d1d5db;font-size:16px}
-      table.month-report .num{text-align:right}
+      table.month-report th{background:#d1d5db;font-size:15px}
       table.summary{margin-bottom:6px}
+      table.summary th,table.summary td{text-align:center}
       table.summary th{background:#e5e7eb}
-      table.summary .head-left{text-align:center;background:#cbd5e1}
-      table.summary .head-right{text-align:center;background:#cbd5e1}
-      table.summary td{text-align:center;font-size:11px}
-      .green{color:#047857}
-      .red{color:#b91c1c}
-      .blue{color:#1d4ed8}
-      .formula{text-align:center;font-style:italic;background:#f9fafb}
-      table.main th{background:#e5e7eb;text-align:center}
+      table.summary .head-left,table.summary .head-right{background:#cbd5e1}
+      table.summary td{font-size:11px}
+      .formula{font-style:italic;background:#f9fafb}
+      table.main{table-layout:auto}
+      table.main th,table.main td{text-align:center;vertical-align:middle;white-space:nowrap}
+      table.main th{background:#e5e7eb}
       table.main tr.group th{background:#cbd5e1;font-size:13px}
-      table.main td.num,table.main th.num{text-align:right}
-      table.main .sep,table.summary .sep{border:0;background:#fff;width:6px;padding:0}
-      table.other th{background:#e5e7eb;text-align:center}
-      table.other td.num{text-align:right}
+      table.main td.wrap,table.main th.wrap{white-space:normal;word-break:break-word;min-width:90px}
+      table.main td:nth-child(4),table.main th:nth-child(4){white-space:normal;word-break:break-word;min-width:90px}
+      table.main td:nth-child(13),table.main th:nth-child(13){white-space:normal;word-break:break-word;min-width:110px}
+      table.main .sep{border-top:0;border-bottom:0;border-left:2px solid #525252;border-right:2px solid #525252;background:#f1f5f9;width:14px;padding:0}
+      table.summary .sep{border:0;background:#fff;width:6px;padding:0}
+      table.other th,table.other td{text-align:center}
+      table.other th{background:#e5e7eb}
+      table.other td.wrap{white-space:normal;word-break:break-word;min-width:120px}
       tfoot td{font-weight:700;background:#f3f4f6}
+      .c-jama{color:#1d4ed8;font-weight:700}
+      .c-dena{color:#c2410c;font-weight:700}
+      .c-exp{color:#b91c1c;font-weight:700}
+      .c-pos{color:#15803d;font-weight:700}
+      .c-neg{color:#b91c1c;font-weight:700}
+      .office-note{margin-top:14px;background:#fef3c7;border:1px solid #d97706;color:#78350f;font-weight:700;text-align:center;padding:6px;font-size:13px;border-radius:4px}
     </style>`;
 
     exportPdfHtml({
