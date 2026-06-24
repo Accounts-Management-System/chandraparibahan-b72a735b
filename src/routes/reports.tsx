@@ -107,7 +107,7 @@ function Page() {
     return Array.from(m.values())
       .map((s) => {
         const balance = s.jama - s.dena;
-        const successRate = s.trips > 0 ? (balance / s.trips) * 100 : 0;
+        const successRate = balance > 0 ? (s.trips / balance) * 100 : 0;
         return { id: s.name, ...s, balance, successRate };
       })
       .sort((a, b) => b.balance - a.balance);
@@ -250,7 +250,7 @@ function Page() {
         const sumDena = supervisorRowsFiltered.reduce((a, s) => a + s.dena, 0);
         const sumBal = supervisorRowsFiltered.reduce((a, s) => a + s.balance, 0);
         const sumTrips = supervisorRowsFiltered.reduce((a, s) => a + s.trips, 0);
-        const overallRate = sumTrips > 0 ? ((sumBal / sumTrips) * 100).toFixed(2) : "0";
+        const overallRate = sumBal > 0 ? ((sumTrips / sumBal) * 100).toFixed(2) : "0";
         
         return { name: "supervisor-report", headers, rows, footer: [t("grandTotal"), "", fmtNum(sumTrips, lang), fmtNum(sumJama, lang), fmtNum(sumDena, lang), fmtNum(sumBal, lang), `${fmtNum(Number(overallRate), lang)}%`], orientation: "portrait" };
       }
