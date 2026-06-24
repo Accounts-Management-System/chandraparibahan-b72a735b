@@ -285,7 +285,7 @@ function Page() {
             <Button variant="outline" onClick={exportLandscapePdf}>
               <FileDown className="h-4 w-4 mr-2" /> {lang === "en" ? "PDF (Landscape)" : "PDF (ল্যান্ডস্কেপ)"}
             </Button>
-            <Button variant="outline" onClick={() => window.print()}>
+            <Button variant="outline" onClick={exportLandscapePdf}>
               <Printer className="h-4 w-4 mr-2" /> {t("print")}
             </Button>
           </div>
