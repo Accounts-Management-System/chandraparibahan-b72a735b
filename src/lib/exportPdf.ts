@@ -43,8 +43,9 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><title>${esc(title)}</title>
 <style>
-  *{box-sizing:border-box}
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{font-family:'Noto Sans Bengali','Hind Siliguri',system-ui,-apple-system,sans-serif;padding:18px;color:#111;background:#fff}
+
   .brand{text-align:center;font-size:22px;font-weight:800;letter-spacing:.5px;color:#0c2f3d;border-bottom:2px solid #0c2f3d;padding-bottom:6px;margin-bottom:10px}
   h1{font-size:18px;margin:0 0 4px;letter-spacing:.3px}
   h2{font-size:14px;margin:14px 0 6px}
