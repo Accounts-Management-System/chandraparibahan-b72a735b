@@ -78,6 +78,11 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
   .toolbar .del{background:#ffffff1a;color:#fff;padding:6px 9px}
   .toolbar .group{display:flex;gap:6px;align-items:center}
   .toolbar .hint{font-size:11px;color:#ffffffc0;flex-basis:100%;margin-top:2px}
+  .toolbar .status{flex-basis:100%;margin-top:4px;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;display:none}
+  .toolbar .status.show{display:block}
+  .toolbar .status.saved{background:#15803d;color:#fff}
+  .toolbar .status.ready{background:#1d4ed8;color:#fff}
+  .toolbar .status.failed{background:#b91c1c;color:#fff}
   @media print { .toolbar{display:none !important} body{padding:0} }
   @page{size:A4 ${orientation};margin:12mm}
 </style></head><body>
@@ -95,7 +100,9 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
     <button class="send" id="wa-send">📤 WhatsApp এ পাঠান</button>
     <button class="print" id="wa-print">🖨️ Print / Save PDF</button>
     <div class="hint">প্রথমে "Print / Save PDF" ক্লিক করে PDF টি সেভ করুন, এরপর "WhatsApp এ পাঠান" এ ক্লিক করলে চ্যাট খুলবে — সেখানে সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।</div>
+    <div id="wa-status" class="status"></div>
   </div>
+
   <div class="brand">চন্দ্রা পরিবহন</div>
   <h1>${esc(title)}</h1>
   ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
@@ -168,15 +175,32 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
         if(!confirm('এই নাম্বার মুছে ফেলবেন?')) return;
         save(load().filter(function(x){return x.num!==v;})); refresh();
       };
+      var statusEl=document.getElementById('wa-status');
+      var pdfSaved=false;
+      function setStatus(kind,msg){
+        statusEl.className='status show '+kind;
+        statusEl.textContent=msg;
+      }
       document.getElementById('wa-send').onclick=function(){
         var num=clean(sel.value)||clean(document.getElementById('wa-new').value);
-        if(!num){ alert('আগে একটি WhatsApp নাম্বার নির্বাচন বা যোগ করুন'); return; }
+        if(!num){ setStatus('failed','❌ Failed — আগে একটি WhatsApp নাম্বার নির্বাচন বা যোগ করুন'); return; }
+        if(!pdfSaved){ setStatus('failed','❌ Failed — আগে "Print / Save PDF" ক্লিক করে PDF সেভ করুন, তারপর আবার পাঠান'); return; }
         var msg=${JSON.stringify(waMsg)};
         var url='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
-        window.open(url,'_blank');
+        var win=window.open(url,'_blank');
+        if(!win){ setStatus('failed','❌ Failed — পপআপ ব্লক হয়েছে, অনুমতি দিন'); return; }
+        setStatus('ready','✅ Ready — WhatsApp চ্যাট খোলা হয়েছে। এখন সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।');
       };
-      document.getElementById('wa-print').onclick=function(){ window.print(); };
+      document.getElementById('wa-print').onclick=function(){
+        setStatus('ready','🖨️ Print ডায়ালগ খোলা হচ্ছে — "Save as PDF" নির্বাচন করুন...');
+        window.print();
+      };
+      window.addEventListener('afterprint',function(){
+        pdfSaved=true;
+        setStatus('saved','✅ Saved — PDF সেভ হয়েছে। এখন "WhatsApp এ পাঠান" ক্লিক করুন।');
+      });
     })();
+
   <\/script>
 </body></html>`;
 
