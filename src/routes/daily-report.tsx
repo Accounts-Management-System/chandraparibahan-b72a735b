@@ -94,22 +94,23 @@ function Page() {
       const d = tr ? Number(tr.dena_1 || 0) + Number(tr.dena_2 || 0) : 0;
       const f = tr ? Number(tr.fare_1 || 0) + Number(tr.fare_2 || 0) : 0;
       const route = tr ? [tr.route_1, tr.route_2].filter(Boolean).join(" / ") : "";
+      const bal = tr ? j - d : 0;
       rowsHtml.push(
         `<tr>
           <td>${tr ? esc(fmtNum(i + 1, lang)) : ""}</td>
           <td>${tr ? esc(fmtDate(tr.trip_date, lang)) : ""}</td>
           <td>${tr ? esc(tr.vehicle_no ?? "") : ""}</td>
-          <td>${tr ? esc(tr.supervisor ?? "") : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(j, lang)) : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(d, lang)) : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(j - d, lang)) : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(f, lang)) : ""}</td>
-          <td>${tr ? esc(route) : ""}</td>
+          <td class="wrap">${tr ? esc(tr.supervisor ?? "") : ""}</td>
+          <td class="c-jama">${tr ? esc(fmtNum(j, lang)) : ""}</td>
+          <td class="c-dena">${tr ? esc(fmtNum(d, lang)) : ""}</td>
+          <td class="${bal < 0 ? 'c-neg' : 'c-pos'}">${tr ? esc(fmtNum(j - d, lang)) : ""}</td>
+          <td>${tr ? esc(fmtNum(f, lang)) : ""}</td>
+          <td class="wrap">${tr ? esc(route) : ""}</td>
           <td class="sep"></td>
           <td>${ex ? esc(ex.category ?? "") : ""}</td>
           <td>${ex ? esc(ex.head ?? "") : ""}</td>
-          <td>${ex ? esc(ex.description ?? "") : ""}</td>
-          <td class="num">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
+          <td class="wrap">${ex ? esc(ex.description ?? "") : ""}</td>
+          <td class="c-exp">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
         </tr>`
       );
     }
@@ -121,11 +122,11 @@ function Page() {
     const monthlyRows = dailyRows.map((r) => `
       <tr>
         <td>${esc(fmtDate(r.date, lang))}</td>
-        <td class="num">${esc(fmtNum(r.transport, lang))}</td>
-        <td class="num">${esc(fmtNum(r.other, lang))}</td>
-        <td class="num">${esc(fmtNum(r.jamaKhoroch, lang))}</td>
-        <td class="num">${esc(fmtNum(r.expense, lang))}</td>
-        <td class="num">${esc(fmtNum(r.balance, lang))}</td>
+        <td class="${r.transport < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(r.transport, lang))}</td>
+        <td class="c-jama">${esc(fmtNum(r.other, lang))}</td>
+        <td class="c-jama">${esc(fmtNum(r.jamaKhoroch, lang))}</td>
+        <td class="c-exp">${esc(fmtNum(r.expense, lang))}</td>
+        <td class="${r.balance < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(r.balance, lang))}</td>
       </tr>`).join("");
 
     const body = `
@@ -135,7 +136,7 @@ function Page() {
       <table class="month-report">
         <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>${trBn("অন্যান্য জমা", lang)}</th><th>${trBn("জমা-খরচের জমা", lang)}</th><th>${trBn("দৈনিক খরচ", lang)}</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
         <tbody>${monthlyRows || `<tr><td colspan="6">${esc(t("noData"))}</td></tr>`}</tbody>
-        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOther, lang))}</td><td class="num">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
+        <tfoot><tr><td>সর্বমোট</td><td class="${(totalJama-totalDena) < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="c-jama">${esc(fmtNum(totalOther, lang))}</td><td class="c-jama">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="c-exp">${esc(fmtNum(totalExpense, lang))}</td><td class="${handBalance < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
       </table>
 
       <table class="summary">
@@ -148,14 +149,14 @@ function Page() {
         <tbody>
           <tr>
             <td>${esc(t("totalTrips"))}<br/><b>${esc(fmtNum(totalTrips, lang))} টি</b></td>
-            <td>${trBn("মোট জমা", lang)}<br/><b class="green">${esc(fmtNum(totalJama, lang))}</b></td>
-            <td>${trBn("মোট দেনা", lang)}<br/><b class="red">${esc(fmtNum(totalDena, lang))}</b></td>
-            <td>${trBn("ব্যালেন্স", lang)}<br/><b>${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
+            <td>${trBn("মোট জমা", lang)}<br/><b class="c-jama">${esc(fmtNum(totalJama, lang))}</b></td>
+            <td>${trBn("মোট দেনা", lang)}<br/><b class="c-dena">${esc(fmtNum(totalDena, lang))}</b></td>
+            <td>${trBn("ব্যালেন্স", lang)}<br/><b class="${(totalJama-totalDena)<0?'c-neg':'c-pos'}">${esc(fmtNum(totalJama - totalDena, lang))}</b></td>
             <td>${trBn("মোট ভাড়া", lang)}<br/><b>${esc(fmtNum(totalFare, lang))}</b></td>
-            <td>${trBn("অন্যান্য জমা", lang)}<br/><b class="green">${esc(fmtNum(totalOther, lang))}</b></td>
-            <td>${trBn("জমা-খরচের জমা", lang)}<br/><b class="green">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
-            <td>${trBn("মোট খরচ", lang)}<br/><b class="red">${esc(fmtNum(totalExpense, lang))}</b></td>
-            <td>${trBn("হাতে ব্যালেন্স", lang)}<br/><b class="blue">${esc(fmtNum(handBalance, lang))}</b></td>
+            <td>${trBn("অন্যান্য জমা", lang)}<br/><b class="c-jama">${esc(fmtNum(totalOther, lang))}</b></td>
+            <td>${trBn("জমা-খরচের জমা", lang)}<br/><b class="c-jama">${esc(fmtNum(totalJamaKhoroch, lang))}</b></td>
+            <td>${trBn("মোট খরচ", lang)}<br/><b class="c-exp">${esc(fmtNum(totalExpense, lang))}</b></td>
+            <td>${trBn("হাতে ব্যালেন্স", lang)}<br/><b class="${handBalance<0?'c-neg':'c-pos'}">${esc(fmtNum(handBalance, lang))}</b></td>
             <td colspan="4" class="formula">(জমা − দেনা) + অন্যান্য জমা − খরচ = হাতে ব্যালেন্স &nbsp;|&nbsp; জমা-খরচের জমা ওনার হিসাবে</td>
           </tr>
         </tbody>
@@ -169,7 +170,7 @@ function Page() {
             <th colspan="4">খরচ হিসাব</th>
           </tr>
           <tr>
-            <th>সিরিয়াল</th>
+            <th>SL</th>
             <th>তারিখ</th>
             <th>গাড়ী নাম্বার</th>
             <th>সুপারভাইজার</th>
@@ -189,20 +190,21 @@ function Page() {
         <tfoot>
           <tr>
             <td colspan="4">সর্বমোট</td>
-            <td class="num">${esc(fmtNum(totalJama, lang))}</td>
-            <td class="num">${esc(fmtNum(totalDena, lang))}</td>
-            <td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td>
-            <td class="num">${esc(fmtNum(totalFare, lang))}</td>
+            <td class="c-jama">${esc(fmtNum(totalJama, lang))}</td>
+            <td class="c-dena">${esc(fmtNum(totalDena, lang))}</td>
+            <td class="${(totalJama-totalDena)<0?'c-neg':'c-pos'}">${esc(fmtNum(totalJama - totalDena, lang))}</td>
+            <td>${esc(fmtNum(totalFare, lang))}</td>
             <td></td>
             <td class="sep"></td>
             <td colspan="3">${trBn("মোট খরচ", lang)}</td>
-            <td class="num">${esc(fmtNum(totalExpense, lang))}</td>
+            <td class="c-exp">${esc(fmtNum(totalExpense, lang))}</td>
           </tr>
         </tfoot>
       </table>
 
       ${(otherDeposits.length || jamaKhorochDeposits.length) ? `
-      <h3 style="margin:10px 0 4px;font-size:14px">${esc(trBn("অন্যান্য জমা ও জমা-খরচের জমা", lang))}</h3>
+      <div class="office-note">⚠ অফিস কতৃক পূরণ করা</div>
+      <h3 style="margin:6px 0 4px;font-size:14px;text-align:center">${esc(trBn("অন্যান্য জমা ও জমা-খরচের জমা", lang))}</h3>
       <table class="other">
         <thead>
           <tr>
@@ -216,12 +218,12 @@ function Page() {
               <td>${esc(r.kindLabel)}</td>
               <td>${esc(r.category ?? "")}</td>
               <td>${esc(r.head ?? "")}</td>
-              <td>${esc(r.description ?? "")}</td>
-              <td class="num">${esc(fmtNum(r.amount, lang))}</td>
+              <td class="wrap">${esc(r.description ?? "")}</td>
+              <td class="c-jama">${esc(fmtNum(r.amount, lang))}</td>
             </tr>`).join("")}
         </tbody>
         <tfoot>
-          <tr><td colspan="5">${esc(trBn("মোট", lang))}</td><td class="num">${esc(fmtNum(totalOther + totalJamaKhoroch, lang))}</td></tr>
+          <tr><td colspan="5">${esc(trBn("মোট", lang))}</td><td class="c-jama">${esc(fmtNum(totalOther + totalJamaKhoroch, lang))}</td></tr>
         </tfoot>
       </table>` : ""}
     `;
@@ -230,26 +232,35 @@ function Page() {
       .banner{background:#dbeafe;border:1px solid #94a3b8;padding:8px;text-align:center;font-weight:700;font-size:16px;margin:6px 0}
       .green-banner{background:#c6e0b4;border:3px solid #525252;font-size:22px;color:#111}
       .meta{text-align:center;font-size:11px;margin-bottom:8px}
-      table.month-report{font-size:15px;border:2px solid #525252;margin-bottom:10px}
+      table{table-layout:auto}
+      table.month-report{font-size:14px;border:2px solid #525252;margin-bottom:10px}
       table.month-report th,table.month-report td{border:2px solid #525252;text-align:center;padding:4px 8px}
-      table.month-report th{background:#d1d5db;font-size:16px}
-      table.month-report .num{text-align:right}
+      table.month-report th{background:#d1d5db;font-size:15px}
       table.summary{margin-bottom:6px}
+      table.summary th,table.summary td{text-align:center}
       table.summary th{background:#e5e7eb}
-      table.summary .head-left{text-align:center;background:#cbd5e1}
-      table.summary .head-right{text-align:center;background:#cbd5e1}
-      table.summary td{text-align:center;font-size:11px}
-      .green{color:#047857}
-      .red{color:#b91c1c}
-      .blue{color:#1d4ed8}
-      .formula{text-align:center;font-style:italic;background:#f9fafb}
-      table.main th{background:#e5e7eb;text-align:center}
+      table.summary .head-left,table.summary .head-right{background:#cbd5e1}
+      table.summary td{font-size:11px}
+      .formula{font-style:italic;background:#f9fafb}
+      table.main{table-layout:auto}
+      table.main th,table.main td{text-align:center;vertical-align:middle;white-space:nowrap}
+      table.main th{background:#e5e7eb}
       table.main tr.group th{background:#cbd5e1;font-size:13px}
-      table.main td.num,table.main th.num{text-align:right}
-      table.main .sep,table.summary .sep{border:0;background:#fff;width:6px;padding:0}
-      table.other th{background:#e5e7eb;text-align:center}
-      table.other td.num{text-align:right}
+      table.main td.wrap,table.main th.wrap{white-space:normal;word-break:break-word;min-width:90px}
+      table.main td:nth-child(4),table.main th:nth-child(4){white-space:normal;word-break:break-word;min-width:90px}
+      table.main td:nth-child(13),table.main th:nth-child(13){white-space:normal;word-break:break-word;min-width:110px}
+      table.main .sep{border-top:0;border-bottom:0;border-left:2px solid #525252;border-right:2px solid #525252;background:#f1f5f9;width:14px;padding:0}
+      table.summary .sep{border:0;background:#fff;width:6px;padding:0}
+      table.other th,table.other td{text-align:center}
+      table.other th{background:#e5e7eb}
+      table.other td.wrap{white-space:normal;word-break:break-word;min-width:120px}
       tfoot td{font-weight:700;background:#f3f4f6}
+      .c-jama{color:#1d4ed8;font-weight:700}
+      .c-dena{color:#c2410c;font-weight:700}
+      .c-exp{color:#b91c1c;font-weight:700}
+      .c-pos{color:#15803d;font-weight:700}
+      .c-neg{color:#b91c1c;font-weight:700}
+      .office-note{margin-top:14px;background:#fef3c7;border:1px solid #d97706;color:#78350f;font-weight:700;text-align:center;padding:6px;font-size:13px;border-radius:4px}
     </style>`;
 
     exportPdfHtml({
@@ -274,7 +285,7 @@ function Page() {
             <Button variant="outline" onClick={exportLandscapePdf}>
               <FileDown className="h-4 w-4 mr-2" /> {lang === "en" ? "PDF (Landscape)" : "PDF (ল্যান্ডস্কেপ)"}
             </Button>
-            <Button variant="outline" onClick={() => window.print()}>
+            <Button variant="outline" onClick={exportLandscapePdf}>
               <Printer className="h-4 w-4 mr-2" /> {t("print")}
             </Button>
           </div>
