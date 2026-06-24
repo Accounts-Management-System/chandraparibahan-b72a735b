@@ -506,11 +506,19 @@ function Page() {
           <TabsContent value="supervisor">
             <div className="mb-3 text-xs text-muted-foreground">
               {trBn("তারিখঃ", lang)} {fmtDate(from, lang)} → {fmtDate(to, lang)}
-              {" · "}{trBn("সফলতার হার = (ব্যালেন্স ÷ মোট জমা) × ১০০", lang)}
+              {" · "}{trBn("সফলতার হার = (মোট ব্যালেন্স ÷ মোট ট্রিপ) × ১০০", lang)}
+            </div>
+            <div className="mb-3 max-w-xs">
+              <Input
+                placeholder={trBn("সুপারভাইজার নাম দিয়ে খুঁজুন", lang)}
+                value={supSearch}
+                onChange={(e) => setSupSearch(e.target.value)}
+                className="h-9"
+              />
             </div>
             <Section
               headers={[t("serial"), trBn("সুপারভাইজার", lang), trBn("মোট ট্রিপ", lang), trBn("মোট জমা", lang), trBn("মোট দেনা", lang), trBn("মোট ব্যালেন্স", lang), trBn("সফলতার হার (%)", lang)]}
-              rows={supervisorRows.map((s, i) => ({ ...s, serial: i + 1 }))}
+              rows={supervisorRowsFiltered.map((s, i) => ({ ...s, serial: i + 1 }))}
               cells={(s: any) => [
                 fmtNum(s.serial, lang),
                 s.name,
@@ -523,10 +531,10 @@ function Page() {
               footer={[
                 t("grandTotal"),
                 "",
-                fmtNum(supervisorRows.reduce((a, s) => a + s.trips, 0), lang),
-                fmtNum(supervisorRows.reduce((a, s) => a + s.jama, 0), lang),
-                fmtNum(supervisorRows.reduce((a, s) => a + s.dena, 0), lang),
-                fmtNum(supervisorRows.reduce((a, s) => a + s.balance, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.trips, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.jama, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.dena, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.balance, 0), lang),
                 "",
               ]}
             />
