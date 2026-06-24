@@ -78,6 +78,11 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
   .toolbar .del{background:#ffffff1a;color:#fff;padding:6px 9px}
   .toolbar .group{display:flex;gap:6px;align-items:center}
   .toolbar .hint{font-size:11px;color:#ffffffc0;flex-basis:100%;margin-top:2px}
+  .toolbar .status{flex-basis:100%;margin-top:4px;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;display:none}
+  .toolbar .status.show{display:block}
+  .toolbar .status.saved{background:#15803d;color:#fff}
+  .toolbar .status.ready{background:#1d4ed8;color:#fff}
+  .toolbar .status.failed{background:#b91c1c;color:#fff}
   @media print { .toolbar{display:none !important} body{padding:0} }
   @page{size:A4 ${orientation};margin:12mm}
 </style></head><body>
@@ -95,7 +100,9 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
     <button class="send" id="wa-send">📤 WhatsApp এ পাঠান</button>
     <button class="print" id="wa-print">🖨️ Print / Save PDF</button>
     <div class="hint">প্রথমে "Print / Save PDF" ক্লিক করে PDF টি সেভ করুন, এরপর "WhatsApp এ পাঠান" এ ক্লিক করলে চ্যাট খুলবে — সেখানে সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।</div>
+    <div id="wa-status" class="status"></div>
   </div>
+
   <div class="brand">চন্দ্রা পরিবহন</div>
   <h1>${esc(title)}</h1>
   ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
