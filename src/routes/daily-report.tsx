@@ -203,7 +203,8 @@ function Page() {
       </table>
 
       ${(otherDeposits.length || jamaKhorochDeposits.length) ? `
-      <h3 style="margin:10px 0 4px;font-size:14px">${esc(trBn("অন্যান্য জমা ও জমা-খরচের জমা", lang))}</h3>
+      <div class="office-note">⚠ অফিস কতৃক পূরণ করা</div>
+      <h3 style="margin:6px 0 4px;font-size:14px;text-align:center">${esc(trBn("অন্যান্য জমা ও জমা-খরচের জমা", lang))}</h3>
       <table class="other">
         <thead>
           <tr>
@@ -217,12 +218,12 @@ function Page() {
               <td>${esc(r.kindLabel)}</td>
               <td>${esc(r.category ?? "")}</td>
               <td>${esc(r.head ?? "")}</td>
-              <td>${esc(r.description ?? "")}</td>
-              <td class="num">${esc(fmtNum(r.amount, lang))}</td>
+              <td class="wrap">${esc(r.description ?? "")}</td>
+              <td class="c-jama">${esc(fmtNum(r.amount, lang))}</td>
             </tr>`).join("")}
         </tbody>
         <tfoot>
-          <tr><td colspan="5">${esc(trBn("মোট", lang))}</td><td class="num">${esc(fmtNum(totalOther + totalJamaKhoroch, lang))}</td></tr>
+          <tr><td colspan="5">${esc(trBn("মোট", lang))}</td><td class="c-jama">${esc(fmtNum(totalOther + totalJamaKhoroch, lang))}</td></tr>
         </tfoot>
       </table>` : ""}
     `;
