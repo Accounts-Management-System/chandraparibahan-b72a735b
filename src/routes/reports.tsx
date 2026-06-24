@@ -107,11 +107,18 @@ function Page() {
     return Array.from(m.values())
       .map((s) => {
         const balance = s.jama - s.dena;
-        const successRate = s.jama > 0 ? (balance / s.jama) * 100 : 0;
+        const successRate = s.trips > 0 ? (balance / s.trips) * 100 : 0;
         return { id: s.name, ...s, balance, successRate };
       })
       .sort((a, b) => b.balance - a.balance);
   }, [tripRows]);
+
+  const [supSearch, setSupSearch] = useState("");
+  const supervisorRowsFiltered = useMemo(() => {
+    const q = supSearch.trim().toLowerCase();
+    if (!q) return supervisorRows;
+    return supervisorRows.filter((s) => s.name.toLowerCase().includes(q));
+  }, [supervisorRows, supSearch]);
 
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
@@ -238,12 +245,13 @@ function Page() {
       }
       case "supervisor": {
         const headers = [t("serial"), trBn("সুপারভাইজার", lang), trBn("মোট ট্রিপ", lang), trBn("মোট জমা", lang), trBn("মোট দেনা", lang), trBn("মোট ব্যালেন্স", lang), trBn("সফলতার হার (%)", lang)];
-        const rows = supervisorRows.map((s, i) => [fmtNum(i + 1, lang), s.name, fmtNum(s.trips, lang), fmtNum(s.jama, lang), fmtNum(s.dena, lang), fmtNum(s.balance, lang), `${fmtNum(Number(s.successRate.toFixed(2)), lang)}%`]);
-        const sumJama = supervisorRows.reduce((a, s) => a + s.jama, 0);
-        const sumDena = supervisorRows.reduce((a, s) => a + s.dena, 0);
-        const sumBal = supervisorRows.reduce((a, s) => a + s.balance, 0);
-        const sumTrips = supervisorRows.reduce((a, s) => a + s.trips, 0);
-        const overallRate = sumJama > 0 ? ((sumBal / sumJama) * 100).toFixed(2) : "0";
+        const rows = supervisorRowsFiltered.map((s, i) => [fmtNum(i + 1, lang), s.name, fmtNum(s.trips, lang), fmtNum(s.jama, lang), fmtNum(s.dena, lang), fmtNum(s.balance, lang), `${fmtNum(Number(s.successRate.toFixed(2)), lang)}%`]);
+        const sumJama = supervisorRowsFiltered.reduce((a, s) => a + s.jama, 0);
+        const sumDena = supervisorRowsFiltered.reduce((a, s) => a + s.dena, 0);
+        const sumBal = supervisorRowsFiltered.reduce((a, s) => a + s.balance, 0);
+        const sumTrips = supervisorRowsFiltered.reduce((a, s) => a + s.trips, 0);
+        const overallRate = sumTrips > 0 ? ((sumBal / sumTrips) * 100).toFixed(2) : "0";
+        
         return { name: "supervisor-report", headers, rows, footer: [t("grandTotal"), "", fmtNum(sumTrips, lang), fmtNum(sumJama, lang), fmtNum(sumDena, lang), fmtNum(sumBal, lang), `${fmtNum(Number(overallRate), lang)}%`], orientation: "portrait" };
       }
       case "owner": {
@@ -498,11 +506,19 @@ function Page() {
           <TabsContent value="supervisor">
             <div className="mb-3 text-xs text-muted-foreground">
               {trBn("তারিখঃ", lang)} {fmtDate(from, lang)} → {fmtDate(to, lang)}
-              {" · "}{trBn("সফলতার হার = (ব্যালেন্স ÷ মোট জমা) × ১০০", lang)}
+              {" · "}{trBn("সফলতার হার = (মোট ব্যালেন্স ÷ মোট ট্রিপ) × ১০০", lang)}
+            </div>
+            <div className="mb-3 max-w-xs">
+              <Input
+                placeholder={trBn("সুপারভাইজার নাম দিয়ে খুঁজুন", lang)}
+                value={supSearch}
+                onChange={(e) => setSupSearch(e.target.value)}
+                className="h-9"
+              />
             </div>
             <Section
               headers={[t("serial"), trBn("সুপারভাইজার", lang), trBn("মোট ট্রিপ", lang), trBn("মোট জমা", lang), trBn("মোট দেনা", lang), trBn("মোট ব্যালেন্স", lang), trBn("সফলতার হার (%)", lang)]}
-              rows={supervisorRows.map((s, i) => ({ ...s, serial: i + 1 }))}
+              rows={supervisorRowsFiltered.map((s, i) => ({ ...s, serial: i + 1 }))}
               cells={(s: any) => [
                 fmtNum(s.serial, lang),
                 s.name,
@@ -515,10 +531,10 @@ function Page() {
               footer={[
                 t("grandTotal"),
                 "",
-                fmtNum(supervisorRows.reduce((a, s) => a + s.trips, 0), lang),
-                fmtNum(supervisorRows.reduce((a, s) => a + s.jama, 0), lang),
-                fmtNum(supervisorRows.reduce((a, s) => a + s.dena, 0), lang),
-                fmtNum(supervisorRows.reduce((a, s) => a + s.balance, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.trips, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.jama, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.dena, 0), lang),
+                fmtNum(supervisorRowsFiltered.reduce((a, s) => a + s.balance, 0), lang),
                 "",
               ]}
             />
