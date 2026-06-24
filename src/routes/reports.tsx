@@ -107,11 +107,18 @@ function Page() {
     return Array.from(m.values())
       .map((s) => {
         const balance = s.jama - s.dena;
-        const successRate = s.jama > 0 ? (balance / s.jama) * 100 : 0;
+        const successRate = s.trips > 0 ? (balance / s.trips) * 100 : 0;
         return { id: s.name, ...s, balance, successRate };
       })
       .sort((a, b) => b.balance - a.balance);
   }, [tripRows]);
+
+  const [supSearch, setSupSearch] = useState("");
+  const supervisorRowsFiltered = useMemo(() => {
+    const q = supSearch.trim().toLowerCase();
+    if (!q) return supervisorRows;
+    return supervisorRows.filter((s) => s.name.toLowerCase().includes(q));
+  }, [supervisorRows, supSearch]);
 
   const ownerByVehicle = useMemo(() => {
     const m = new Map<string, { vno: string; owner: string; trips: number; fare: number }>();
