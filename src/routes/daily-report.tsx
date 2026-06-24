@@ -122,11 +122,11 @@ function Page() {
     const monthlyRows = dailyRows.map((r) => `
       <tr>
         <td>${esc(fmtDate(r.date, lang))}</td>
-        <td class="num">${esc(fmtNum(r.transport, lang))}</td>
-        <td class="num">${esc(fmtNum(r.other, lang))}</td>
-        <td class="num">${esc(fmtNum(r.jamaKhoroch, lang))}</td>
-        <td class="num">${esc(fmtNum(r.expense, lang))}</td>
-        <td class="num">${esc(fmtNum(r.balance, lang))}</td>
+        <td class="${r.transport < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(r.transport, lang))}</td>
+        <td class="c-jama">${esc(fmtNum(r.other, lang))}</td>
+        <td class="c-jama">${esc(fmtNum(r.jamaKhoroch, lang))}</td>
+        <td class="c-exp">${esc(fmtNum(r.expense, lang))}</td>
+        <td class="${r.balance < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(r.balance, lang))}</td>
       </tr>`).join("");
 
     const body = `
@@ -136,7 +136,7 @@ function Page() {
       <table class="month-report">
         <thead><tr><th>তারিখ</th><th>পরিবহন জমা/দেনা</th><th>${trBn("অন্যান্য জমা", lang)}</th><th>${trBn("জমা-খরচের জমা", lang)}</th><th>${trBn("দৈনিক খরচ", lang)}</th><th>বর্তমান ব্যালেন্স</th></tr></thead>
         <tbody>${monthlyRows || `<tr><td colspan="6">${esc(t("noData"))}</td></tr>`}</tbody>
-        <tfoot><tr><td>সর্বমোট</td><td class="num">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="num">${esc(fmtNum(totalOther, lang))}</td><td class="num">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="num">${esc(fmtNum(totalExpense, lang))}</td><td class="num">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
+        <tfoot><tr><td>সর্বমোট</td><td class="${(totalJama-totalDena) < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(totalJama - totalDena, lang))}</td><td class="c-jama">${esc(fmtNum(totalOther, lang))}</td><td class="c-jama">${esc(fmtNum(totalJamaKhoroch, lang))}</td><td class="c-exp">${esc(fmtNum(totalExpense, lang))}</td><td class="${handBalance < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(handBalance, lang))}</td></tr></tfoot>
       </table>
 
       <table class="summary">
