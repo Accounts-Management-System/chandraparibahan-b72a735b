@@ -94,22 +94,23 @@ function Page() {
       const d = tr ? Number(tr.dena_1 || 0) + Number(tr.dena_2 || 0) : 0;
       const f = tr ? Number(tr.fare_1 || 0) + Number(tr.fare_2 || 0) : 0;
       const route = tr ? [tr.route_1, tr.route_2].filter(Boolean).join(" / ") : "";
+      const bal = tr ? j - d : 0;
       rowsHtml.push(
         `<tr>
           <td>${tr ? esc(fmtNum(i + 1, lang)) : ""}</td>
           <td>${tr ? esc(fmtDate(tr.trip_date, lang)) : ""}</td>
           <td>${tr ? esc(tr.vehicle_no ?? "") : ""}</td>
-          <td>${tr ? esc(tr.supervisor ?? "") : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(j, lang)) : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(d, lang)) : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(j - d, lang)) : ""}</td>
-          <td class="num">${tr ? esc(fmtNum(f, lang)) : ""}</td>
-          <td>${tr ? esc(route) : ""}</td>
+          <td class="wrap">${tr ? esc(tr.supervisor ?? "") : ""}</td>
+          <td class="c-jama">${tr ? esc(fmtNum(j, lang)) : ""}</td>
+          <td class="c-dena">${tr ? esc(fmtNum(d, lang)) : ""}</td>
+          <td class="${bal < 0 ? 'c-neg' : 'c-pos'}">${tr ? esc(fmtNum(j - d, lang)) : ""}</td>
+          <td>${tr ? esc(fmtNum(f, lang)) : ""}</td>
+          <td class="wrap">${tr ? esc(route) : ""}</td>
           <td class="sep"></td>
           <td>${ex ? esc(ex.category ?? "") : ""}</td>
           <td>${ex ? esc(ex.head ?? "") : ""}</td>
-          <td>${ex ? esc(ex.description ?? "") : ""}</td>
-          <td class="num">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
+          <td class="wrap">${ex ? esc(ex.description ?? "") : ""}</td>
+          <td class="c-exp">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
         </tr>`
       );
     }
