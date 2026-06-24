@@ -200,6 +200,30 @@ function Page() {
           </tr>
         </tfoot>
       </table>
+
+      ${(otherDeposits.length || jamaKhorochDeposits.length) ? `
+      <h3 style="margin:10px 0 4px;font-size:14px">${esc(trBn("অন্যান্য জমা ও জমা-খরচের জমা", lang))}</h3>
+      <table class="other">
+        <thead>
+          <tr>
+            <th>তারিখ</th><th>ধরন</th><th>ক্যাটাগরী</th><th>খাত</th><th>বিবরন</th><th>পরিমান</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${[...otherDeposits.map((r: any) => ({ ...r, kindLabel: trBn("অন্যান্য জমা", lang) })), ...jamaKhorochDeposits.map((r: any) => ({ ...r, kindLabel: trBn("জমা-খরচের জমা", lang) }))]
+            .map((r: any) => `<tr>
+              <td>${esc(fmtDate(r.income_date, lang))}</td>
+              <td>${esc(r.kindLabel)}</td>
+              <td>${esc(r.category ?? "")}</td>
+              <td>${esc(r.head ?? "")}</td>
+              <td>${esc(r.description ?? "")}</td>
+              <td class="num">${esc(fmtNum(r.amount, lang))}</td>
+            </tr>`).join("")}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="5">${esc(trBn("মোট", lang))}</td><td class="num">${esc(fmtNum(totalOther + totalJamaKhoroch, lang))}</td></tr>
+        </tfoot>
+      </table>` : ""}
     `;
 
     const extraStyle = `<style>
@@ -223,15 +247,18 @@ function Page() {
       table.main tr.group th{background:#cbd5e1;font-size:13px}
       table.main td.num,table.main th.num{text-align:right}
       table.main .sep,table.summary .sep{border:0;background:#fff;width:6px;padding:0}
+      table.other th{background:#e5e7eb;text-align:center}
+      table.other td.num{text-align:right}
       tfoot td{font-weight:700;background:#f3f4f6}
     </style>`;
 
     exportPdfHtml({
       title: trBn("চন্দ্রা পরিবহন — প্রতিদিনের জমা ও খরচ হিসাব", lang),
       body: extraStyle + body,
-      orientation: "portrait",
+      orientation: "landscape",
     });
   };
+
 
   return (
     <AppLayout>
