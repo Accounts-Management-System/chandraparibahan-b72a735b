@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useT, fmtNum, fmtDate, trBn } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
@@ -107,7 +108,7 @@ function Page() {
     return Array.from(m.values())
       .map((s) => {
         const balance = s.jama - s.dena;
-        const successRate = balance > 0 ? (s.trips / balance) * 100 : 0;
+        const successRate = s.jama > 0 ? (balance / s.jama) * 100 : 0;
         return { id: s.name, ...s, balance, successRate };
       })
       .sort((a, b) => b.balance - a.balance);
@@ -115,9 +116,8 @@ function Page() {
 
   const [supSearch, setSupSearch] = useState("");
   const supervisorRowsFiltered = useMemo(() => {
-    const q = supSearch.trim().toLowerCase();
-    if (!q) return supervisorRows;
-    return supervisorRows.filter((s) => s.name.toLowerCase().includes(q));
+    if (!supSearch || supSearch === "__all__") return supervisorRows;
+    return supervisorRows.filter((s) => s.name === supSearch);
   }, [supervisorRows, supSearch]);
 
   const ownerByVehicle = useMemo(() => {
@@ -250,7 +250,7 @@ function Page() {
         const sumDena = supervisorRowsFiltered.reduce((a, s) => a + s.dena, 0);
         const sumBal = supervisorRowsFiltered.reduce((a, s) => a + s.balance, 0);
         const sumTrips = supervisorRowsFiltered.reduce((a, s) => a + s.trips, 0);
-        const overallRate = sumBal > 0 ? ((sumTrips / sumBal) * 100).toFixed(2) : "0";
+        const overallRate = sumJama > 0 ? ((sumBal / sumJama) * 100).toFixed(2) : "0";
         
         return { name: "supervisor-report", headers, rows, footer: [t("grandTotal"), "", fmtNum(sumTrips, lang), fmtNum(sumJama, lang), fmtNum(sumDena, lang), fmtNum(sumBal, lang), `${fmtNum(Number(overallRate), lang)}%`], orientation: "portrait" };
       }
@@ -506,15 +506,20 @@ function Page() {
           <TabsContent value="supervisor">
             <div className="mb-3 text-xs text-muted-foreground">
               {trBn("তারিখঃ", lang)} {fmtDate(from, lang)} → {fmtDate(to, lang)}
-              {" · "}{trBn("সফলতার হার = (মোট ব্যালেন্স ÷ মোট ট্রিপ) × ১০০", lang)}
+              {" · "}{trBn("সফলতার হার = (মোট ব্যালেন্স ÷ মোট জমা) × ১০০", lang)}
             </div>
             <div className="mb-3 max-w-xs">
-              <Input
-                placeholder={trBn("সুপারভাইজার নাম দিয়ে খুঁজুন", lang)}
-                value={supSearch}
-                onChange={(e) => setSupSearch(e.target.value)}
-                className="h-9"
-              />
+              <Select value={supSearch || "__all__"} onValueChange={(v) => setSupSearch(v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder={trBn("সুপারভাইজার নির্বাচন করুন", lang)} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{trBn("সকল সুপারভাইজার", lang)}</SelectItem>
+                  {supervisorRows.map((s) => (
+                    <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Section
               headers={[t("serial"), trBn("সুপারভাইজার", lang), trBn("মোট ট্রিপ", lang), trBn("মোট জমা", lang), trBn("মোট দেনা", lang), trBn("মোট ব্যালেন্স", lang), trBn("সফলতার হার (%)", lang)]}
