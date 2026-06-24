@@ -251,7 +251,7 @@ function Page() {
         const sumBal = supervisorRowsFiltered.reduce((a, s) => a + s.balance, 0);
         const sumTrips = supervisorRowsFiltered.reduce((a, s) => a + s.trips, 0);
         const overallRate = sumTrips > 0 ? ((sumBal / sumTrips) * 100).toFixed(2) : "0";
-        const overallRate = sumJama > 0 ? ((sumBal / sumJama) * 100).toFixed(2) : "0";
+        
         return { name: "supervisor-report", headers, rows, footer: [t("grandTotal"), "", fmtNum(sumTrips, lang), fmtNum(sumJama, lang), fmtNum(sumDena, lang), fmtNum(sumBal, lang), `${fmtNum(Number(overallRate), lang)}%`], orientation: "portrait" };
       }
       case "owner": {
