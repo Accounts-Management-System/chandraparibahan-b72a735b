@@ -232,7 +232,11 @@ function DashboardPage() {
         </div>
 
         {/* Filters */}
-        <Card className="p-3 border-border/60 bg-card shadow-sm">
+        <Card className="p-3 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
+          <style>{`
+            @keyframes eqPulse { 0%,100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+            .eq-bar { transform-origin: bottom; animation: eqPulse 0.7s ease-in-out infinite; }
+          `}</style>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <label className="flex flex-col gap-1">
               <span className="text-[10px] uppercase text-muted-foreground">{t("from")}</span>
@@ -308,7 +312,7 @@ function DashboardPage() {
         </div>
 
         {/* Per-trip chart */}
-        <Card className="p-4 border-border/60 bg-card shadow-sm">
+        <Card className="p-4 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="text-sm font-semibold text-muted-foreground">{t("tripChart")}</div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted p-0.5 text-xs">
@@ -351,8 +355,40 @@ function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="oklch(0 0 0 / 0.08)" />
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={60} />
                     <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtNum(v, lang)} />
-                    <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v: any) => fmtNum(Number(v), lang)} />
-                    <Bar dataKey="value" fill={`url(#${gradId})`} radius={[6, 6, 0, 0]}>
+                    <Tooltip cursor={false} contentStyle={{ background: "color-mix(in oklab, var(--card) 70%, transparent)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, backdropFilter: "blur(6px)" }} formatter={(v: any) => fmtNum(Number(v), lang)} />
+                    <Bar
+                      dataKey="value"
+                      fill={`url(#${gradId})`}
+                      radius={[6, 6, 0, 0]}
+                      onClick={(d: any) => setActiveBar((prev) => (prev === d?.name ? null : d?.name))}
+                      shape={(props: any) => {
+                        const { x, y, width, height, payload } = props;
+                        const isActive = payload?.name === activeBar;
+                        return (
+                          <g style={{ cursor: "pointer" }}>
+                            <rect x={x} y={y} width={width} height={height} rx={6} ry={6} fill={`url(#${gradId})`} />
+                            {isActive && Array.from({ length: 4 }).map((_, i) => {
+                              const bw = Math.max(2, width / 7);
+                              const gap = (width - bw * 4) / 5;
+                              const bx = x + gap + i * (bw + gap);
+                              return (
+                                <rect
+                                  key={i}
+                                  x={bx}
+                                  y={y + 4}
+                                  width={bw}
+                                  height={Math.max(8, height - 8)}
+                                  rx={1.5}
+                                  fill="rgba(255,255,255,0.85)"
+                                  className="eq-bar"
+                                  style={{ animationDelay: `${i * 0.12}s` }}
+                                />
+                              );
+                            })}
+                          </g>
+                        );
+                      }}
+                    >
                       <LabelList dataKey="value" position="top" content={<ValueLabel />} />
                     </Bar>
                   </BarChart>
