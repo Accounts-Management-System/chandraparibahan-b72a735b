@@ -93,6 +93,11 @@ function DashboardPage() {
   const [month, setMonth] = useState("");
   const [vehicle, setVehicle] = useState<string>("all");
   const [ownerId, setOwnerId] = useState<string>("all");
+  const [activeBar, setActiveBar] = useState<string | null>(null);
+  const [links, setLinks] = useState<CustomLink[]>([]);
+  const [linksOpen, setLinksOpen] = useState(false);
+  useEffect(() => { setLinks(loadLinks()); }, []);
+  const updateLinks = (next: CustomLink[]) => { setLinks(next); saveLinks(next); };
 
   const effRange = useMemo(() => {
     const mr = monthRange(month);
