@@ -488,3 +488,57 @@ function MiniStat({ label, value, tone = "blue", highlight }: { label: string; v
     </div>
   );
 }
+
+function LinksDialog({
+  open, onOpenChange, links, onChange, t,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  links: CustomLink[];
+  onChange: (next: CustomLink[]) => void;
+  t: (k: any) => string;
+}) {
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const add = () => {
+    const trimmedLabel = label.trim();
+    let trimmedUrl = url.trim();
+    if (!trimmedLabel || !trimmedUrl) return;
+    if (!/^https?:\/\//i.test(trimmedUrl)) trimmedUrl = `https://${trimmedUrl}`;
+    onChange([...links, { id: crypto.randomUUID(), label: trimmedLabel, url: trimmedUrl }]);
+    setLabel(""); setUrl("");
+  };
+  const remove = (id: string) => onChange(links.filter((l) => l.id !== id));
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{t("manageLinks")}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-2">
+            <Input placeholder={t("linkLabel")} value={label} onChange={(e) => setLabel(e.target.value)} />
+            <Input placeholder={t("linkUrl")} value={url} onChange={(e) => setUrl(e.target.value)} />
+            <Button onClick={add} type="button"><Plus className="h-4 w-4 mr-1" />{t("addLink")}</Button>
+          </div>
+          <div className="border-t pt-3 space-y-1 max-h-64 overflow-y-auto">
+            {links.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">{t("noLinks")}</p>
+            ) : links.map((l) => (
+              <div key={l.id} className="flex items-center justify-between gap-2 rounded px-2 py-1.5 border border-border/40 bg-card/40">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{l.label}</div>
+                  <a href={l.url} target="_blank" rel="noreferrer" className="text-[10px] text-primary truncate block hover:underline">{l.url}</a>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => remove(l.id)} aria-label="delete">
+                  <Trash2 className="h-4 w-4 text-rose-500" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
