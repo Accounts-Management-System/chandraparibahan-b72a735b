@@ -212,21 +212,18 @@ function DashboardPage() {
     const cy = y - pillH / 2 - 6;
     return (
       <g transform={`translate(${cx}, ${cy})`}>
-        {/* outer shadow for 3D lift */}
-        <rect x={-pillW / 2 + 1} y={-pillH / 2 + 2} rx={8} ry={8} width={pillW} height={pillH}
-          fill="rgba(0,0,0,0.28)" filter={`url(#${labelBlurId})`} />
-        {/* main gradient body */}
-        <rect x={-pillW / 2} y={-pillH / 2} rx={8} ry={8} width={pillW} height={pillH}
-          fill={`url(#${labelGradId})`} />
-        {/* top highlight (bevel) */}
-        <rect x={-pillW / 2 + 1.5} y={-pillH / 2 + 1.5} rx={7} ry={7} width={pillW - 3} height={pillH / 2 - 1}
-          fill="rgba(255,255,255,0.45)" />
-        {/* bottom shade */}
-        <rect x={-pillW / 2 + 1.5} y={1} rx={7} ry={7} width={pillW - 3} height={pillH / 2 - 2}
+        {/* subtle drop shadow */}
+        <rect x={-pillW / 2} y={-pillH / 2 + 1.5} rx={4} ry={4} width={pillW} height={pillH}
           fill="rgba(0,0,0,0.18)" />
-        {/* crisp border */}
-        <rect x={-pillW / 2} y={-pillH / 2} rx={8} ry={8} width={pillW} height={pillH}
-          fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={0.9} />
+        {/* bar-like gradient body */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={4} ry={4} width={pillW} height={pillH}
+          fill={`url(#${labelGradId})`} />
+        {/* thin top sheen */}
+        <rect x={-pillW / 2 + 1} y={-pillH / 2 + 1} rx={3} ry={3} width={pillW - 2} height={2}
+          fill="rgba(255,255,255,0.35)" />
+        {/* hairline border */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={4} ry={4} width={pillW} height={pillH}
+          fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.6} />
         <text x={0} y={0} textAnchor="middle" transform="rotate(-90)"
           dominantBaseline="middle"
           style={{ fontSize: 10, fontWeight: 800, fill: "#fff", letterSpacing: 0.3, paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 0.6 }}>
