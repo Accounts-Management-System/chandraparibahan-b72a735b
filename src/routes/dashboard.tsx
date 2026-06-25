@@ -24,10 +24,19 @@ import {
   BookOpen,
   ShieldCheck,
   UserCog,
+  FileText,
+  Store,
+  Route as RouteIcon,
+  Link as LinkIcon,
+  Plus,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -35,10 +44,13 @@ export const Route = createFileRoute("/dashboard")({
 
 const tiles = [
   { to: "/daily-accounts", key: "dailyAccounts" as const, icon: Receipt },
+  { to: "/daily-report", key: "dailyReport" as const, icon: FileText },
   { to: "/jama-khoroch", key: "jamaKhoroch" as const, icon: BookOpen },
   { to: "/expenses", key: "expenses" as const, icon: Wallet },
   { to: "/other-income", key: "otherIncome" as const, icon: Coins },
   { to: "/vehicles", key: "vehicles" as const, icon: Bus },
+  { to: "/routes", key: "routes" as const, icon: RouteIcon },
+  { to: "/vendors", key: "vendors" as const, icon: Store },
   { to: "/contacts", key: "shareholders" as const, icon: Users },
   { to: "/data-manufacturer", key: "dataManufacturer" as const, icon: Factory, writeOnly: true },
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
@@ -46,6 +58,15 @@ const tiles = [
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
   { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
+
+type CustomLink = { id: string; label: string; url: string };
+const LINKS_KEY = "dashboard-custom-links";
+function loadLinks(): CustomLink[] {
+  try { return JSON.parse(localStorage.getItem(LINKS_KEY) || "[]"); } catch { return []; }
+}
+function saveLinks(v: CustomLink[]) {
+  try { localStorage.setItem(LINKS_KEY, JSON.stringify(v)); } catch {}
+}
 
 function monthRange(ym: string): { from: string; to: string } | null {
   if (!ym) return null;
@@ -72,6 +93,11 @@ function DashboardPage() {
   const [month, setMonth] = useState("");
   const [vehicle, setVehicle] = useState<string>("all");
   const [ownerId, setOwnerId] = useState<string>("all");
+  const [activeBar, setActiveBar] = useState<string | null>(null);
+  const [links, setLinks] = useState<CustomLink[]>([]);
+  const [linksOpen, setLinksOpen] = useState(false);
+  useEffect(() => { setLinks(loadLinks()); }, []);
+  const updateLinks = (next: CustomLink[]) => { setLinks(next); saveLinks(next); };
 
   const effRange = useMemo(() => {
     const mr = monthRange(month);
@@ -206,7 +232,11 @@ function DashboardPage() {
         </div>
 
         {/* Filters */}
-        <Card className="p-3 border-border/60 bg-card shadow-sm">
+        <Card className="p-3 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
+          <style>{`
+            @keyframes eqPulse { 0%,100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+            .eq-bar { transform-origin: bottom; animation: eqPulse 0.7s ease-in-out infinite; }
+          `}</style>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <label className="flex flex-col gap-1">
               <span className="text-[10px] uppercase text-muted-foreground">{t("from")}</span>
@@ -282,7 +312,7 @@ function DashboardPage() {
         </div>
 
         {/* Per-trip chart */}
-        <Card className="p-4 border-border/60 bg-card shadow-sm">
+        <Card className="p-4 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="text-sm font-semibold text-muted-foreground">{t("tripChart")}</div>
             <div className="inline-flex rounded-md border border-border/60 bg-muted p-0.5 text-xs">
@@ -325,8 +355,40 @@ function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="oklch(0 0 0 / 0.08)" />
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={60} />
                     <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtNum(v, lang)} />
-                    <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v: any) => fmtNum(Number(v), lang)} />
-                    <Bar dataKey="value" fill={`url(#${gradId})`} radius={[6, 6, 0, 0]}>
+                    <Tooltip cursor={false} contentStyle={{ background: "color-mix(in oklab, var(--card) 70%, transparent)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, backdropFilter: "blur(6px)" }} formatter={(v: any) => fmtNum(Number(v), lang)} />
+                    <Bar
+                      dataKey="value"
+                      fill={`url(#${gradId})`}
+                      radius={[6, 6, 0, 0]}
+                      onClick={(d: any) => setActiveBar((prev) => (prev === d?.name ? null : d?.name))}
+                      shape={(props: any) => {
+                        const { x, y, width, height, payload } = props;
+                        const isActive = payload?.name === activeBar;
+                        return (
+                          <g style={{ cursor: "pointer" }}>
+                            <rect x={x} y={y} width={width} height={height} rx={6} ry={6} fill={`url(#${gradId})`} />
+                            {isActive && Array.from({ length: 4 }).map((_, i) => {
+                              const bw = Math.max(2, width / 7);
+                              const gap = (width - bw * 4) / 5;
+                              const bx = x + gap + i * (bw + gap);
+                              return (
+                                <rect
+                                  key={i}
+                                  x={bx}
+                                  y={y + 4}
+                                  width={bw}
+                                  height={Math.max(8, height - 8)}
+                                  rx={1.5}
+                                  fill="rgba(255,255,255,0.85)"
+                                  className="eq-bar"
+                                  style={{ animationDelay: `${i * 0.12}s` }}
+                                />
+                              );
+                            })}
+                          </g>
+                        );
+                      }}
+                    >
                       <LabelList dataKey="value" position="top" content={<ValueLabel />} />
                     </Bar>
                   </BarChart>
@@ -361,8 +423,49 @@ function DashboardPage() {
                 );
               });
             })()}
+            <button
+              type="button"
+              onClick={() => setLinksOpen(true)}
+              className="tile-3d tile-amber group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-md text-left"
+            >
+              <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">
+                <LinkIcon className="h-5 w-5" />
+              </div>
+              <div className="font-medium text-sm text-foreground">{t("addLink")}</div>
+            </button>
           </div>
+
+          {links.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("customLinks")}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {links.map((l) => (
+                  <a
+                    key={l.id}
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tile-3d tile-cyan group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/15 text-primary mb-2">
+                      <ExternalLink className="h-4 w-4" />
+                    </div>
+                    <div className="font-medium text-sm text-foreground truncate">{l.label}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{l.url}</div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        <LinksDialog
+          open={linksOpen}
+          onOpenChange={setLinksOpen}
+          links={links}
+          onChange={updateLinks}
+          t={t}
+        />
       </div>
     </AppLayout>
   );
@@ -383,5 +486,59 @@ function MiniStat({ label, value, tone = "blue", highlight }: { label: string; v
       <div className="text-[10px] uppercase text-foreground/60 mb-1 font-semibold tracking-wide">{label}</div>
       <div className={`text-base md:text-lg font-extrabold ${toneText[tone]}`}>{value}</div>
     </div>
+  );
+}
+
+function LinksDialog({
+  open, onOpenChange, links, onChange, t,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  links: CustomLink[];
+  onChange: (next: CustomLink[]) => void;
+  t: (k: any) => string;
+}) {
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const add = () => {
+    const trimmedLabel = label.trim();
+    let trimmedUrl = url.trim();
+    if (!trimmedLabel || !trimmedUrl) return;
+    if (!/^https?:\/\//i.test(trimmedUrl)) trimmedUrl = `https://${trimmedUrl}`;
+    onChange([...links, { id: crypto.randomUUID(), label: trimmedLabel, url: trimmedUrl }]);
+    setLabel(""); setUrl("");
+  };
+  const remove = (id: string) => onChange(links.filter((l) => l.id !== id));
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{t("manageLinks")}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-2">
+            <Input placeholder={t("linkLabel")} value={label} onChange={(e) => setLabel(e.target.value)} />
+            <Input placeholder={t("linkUrl")} value={url} onChange={(e) => setUrl(e.target.value)} />
+            <Button onClick={add} type="button"><Plus className="h-4 w-4 mr-1" />{t("addLink")}</Button>
+          </div>
+          <div className="border-t pt-3 space-y-1 max-h-64 overflow-y-auto">
+            {links.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">{t("noLinks")}</p>
+            ) : links.map((l) => (
+              <div key={l.id} className="flex items-center justify-between gap-2 rounded px-2 py-1.5 border border-border/40 bg-card/40">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{l.label}</div>
+                  <a href={l.url} target="_blank" rel="noreferrer" className="text-[10px] text-primary truncate block hover:underline">{l.url}</a>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => remove(l.id)} aria-label="delete">
+                  <Trash2 className="h-4 w-4 text-rose-500" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -58,10 +58,12 @@ function DailyAccountsPage() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["trips"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true }).limit(1000);
+      const { data, error } = await supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("created_at", { ascending: false }).order("serial_no", { ascending: false }).limit(1000);
       if (error) throw error;
       return (data ?? []) as Trip[];
     },
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   const del = useMutation({
@@ -287,7 +289,7 @@ function TripDialog({
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trips"] }); toast.success(t("saved")); onOpenChange(false); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trips"] }); qc.invalidateQueries({ queryKey: ["last-trip"] }); toast.success(t("saved")); onOpenChange(false); },
     onError: (e: any) => toast.error(e.message),
   });
 
