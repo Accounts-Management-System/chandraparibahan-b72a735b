@@ -234,8 +234,13 @@ function DashboardPage() {
         {/* Filters */}
         <Card className="p-3 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
           <style>{`
-            @keyframes eqPulse { 0%,100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
-            .eq-bar { transform-origin: bottom; animation: eqPulse 0.7s ease-in-out infinite; }
+            @keyframes bubbleRise {
+              0%   { transform: translateY(0) scale(0.6); opacity: 0; }
+              15%  { opacity: 0.85; }
+              80%  { opacity: 0.7; }
+              100% { transform: translateY(var(--rise, -60px)) scale(1); opacity: 0; }
+            }
+            .bubble { transform-origin: center; animation: bubbleRise 2.6s ease-in-out infinite; }
           `}</style>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <label className="flex flex-col gap-1">
