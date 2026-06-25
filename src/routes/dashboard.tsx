@@ -212,21 +212,18 @@ function DashboardPage() {
     const cy = y - pillH / 2 - 6;
     return (
       <g transform={`translate(${cx}, ${cy})`}>
-        {/* outer shadow for 3D lift */}
-        <rect x={-pillW / 2 + 1} y={-pillH / 2 + 2} rx={8} ry={8} width={pillW} height={pillH}
-          fill="rgba(0,0,0,0.28)" filter={`url(#${labelBlurId})`} />
-        {/* main gradient body */}
-        <rect x={-pillW / 2} y={-pillH / 2} rx={8} ry={8} width={pillW} height={pillH}
-          fill={`url(#${labelGradId})`} />
-        {/* top highlight (bevel) */}
-        <rect x={-pillW / 2 + 1.5} y={-pillH / 2 + 1.5} rx={7} ry={7} width={pillW - 3} height={pillH / 2 - 1}
-          fill="rgba(255,255,255,0.45)" />
-        {/* bottom shade */}
-        <rect x={-pillW / 2 + 1.5} y={1} rx={7} ry={7} width={pillW - 3} height={pillH / 2 - 2}
+        {/* subtle drop shadow */}
+        <rect x={-pillW / 2} y={-pillH / 2 + 1.5} rx={4} ry={4} width={pillW} height={pillH}
           fill="rgba(0,0,0,0.18)" />
-        {/* crisp border */}
-        <rect x={-pillW / 2} y={-pillH / 2} rx={8} ry={8} width={pillW} height={pillH}
-          fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={0.9} />
+        {/* bar-like gradient body */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={4} ry={4} width={pillW} height={pillH}
+          fill={`url(#${labelGradId})`} />
+        {/* thin top sheen */}
+        <rect x={-pillW / 2 + 1} y={-pillH / 2 + 1} rx={3} ry={3} width={pillW - 2} height={2}
+          fill="rgba(255,255,255,0.35)" />
+        {/* hairline border */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={4} ry={4} width={pillW} height={pillH}
+          fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.6} />
         <text x={0} y={0} textAnchor="middle" transform="rotate(-90)"
           dominantBaseline="middle"
           style={{ fontSize: 10, fontWeight: 800, fill: "#fff", letterSpacing: 0.3, paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 0.6 }}>
@@ -249,12 +246,12 @@ function DashboardPage() {
         <Card className="p-3 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
           <style>{`
             @keyframes bubbleRise {
-              0%   { transform: translateY(0) scale(0.6); opacity: 0; }
-              15%  { opacity: 0.85; }
-              80%  { opacity: 0.7; }
+              0%   { transform: translateY(0) scale(0.4); opacity: 0; }
+              20%  { opacity: 0.7; }
+              85%  { opacity: 0.55; }
               100% { transform: translateY(var(--rise, -60px)) scale(1); opacity: 0; }
             }
-            .bubble { transform-origin: center; animation: bubbleRise 2.6s ease-in-out infinite; }
+            .bubble { transform-origin: center; animation-name: bubbleRise; animation-timing-function: ease-in-out; animation-iteration-count: infinite; will-change: transform, opacity; }
           `}</style>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <label className="flex flex-col gap-1">
@@ -384,26 +381,35 @@ function DashboardPage() {
                         const { x, y, width, height, payload } = props;
                         const isActive = payload?.name === activeBar;
                         // Bubbles always rise gently inside the bar; more on active.
-                        const count = isActive ? 7 : 4;
+                        const count = isActive ? 14 : 8;
                         const clipId = `clip-${payload?.name}-${chartMode}`;
+                        // Pseudo-random but stable per (name,index)
+                        const seedStr = String(payload?.name ?? "") + chartMode;
+                        let h = 2166136261;
+                        for (let k = 0; k < seedStr.length; k++) { h ^= seedStr.charCodeAt(k); h = Math.imul(h, 16777619); }
+                        const rnd = (i: number, salt: number) => {
+                          let s = (h ^ (i * 2654435761) ^ (salt * 40503)) >>> 0;
+                          s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
+                          return (s % 100000) / 100000;
+                        };
                         const bubbles = Array.from({ length: count }).map((_, i) => {
-                          const seed = (i * 9301 + 49297) % 233280;
-                          const rand = seed / 233280;
-                          const cxOff = (rand - 0.5) * (width * 0.7);
-                          const r = 1.6 + ((i * 1.7) % 3);
-                          const rise = -(height - 8);
-                          const delay = (i * 0.35) % 2.6;
+                          const cxOff = (rnd(i, 1) - 0.5) * (width * 0.78);
+                          const r = 0.6 + rnd(i, 2) * 1.4; // 0.6 – 2.0 (smaller)
+                          const rise = -(height - 6) * (0.65 + rnd(i, 3) * 0.45);
+                          const duration = 1.8 + rnd(i, 4) * 3.2; // 1.8s – 5.0s (varied)
+                          const delay = rnd(i, 5) * 4; // 0 – 4s desync
+                          const startY = y + height - 2 - rnd(i, 6) * (height * 0.15);
                           return (
                             <circle
                               key={i}
                               cx={x + width / 2 + cxOff}
-                              cy={y + height - 4}
+                              cy={startY}
                               r={r}
-                              fill="rgba(255,255,255,0.55)"
-                              stroke="rgba(255,255,255,0.85)"
-                              strokeWidth={0.4}
+                              fill="rgba(255,255,255,0.5)"
+                              stroke="rgba(255,255,255,0.75)"
+                              strokeWidth={0.3}
                               className="bubble"
-                              style={{ ["--rise" as any]: `${rise}px`, animationDelay: `${delay}s` }}
+                              style={{ ["--rise" as any]: `${rise}px`, animationDelay: `${delay}s`, animationDuration: `${duration}s` }}
                             />
                           );
                         });
