@@ -202,31 +202,30 @@ function DashboardPage() {
     3,
     ...chartData.map((d) => fmtNum(Number(d.value), lang).length),
   );
-  const pillH = Math.max(34, maxLabelLen * 7 + 14);
-  const pillW = 20;
+  const pillH = Math.max(30, maxLabelLen * 6.5 + 10);
   const ValueLabel = (props: any) => {
     const { x, y, width, value } = props;
     if (value == null) return null;
     const text = fmtNum(Number(value), lang);
+    // Slim glass pill — matches bar width, capped thin
+    const pillW = Math.max(10, Math.min(16, (width ?? 16) * 0.7));
     const cx = x + width / 2;
-    const cy = y - pillH / 2 - 6;
+    const gap = 8; // visible gap so pill doesn't merge with the bar top
+    const cy = y - pillH / 2 - gap;
     return (
       <g transform={`translate(${cx}, ${cy})`}>
-        {/* subtle drop shadow */}
-        <rect x={-pillW / 2} y={-pillH / 2 + 1.5} rx={4} ry={4} width={pillW} height={pillH}
-          fill="rgba(0,0,0,0.18)" />
-        {/* bar-like gradient body */}
-        <rect x={-pillW / 2} y={-pillH / 2} rx={4} ry={4} width={pillW} height={pillH}
-          fill={`url(#${labelGradId})`} />
-        {/* thin top sheen */}
-        <rect x={-pillW / 2 + 1} y={-pillH / 2 + 1} rx={3} ry={3} width={pillW - 2} height={2}
-          fill="rgba(255,255,255,0.35)" />
-        {/* hairline border */}
-        <rect x={-pillW / 2} y={-pillH / 2} rx={4} ry={4} width={pillW} height={pillH}
-          fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.6} />
+        {/* glass body — 30% transparent */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={3} ry={3} width={pillW} height={pillH}
+          fill={`url(#${labelGradId})`} fillOpacity={0.3} />
+        {/* subtle top sheen */}
+        <rect x={-pillW / 2 + 0.8} y={-pillH / 2 + 0.8} rx={2} ry={2} width={pillW - 1.6} height={1.4}
+          fill="rgba(255,255,255,0.45)" />
+        {/* glass border */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={3} ry={3} width={pillW} height={pillH}
+          fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={0.5} />
         <text x={0} y={0} textAnchor="middle" transform="rotate(-90)"
           dominantBaseline="middle"
-          style={{ fontSize: 10, fontWeight: 800, fill: "#fff", letterSpacing: 0.3, paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 0.6 }}>
+          style={{ fontSize: 9.5, fontWeight: 800, fill: "#fff", letterSpacing: 0.2, paintOrder: "stroke", stroke: "rgba(0,0,0,0.7)", strokeWidth: 0.7 }}>
           {text}
         </text>
       </g>
