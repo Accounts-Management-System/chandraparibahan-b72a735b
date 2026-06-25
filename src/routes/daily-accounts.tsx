@@ -287,7 +287,7 @@ function TripDialog({
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trips"] }); toast.success(t("saved")); onOpenChange(false); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trips"] }); qc.invalidateQueries({ queryKey: ["last-trip"] }); toast.success(t("saved")); onOpenChange(false); },
     onError: (e: any) => toast.error(e.message),
   });
 

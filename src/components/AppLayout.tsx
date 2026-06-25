@@ -227,13 +227,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <footer className="mt-8 pt-4 border-t text-center text-[11px] text-muted-foreground leading-relaxed">
             {lang === "bn" ? (
               <>
-                <div>সর্বস্বত্ব সংরক্ষিত — জায়িম ভুইয়া</div>
-                <div>ডাটাবেইজ ডিজাইন ও প্রোজেক্ট ডেভেলপমেন্ট বাই জায়িম ভুইয়া • মোবাইল: ০১৭১২৮১১১১৮</div>
+                <div>অলরাইট রিসিভড Chandra State.</div>
+                <div>পরিকল্পনা, ডিজাইন এন্ড ডেভেলপড বাই জায়িম ভুইয়া। মোবাইল: ৮৮০১৭১২৮১১১১৮</div>
               </>
             ) : (
               <>
-                <div>All Rights Received by Zayem Bhuiya</div>
-                <div>Database Design &amp; Project Developed By Zayem Bhuiya • Mobile: 01712811118</div>
+                <div>All Rights Reserved Chandra State.</div>
+                <div>Planned, Designed &amp; Developed By Zayem Bhuiya. Mobile: 8801712811118</div>
               </>
             )}
           </footer>

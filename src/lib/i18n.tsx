@@ -204,6 +204,12 @@ const dict = {
   mostBalance: { bn: "বেশি ব্যালেন্স", en: "Most Balance" },
   leastBalance: { bn: "কম ব্যালেন্স", en: "Least Balance" },
   top10Vehicles: { bn: "টপ ১০ গাড়ি (ট্রিপ অনুযায়ী)", en: "Top 10 Vehicles (by Trips)" },
+  customLinks: { bn: "কাস্টম লিংক", en: "Custom Links" },
+  addLink: { bn: "লিংক যোগ করুন", en: "Add Link" },
+  linkLabel: { bn: "লিংকের নাম", en: "Link Name" },
+  linkUrl: { bn: "লিংক / URL", en: "Link / URL" },
+  manageLinks: { bn: "লিংক ব্যবস্থাপনা", en: "Manage Links" },
+  noLinks: { bn: "কোনো লিংক যোগ করা হয়নি", en: "No links added yet" },
 } as const;
 
 type Key = keyof typeof dict;
