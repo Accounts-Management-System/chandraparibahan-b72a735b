@@ -24,10 +24,19 @@ import {
   BookOpen,
   ShieldCheck,
   UserCog,
+  FileText,
+  Store,
+  Route as RouteIcon,
+  Link as LinkIcon,
+  Plus,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRole } from "@/lib/useRole";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -35,10 +44,13 @@ export const Route = createFileRoute("/dashboard")({
 
 const tiles = [
   { to: "/daily-accounts", key: "dailyAccounts" as const, icon: Receipt },
+  { to: "/daily-report", key: "dailyReport" as const, icon: FileText },
   { to: "/jama-khoroch", key: "jamaKhoroch" as const, icon: BookOpen },
   { to: "/expenses", key: "expenses" as const, icon: Wallet },
   { to: "/other-income", key: "otherIncome" as const, icon: Coins },
   { to: "/vehicles", key: "vehicles" as const, icon: Bus },
+  { to: "/routes", key: "routes" as const, icon: RouteIcon },
+  { to: "/vendors", key: "vendors" as const, icon: Store },
   { to: "/contacts", key: "shareholders" as const, icon: Users },
   { to: "/data-manufacturer", key: "dataManufacturer" as const, icon: Factory, writeOnly: true },
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
@@ -46,6 +58,15 @@ const tiles = [
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
   { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
+
+type CustomLink = { id: string; label: string; url: string };
+const LINKS_KEY = "dashboard-custom-links";
+function loadLinks(): CustomLink[] {
+  try { return JSON.parse(localStorage.getItem(LINKS_KEY) || "[]"); } catch { return []; }
+}
+function saveLinks(v: CustomLink[]) {
+  try { localStorage.setItem(LINKS_KEY, JSON.stringify(v)); } catch {}
+}
 
 function monthRange(ym: string): { from: string; to: string } | null {
   if (!ym) return null;
