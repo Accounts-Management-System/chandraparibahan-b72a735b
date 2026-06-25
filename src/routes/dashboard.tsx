@@ -423,8 +423,49 @@ function DashboardPage() {
                 );
               });
             })()}
+            <button
+              type="button"
+              onClick={() => setLinksOpen(true)}
+              className="tile-3d tile-amber group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-md text-left"
+            >
+              <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">
+                <LinkIcon className="h-5 w-5" />
+              </div>
+              <div className="font-medium text-sm text-foreground">{t("addLink")}</div>
+            </button>
           </div>
+
+          {links.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("customLinks")}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {links.map((l) => (
+                  <a
+                    key={l.id}
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tile-3d tile-cyan group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/15 text-primary mb-2">
+                      <ExternalLink className="h-4 w-4" />
+                    </div>
+                    <div className="font-medium text-sm text-foreground truncate">{l.label}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{l.url}</div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        <LinksDialog
+          open={linksOpen}
+          onOpenChange={setLinksOpen}
+          links={links}
+          onChange={updateLinks}
+          t={t}
+        />
       </div>
     </AppLayout>
   );
