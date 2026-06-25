@@ -383,30 +383,41 @@ function DashboardPage() {
                       shape={(props: any) => {
                         const { x, y, width, height, payload } = props;
                         const isActive = payload?.name === activeBar;
+                        // Bubbles always rise gently inside the bar; more on active.
+                        const count = isActive ? 7 : 4;
+                        const clipId = `clip-${payload?.name}-${chartMode}`;
+                        const bubbles = Array.from({ length: count }).map((_, i) => {
+                          const seed = (i * 9301 + 49297) % 233280;
+                          const rand = seed / 233280;
+                          const cxOff = (rand - 0.5) * (width * 0.7);
+                          const r = 1.6 + ((i * 1.7) % 3);
+                          const rise = -(height - 8);
+                          const delay = (i * 0.35) % 2.6;
+                          return (
+                            <circle
+                              key={i}
+                              cx={x + width / 2 + cxOff}
+                              cy={y + height - 4}
+                              r={r}
+                              fill="rgba(255,255,255,0.55)"
+                              stroke="rgba(255,255,255,0.85)"
+                              strokeWidth={0.4}
+                              className="bubble"
+                              style={{ ["--rise" as any]: `${rise}px`, animationDelay: `${delay}s` }}
+                            />
+                          );
+                        });
                         return (
                           <g style={{ cursor: "pointer" }}>
+                            <clipPath id={clipId}>
+                              <rect x={x} y={y} width={width} height={height} rx={6} ry={6} />
+                            </clipPath>
                             <rect x={x} y={y} width={width} height={height} rx={6} ry={6} fill={`url(#${gradId})`} />
-                            {isActive && Array.from({ length: 4 }).map((_, i) => {
-                              const bw = Math.max(2, width / 7);
-                              const gap = (width - bw * 4) / 5;
-                              const bx = x + gap + i * (bw + gap);
-                              return (
-                                <rect
-                                  key={i}
-                                  x={bx}
-                                  y={y + 4}
-                                  width={bw}
-                                  height={Math.max(8, height - 8)}
-                                  rx={1.5}
-                                  fill="rgba(255,255,255,0.85)"
-                                  className="eq-bar"
-                                  style={{ animationDelay: `${i * 0.12}s` }}
-                                />
-                              );
-                            })}
+                            <g clipPath={`url(#${clipId})`}>{bubbles}</g>
                           </g>
                         );
                       }}
+
                     >
                       <LabelList dataKey="value" position="top" content={<ValueLabel />} />
                     </Bar>
