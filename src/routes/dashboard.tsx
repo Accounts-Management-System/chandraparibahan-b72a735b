@@ -246,12 +246,12 @@ function DashboardPage() {
         <Card className="p-3 border-border/40 bg-card/30 backdrop-blur-md shadow-sm">
           <style>{`
             @keyframes bubbleRise {
-              0%   { transform: translateY(0) scale(0.6); opacity: 0; }
-              15%  { opacity: 0.85; }
-              80%  { opacity: 0.7; }
+              0%   { transform: translateY(0) scale(0.4); opacity: 0; }
+              20%  { opacity: 0.7; }
+              85%  { opacity: 0.55; }
               100% { transform: translateY(var(--rise, -60px)) scale(1); opacity: 0; }
             }
-            .bubble { transform-origin: center; animation: bubbleRise 2.6s ease-in-out infinite; }
+            .bubble { transform-origin: center; animation-name: bubbleRise; animation-timing-function: ease-in-out; animation-iteration-count: infinite; will-change: transform, opacity; }
           `}</style>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <label className="flex flex-col gap-1">
