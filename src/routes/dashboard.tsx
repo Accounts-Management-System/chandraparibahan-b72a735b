@@ -197,31 +197,45 @@ function DashboardPage() {
   const labelGradId = `labelGrad-${chartMode}`;
   const labelBlurId = `labelBlur-${chartMode}`;
 
-  // Custom vector label: vertical (rotated) text in rounded pill with gradient + glow
+  // Uniform pill size: compute once from longest formatted value in data
+  const maxLabelLen = Math.max(
+    3,
+    ...chartData.map((d) => fmtNum(Number(d.value), lang).length),
+  );
+  const pillH = Math.max(34, maxLabelLen * 7 + 14);
+  const pillW = 20;
   const ValueLabel = (props: any) => {
     const { x, y, width, value } = props;
     if (value == null) return null;
     const text = fmtNum(Number(value), lang);
     const cx = x + width / 2;
-    const charW = 7;
-    const padY = 6;
-    const h = Math.max(28, text.length * charW + padY * 2);
-    const w = 16;
-    const cy = y - h / 2 - 4;
+    const cy = y - pillH / 2 - 6;
     return (
       <g transform={`translate(${cx}, ${cy})`}>
-        <rect x={-w / 2} y={-h / 2} rx={7} ry={7} width={w} height={h}
-          fill={`url(#${labelGradId})`} filter={`url(#${labelBlurId})`} opacity={0.95} />
-        <rect x={-w / 2} y={-h / 2} rx={7} ry={7} width={w} height={h}
-          fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
+        {/* outer shadow for 3D lift */}
+        <rect x={-pillW / 2 + 1} y={-pillH / 2 + 2} rx={8} ry={8} width={pillW} height={pillH}
+          fill="rgba(0,0,0,0.28)" filter={`url(#${labelBlurId})`} />
+        {/* main gradient body */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={8} ry={8} width={pillW} height={pillH}
+          fill={`url(#${labelGradId})`} />
+        {/* top highlight (bevel) */}
+        <rect x={-pillW / 2 + 1.5} y={-pillH / 2 + 1.5} rx={7} ry={7} width={pillW - 3} height={pillH / 2 - 1}
+          fill="rgba(255,255,255,0.45)" />
+        {/* bottom shade */}
+        <rect x={-pillW / 2 + 1.5} y={1} rx={7} ry={7} width={pillW - 3} height={pillH / 2 - 2}
+          fill="rgba(0,0,0,0.18)" />
+        {/* crisp border */}
+        <rect x={-pillW / 2} y={-pillH / 2} rx={8} ry={8} width={pillW} height={pillH}
+          fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={0.9} />
         <text x={0} y={0} textAnchor="middle" transform="rotate(-90)"
           dominantBaseline="middle"
-          style={{ fontSize: 10, fontWeight: 700, fill: "#fff", letterSpacing: 0.3 }}>
+          style={{ fontSize: 10, fontWeight: 800, fill: "#fff", letterSpacing: 0.3, paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 0.6 }}>
           {text}
         </text>
       </g>
     );
   };
+
 
   return (
     <AppLayout>
