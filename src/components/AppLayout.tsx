@@ -150,7 +150,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
           />
           <div className="min-w-0">
-            <h1 className="text-lg font-bold leading-tight truncate text-slate-900 dark:text-slate-100">{t("brand")}</h1>
+            <h1 className="brand-marble text-xl font-extrabold leading-tight truncate">{t("brand")}</h1>
             <p className="text-[11px] text-slate-700/90 dark:text-slate-300/80 leading-tight truncate">{t("tagline")}</p>
             <p className="mt-1 inline-flex rounded border border-cyan-700/40 dark:border-cyan-300/30 bg-cyan-200/40 dark:bg-cyan-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-900 dark:text-cyan-200">
               {roleLoading ? t("loading") : role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
