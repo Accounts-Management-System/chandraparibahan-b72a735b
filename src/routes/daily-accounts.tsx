@@ -58,7 +58,7 @@ function DailyAccountsPage() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["trips"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("created_at", { ascending: false }).order("serial_no", { ascending: false }).limit(1000);
+      const { data, error } = await supabase.from("trips").select("*").order("trip_date", { ascending: false }).order("serial_no", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }).limit(1000);
       if (error) throw error;
       return (data ?? []) as Trip[];
     },
