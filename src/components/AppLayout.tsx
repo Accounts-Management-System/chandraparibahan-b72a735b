@@ -224,64 +224,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           {children}
-          <footer className="mt-12 pt-16 pb-8 font-sans border-t-4 border-blue-600 text-gray-600 dark:text-gray-300 bg-transparent">
-            <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-foreground tracking-wide">
-                  {lang === "bn" ? <>চন্দ্রা <span className="text-blue-500">পরিবহন</span></> : <>CHANDRA <span className="text-blue-500">PARIBAHAN</span></>}
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {lang === "bn"
-                    ? "আপনার নিরাপদ ও আরামদায়ক ভ্রমণের বিশ্বস্ত সঙ্গী। আমরা দেশজুড়ে আধুনিক ও উন্নত বাস সেবা নিশ্চিত করতে প্রতিশ্রুতিবদ্ধ।"
-                    : "Your trusted partner for safe and comfortable travel. We are committed to ensuring modern and superior bus service nationwide."}
-                </p>
-                <div className="flex space-x-4 pt-2">
-                  <a href="#" aria-label="Facebook" className="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-800/60 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
-                  </a>
-                  <a href="#" aria-label="Twitter" className="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-800/60 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 12 8.5v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
-                  </a>
-                  <a href="#" aria-label="YouTube" className="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-800/60 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                  </a>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4 border-b-2 border-blue-500 pb-2 inline-block">{lang === "bn" ? "কুইক লিঙ্ক" : "Quick Links"}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><Link to="/dashboard" className="hover:text-blue-400 transition-colors">{lang === "bn" ? "হোম পেজ" : "Home"}</Link></li>
-                  <li><Link to="/daily-accounts" className="hover:text-blue-400 transition-colors">{lang === "bn" ? "দৈনিক জমা" : "Daily Accounts"}</Link></li>
-                  <li><Link to="/routes" className="hover:text-blue-400 transition-colors">{lang === "bn" ? "রুট ও সময়সূচী" : "Routes & Schedule"}</Link></li>
-                  <li><Link to="/reports" className="hover:text-blue-400 transition-colors">{lang === "bn" ? "রিপোর্ট" : "Reports"}</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4 border-b-2 border-blue-500 pb-2 inline-block">{lang === "bn" ? "আমাদের সেবাসমূহ" : "Our Services"}</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {(lang === "bn"
-                    ? ["এসি ও নন-এসি লাক্সারি বাস", "২৪/৭ অনলাইন ট্র্যাকিং সিস্টেম", "দক্ষ ও প্রশিক্ষিত চালক", "নিরাপদ ও সময়োপযোগী যাত্রা"]
-                    : ["AC & Non-AC Luxury Buses", "24/7 Online Tracking System", "Skilled & Trained Drivers", "Safe & Timely Journeys"]
-                  ).map((s) => (
-                    <li key={s} className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-2" /> {s}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4 border-b-2 border-blue-500 pb-2 inline-block">{lang === "bn" ? "যোগাযোগ" : "Contact"}</h3>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start"><span className="mr-2 text-blue-500">📍</span><span>{lang === "bn" ? "প্রধান কার্যালয়, ঢাকা, বাংলাদেশ" : "Head Office, Dhaka, Bangladesh"}</span></li>
-                  <li className="flex items-center"><span className="mr-2 text-blue-500">📞</span><span>{lang === "bn" ? "+৮৮০ ১৭১২-৮১১১১৮" : "+880 1712-811118"}</span></li>
-                  <li className="flex items-center"><span className="mr-2 text-blue-500">✉️</span><span>info@chandraparibahan.com</span></li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-300/40 dark:border-slate-800/60 max-w-7xl mx-auto px-4 my-6" />
-
+          <footer className="mt-12 pt-8 pb-8 font-sans border-t-4 border-blue-600 text-gray-600 dark:text-gray-300 bg-transparent">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground gap-4">
               <div className="tracking-wide">
                 {lang === "bn" ? (
@@ -292,7 +235,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex items-center bg-transparent px-4 py-2 rounded-lg border border-slate-300/40 dark:border-slate-800/60 shadow-inner backdrop-blur-sm">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                <span className="mr-1">{lang === "bn" ? "ওয়েবসাইট ডিজাইন এন্ড ডেভেলপড বাই" : "Website Designed & Developed by"}</span>
+                <span className="mr-1">{lang === "bn" ? "ডিজাইন এবং ডেভেলপড" : "Designed & Developed by"}</span>
                 <span className="text-blue-500 dark:text-blue-400 font-semibold tracking-wider hover:text-blue-300 transition-colors cursor-pointer">
                   {lang === "bn" ? "জায়িম ভুইয়া।" : "Zayem Bhuiya."}
                 </span>
