@@ -12,9 +12,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Camera, Sparkles, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
+import { extractRowsFromImage } from "@/lib/ai-extract.functions";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
 
