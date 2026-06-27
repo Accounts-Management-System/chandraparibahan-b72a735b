@@ -224,19 +224,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           {children}
-          <footer className="mt-12 pt-8 pb-8 font-sans border-t-4 border-blue-600 text-gray-600 dark:text-gray-300 bg-transparent">
-            <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground gap-4">
-              <div className="tracking-wide">
+          <footer className="mt-12 pt-6 pb-6 font-sans text-gray-600 dark:text-gray-300 bg-transparent">
+            <div className="max-w-7xl mx-auto px-4 flex flex-row justify-between items-center text-xs gap-4 whitespace-nowrap">
+              <div className="tracking-wide flex items-center">
+                <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse" />
                 {lang === "bn" ? (
-                  <>&copy; ২০২৬ <span className="text-foreground/80 font-medium">চন্দ্রা পরিবহন</span>। সর্বস্বত্ব সংরক্ষিত।</>
+                  <>&copy; ২০২৬ <span className="text-foreground/80 font-medium ml-1">চন্দ্রা পরিবহন</span>। সর্বস্বত্ব সংরক্ষিত।</>
                 ) : (
-                  <>&copy; 2026 <span className="text-foreground/80 font-medium">Chandra Paribahan</span>. All Rights Reserved.</>
+                  <>&copy; 2026 <span className="text-foreground/80 font-medium ml-1">Chandra Paribahan</span>. All Rights Reserved.</>
                 )}
               </div>
-              <div className="flex items-center bg-transparent px-4 py-2 rounded-lg border border-slate-300/40 dark:border-slate-800/60 shadow-inner backdrop-blur-sm">
-                <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+              <div className="flex items-center">
                 <span className="mr-1">{lang === "bn" ? "ডিজাইন এবং ডেভেলপড" : "Designed & Developed by"}</span>
-                <span className="text-blue-500 dark:text-blue-400 font-semibold tracking-wider hover:text-blue-300 transition-colors cursor-pointer">
+                <span className="text-white font-semibold tracking-wider cursor-pointer">
                   {lang === "bn" ? "জায়িম ভুইয়া।" : "Zayem Bhuiya."}
                 </span>
               </div>
