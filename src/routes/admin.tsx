@@ -516,8 +516,7 @@ function AiEntryPanel() {
       const { error } = await supabase.from(target).insert(payload as any);
       if (error) throw error;
       toast.success(`${payload.length}টি row সংরক্ষিত`);
-      setRows([]);
-      setImageUrl(null);
+      resetAll();
       qc.invalidateQueries();
     } catch (e: any) {
       toast.error(e.message || "সেভ ব্যর্থ");
@@ -531,14 +530,39 @@ function AiEntryPanel() {
       <div className="rounded-lg border bg-card p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => { setTarget("trips"); setRows([]); }}
+            onClick={() => { setTarget("trips"); resetAll(); }}
             className={`px-3 py-2 rounded-md text-sm border ${target === "trips" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
           >দৈনিক জমা (trips)</button>
           <button
-            onClick={() => { setTarget("expenses"); setRows([]); }}
+            onClick={() => { setTarget("expenses"); resetAll(); }}
             className={`px-3 py-2 rounded-md text-sm border ${target === "expenses" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
           >খরচ (expenses)</button>
         </div>
+
+        <div className="flex flex-wrap gap-2 pt-1 border-t">
+          <button
+            onClick={() => { setMode("full"); resetAll(); }}
+            className={`px-3 py-1.5 rounded-md text-xs border ${mode === "full" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-card border-border/60"}`}
+          >ফুল রো মোড</button>
+          <button
+            onClick={() => { setMode("single"); resetAll(); }}
+            className={`px-3 py-1.5 rounded-md text-xs border ${mode === "single" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-card border-border/60"}`}
+          >একক কলাম মোড</button>
+        </div>
+
+        {mode === "single" && (
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">কলাম বাছাই করুন</label>
+            <Select value={activeCol} onValueChange={setActiveCol}>
+              <SelectTrigger className="h-10"><SelectValue placeholder="কলাম..." /></SelectTrigger>
+              <SelectContent>
+                {(availableCols.length ? availableCols : allCols).map((c) => (
+                  <SelectItem key={c.name} value={c.name}>{c.name} — {c.desc}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/60 p-4 cursor-pointer hover:bg-muted/50">
@@ -556,13 +580,20 @@ function AiEntryPanel() {
         {imageUrl && (
           <div className="space-y-2">
             <img src={imageUrl} alt="preview" className="max-h-64 mx-auto rounded-md border" />
-            <Button onClick={extract} disabled={loading} className="w-full">
+            <Button onClick={mode === "full" ? extract : extractColumn} disabled={loading} className="w-full">
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              {loading ? "পড়া হচ্ছে..." : "লেখা বের কর"}
+              {loading ? "পড়া হচ্ছে..." : mode === "full" ? "লেখা বের কর" : `"${activeCol || "কলাম"}" এর মান বের কর`}
             </Button>
           </div>
         )}
+
+        {mode === "single" && rows.length > 0 && !imageUrl && (
+          <div className="text-xs text-muted-foreground">
+            যোগকৃত কলাম: {columns.map((c) => c.name).join(", ") || "—"} • আরও কলাম যোগ করতে উপরে কলাম বাছাই করে ছবি দিন।
+          </div>
+        )}
       </div>
+
 
       {rows.length > 0 && (
         <div className="space-y-3">
