@@ -290,15 +290,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <>&copy; 2026 <span className="text-foreground/80 font-medium">Chandra Paribahan</span>. All Rights Reserved.</>
                 )}
               </div>
-              <div className="flex space-x-6">
-                <a href="#" className="hover:text-foreground transition-colors">{lang === "bn" ? "শর্তাবলী" : "Terms of Service"}</a>
-                <a href="#" className="hover:text-foreground transition-colors">{lang === "bn" ? "গোপনীয়তা নীতি" : "Privacy Policy"}</a>
-              </div>
               <div className="flex items-center bg-transparent px-4 py-2 rounded-lg border border-slate-300/40 dark:border-slate-800/60 shadow-inner backdrop-blur-sm">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                <span className="mr-1">{lang === "bn" ? "পরিকল্পনা, ডিজাইন এন্ড ডেভেলপড বাই" : "Designed & Developed by"}</span>
+                <span className="mr-1">{lang === "bn" ? "ওয়েবসাইট ডিজাইন এন্ড ডেভেলপড বাই" : "Website Designed & Developed by"}</span>
                 <span className="text-blue-500 dark:text-blue-400 font-semibold tracking-wider hover:text-blue-300 transition-colors cursor-pointer">
-                  {lang === "bn" ? "জায়িম ভুইয়া" : "Zayem Bhuiya"}
+                  {lang === "bn" ? "জায়িম ভুইয়া।" : "Zayem Bhuiya."}
                 </span>
               </div>
             </div>
