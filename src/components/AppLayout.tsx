@@ -202,10 +202,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
-        <header className="md:hidden flex items-center justify-between border-b px-4 py-3 bg-card/80 backdrop-blur">
+        <header className="md:hidden flex items-center justify-between border-b px-4 py-3 bg-card/50">
           <div>
-            <h1 className="brand-marble text-lg">{t("brand")}</h1>
-            <p className="text-[10px] text-muted-foreground">
+            <h1 className="brand-marble text-lg text-black dark:text-white">{t("brand")}</h1>
+            <p className="text-[10px] text-black/70 dark:text-white/70">
               {roleLoading ? t("loading") : role === "admin" ? t("admin") : role === "moderator" ? t("moderator") : role === "shareholder" ? t("guestReadOnly") : t("loggedIn")}
               {user.email ? ` • ${user.email}` : ""}
             </p>
