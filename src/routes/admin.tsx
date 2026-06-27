@@ -407,19 +407,28 @@ const TARGET_COLUMNS: Record<AiTarget, ColMeta[]> = {
 function AiEntryPanel() {
   const qc = useQueryClient();
   const doExtract = useServerFn(extractRowsFromImage);
+  const doExtractCol = useServerFn(extractColumnFromImage);
   const [target, setTarget] = useState<AiTarget>("trips");
+  const [mode, setMode] = useState<"full" | "single">("full");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [rows, setRows] = useState<Record<string, any>[]>([]);
-  const [columns, setColumns] = useState<{ name: string; type: string; desc: string }[]>([]);
+  const [columns, setColumns] = useState<ColMeta[]>([]);
+  const [activeCol, setActiveCol] = useState<string>("");
+
+  const allCols = TARGET_COLUMNS[target];
+  const availableCols = allCols.filter((c) => !columns.some((x) => x.name === c.name));
 
   async function onFile(f: File | null) {
     if (!f) return;
     const reader = new FileReader();
     reader.onload = () => setImageUrl(String(reader.result));
     reader.readAsDataURL(f);
-    setRows([]);
+  }
+
+  function resetAll() {
+    setRows([]); setColumns([]); setImageUrl(null); setActiveCol("");
   }
 
   async function extract() {
@@ -430,6 +439,38 @@ function AiEntryPanel() {
       setColumns(r.columns);
       setRows(r.rows.length ? r.rows : [Object.fromEntries(r.columns.map((c: any) => [c.name, c.type === "number" ? 0 : ""]))]);
       toast.success(`${r.rows.length}টি row পাওয়া গেছে`);
+    } catch (e: any) {
+      toast.error(e.message || "Extract ব্যর্থ");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function extractColumn() {
+    if (!imageUrl) { toast.error("আগে ছবি দিন"); return; }
+    if (!activeCol) { toast.error("কলাম সিলেক্ট করুন"); return; }
+    setLoading(true);
+    try {
+      const r: any = await doExtractCol({ data: { imageDataUrl: imageUrl, target, column: activeCol } });
+      const col: ColMeta = r.column;
+      const values: any[] = r.values;
+      // merge into rows: extend columns + fill column for each row
+      setColumns((prev) => (prev.some((c) => c.name === col.name) ? prev : [...prev, col]));
+      setRows((prev) => {
+        const max = Math.max(prev.length, values.length);
+        const next: Record<string, any>[] = [];
+        for (let i = 0; i < max; i++) {
+          const base = prev[i] ? { ...prev[i] } : Object.fromEntries(
+            [...columns, col].map((c) => [c.name, c.type === "number" ? 0 : ""])
+          );
+          base[col.name] = values[i] ?? (col.type === "number" ? 0 : "");
+          next.push(base);
+        }
+        return next;
+      });
+      setImageUrl(null);
+      setActiveCol("");
+      toast.success(`"${col.name}" এ ${values.length}টি মান যোগ`);
     } catch (e: any) {
       toast.error(e.message || "Extract ব্যর্থ");
     } finally {
