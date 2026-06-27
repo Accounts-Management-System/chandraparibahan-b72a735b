@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { Plus, Trash2, Camera, Sparkles, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
-import { extractRowsFromImage } from "@/lib/ai-extract.functions";
+import { extractRowsFromImage, extractColumnFromImage } from "@/lib/ai-extract.functions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
 
@@ -376,23 +377,58 @@ function DiaryPanel() {
 }
 
 type AiTarget = "trips" | "expenses";
+type ColMeta = { name: string; type: string; desc: string };
+
+const TARGET_COLUMNS: Record<AiTarget, ColMeta[]> = {
+  trips: [
+    { name: "trip_date", type: "date", desc: "তারিখ" },
+    { name: "vehicle_no", type: "string", desc: "গাড়ীর নম্বর" },
+    { name: "route_1", type: "string", desc: "১ম রুট" },
+    { name: "jama_1", type: "number", desc: "১ম জমা" },
+    { name: "dena_1", type: "number", desc: "১ম দেনা" },
+    { name: "fare_1", type: "number", desc: "১ম ভাড়া" },
+    { name: "route_2", type: "string", desc: "২য় রুট" },
+    { name: "jama_2", type: "number", desc: "২য় জমা" },
+    { name: "dena_2", type: "number", desc: "২য় দেনা" },
+    { name: "fare_2", type: "number", desc: "২য় ভাড়া" },
+    { name: "supervisor", type: "string", desc: "সুপারভাইজার" },
+  ],
+  expenses: [
+    { name: "expense_date", type: "date", desc: "তারিখ" },
+    { name: "vehicle_no", type: "string", desc: "গাড়ীর নম্বর" },
+    { name: "category", type: "string", desc: "ক্যাটাগরি" },
+    { name: "head", type: "string", desc: "হেড" },
+    { name: "description", type: "string", desc: "বিবরণ" },
+    { name: "vendor", type: "string", desc: "ভেন্ডর" },
+    { name: "amount", type: "number", desc: "টাকা" },
+  ],
+};
 
 function AiEntryPanel() {
   const qc = useQueryClient();
   const doExtract = useServerFn(extractRowsFromImage);
+  const doExtractCol = useServerFn(extractColumnFromImage);
   const [target, setTarget] = useState<AiTarget>("trips");
+  const [mode, setMode] = useState<"full" | "single">("full");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [rows, setRows] = useState<Record<string, any>[]>([]);
-  const [columns, setColumns] = useState<{ name: string; type: string; desc: string }[]>([]);
+  const [columns, setColumns] = useState<ColMeta[]>([]);
+  const [activeCol, setActiveCol] = useState<string>("");
+
+  const allCols = TARGET_COLUMNS[target];
+  const availableCols = allCols.filter((c) => !columns.some((x) => x.name === c.name));
 
   async function onFile(f: File | null) {
     if (!f) return;
     const reader = new FileReader();
     reader.onload = () => setImageUrl(String(reader.result));
     reader.readAsDataURL(f);
-    setRows([]);
+  }
+
+  function resetAll() {
+    setRows([]); setColumns([]); setImageUrl(null); setActiveCol("");
   }
 
   async function extract() {
@@ -403,6 +439,38 @@ function AiEntryPanel() {
       setColumns(r.columns);
       setRows(r.rows.length ? r.rows : [Object.fromEntries(r.columns.map((c: any) => [c.name, c.type === "number" ? 0 : ""]))]);
       toast.success(`${r.rows.length}টি row পাওয়া গেছে`);
+    } catch (e: any) {
+      toast.error(e.message || "Extract ব্যর্থ");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function extractColumn() {
+    if (!imageUrl) { toast.error("আগে ছবি দিন"); return; }
+    if (!activeCol) { toast.error("কলাম সিলেক্ট করুন"); return; }
+    setLoading(true);
+    try {
+      const r: any = await doExtractCol({ data: { imageDataUrl: imageUrl, target, column: activeCol } });
+      const col: ColMeta = r.column;
+      const values: any[] = r.values;
+      // merge into rows: extend columns + fill column for each row
+      setColumns((prev) => (prev.some((c) => c.name === col.name) ? prev : [...prev, col]));
+      setRows((prev) => {
+        const max = Math.max(prev.length, values.length);
+        const next: Record<string, any>[] = [];
+        for (let i = 0; i < max; i++) {
+          const base = prev[i] ? { ...prev[i] } : Object.fromEntries(
+            [...columns, col].map((c) => [c.name, c.type === "number" ? 0 : ""])
+          );
+          base[col.name] = values[i] ?? (col.type === "number" ? 0 : "");
+          next.push(base);
+        }
+        return next;
+      });
+      setImageUrl(null);
+      setActiveCol("");
+      toast.success(`"${col.name}" এ ${values.length}টি মান যোগ`);
     } catch (e: any) {
       toast.error(e.message || "Extract ব্যর্থ");
     } finally {
@@ -448,8 +516,7 @@ function AiEntryPanel() {
       const { error } = await supabase.from(target).insert(payload as any);
       if (error) throw error;
       toast.success(`${payload.length}টি row সংরক্ষিত`);
-      setRows([]);
-      setImageUrl(null);
+      resetAll();
       qc.invalidateQueries();
     } catch (e: any) {
       toast.error(e.message || "সেভ ব্যর্থ");
@@ -463,14 +530,39 @@ function AiEntryPanel() {
       <div className="rounded-lg border bg-card p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => { setTarget("trips"); setRows([]); }}
+            onClick={() => { setTarget("trips"); resetAll(); }}
             className={`px-3 py-2 rounded-md text-sm border ${target === "trips" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
           >দৈনিক জমা (trips)</button>
           <button
-            onClick={() => { setTarget("expenses"); setRows([]); }}
+            onClick={() => { setTarget("expenses"); resetAll(); }}
             className={`px-3 py-2 rounded-md text-sm border ${target === "expenses" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
           >খরচ (expenses)</button>
         </div>
+
+        <div className="flex flex-wrap gap-2 pt-1 border-t">
+          <button
+            onClick={() => { setMode("full"); resetAll(); }}
+            className={`px-3 py-1.5 rounded-md text-xs border ${mode === "full" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-card border-border/60"}`}
+          >ফুল রো মোড</button>
+          <button
+            onClick={() => { setMode("single"); resetAll(); }}
+            className={`px-3 py-1.5 rounded-md text-xs border ${mode === "single" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-card border-border/60"}`}
+          >একক কলাম মোড</button>
+        </div>
+
+        {mode === "single" && (
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">কলাম বাছাই করুন</label>
+            <Select value={activeCol} onValueChange={setActiveCol}>
+              <SelectTrigger className="h-10"><SelectValue placeholder="কলাম..." /></SelectTrigger>
+              <SelectContent>
+                {(availableCols.length ? availableCols : allCols).map((c) => (
+                  <SelectItem key={c.name} value={c.name}>{c.name} — {c.desc}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/60 p-4 cursor-pointer hover:bg-muted/50">
@@ -488,13 +580,20 @@ function AiEntryPanel() {
         {imageUrl && (
           <div className="space-y-2">
             <img src={imageUrl} alt="preview" className="max-h-64 mx-auto rounded-md border" />
-            <Button onClick={extract} disabled={loading} className="w-full">
+            <Button onClick={mode === "full" ? extract : extractColumn} disabled={loading} className="w-full">
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              {loading ? "পড়া হচ্ছে..." : "লেখা বের কর"}
+              {loading ? "পড়া হচ্ছে..." : mode === "full" ? "লেখা বের কর" : `"${activeCol || "কলাম"}" এর মান বের কর`}
             </Button>
           </div>
         )}
+
+        {mode === "single" && rows.length > 0 && !imageUrl && (
+          <div className="text-xs text-muted-foreground">
+            যোগকৃত কলাম: {columns.map((c) => c.name).join(", ") || "—"} • আরও কলাম যোগ করতে উপরে কলাম বাছাই করে ছবি দিন।
+          </div>
+        )}
       </div>
+
 
       {rows.length > 0 && (
         <div className="space-y-3">
