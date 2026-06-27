@@ -377,6 +377,32 @@ function DiaryPanel() {
 }
 
 type AiTarget = "trips" | "expenses";
+type ColMeta = { name: string; type: string; desc: string };
+
+const TARGET_COLUMNS: Record<AiTarget, ColMeta[]> = {
+  trips: [
+    { name: "trip_date", type: "date", desc: "তারিখ" },
+    { name: "vehicle_no", type: "string", desc: "গাড়ীর নম্বর" },
+    { name: "route_1", type: "string", desc: "১ম রুট" },
+    { name: "jama_1", type: "number", desc: "১ম জমা" },
+    { name: "dena_1", type: "number", desc: "১ম দেনা" },
+    { name: "fare_1", type: "number", desc: "১ম ভাড়া" },
+    { name: "route_2", type: "string", desc: "২য় রুট" },
+    { name: "jama_2", type: "number", desc: "২য় জমা" },
+    { name: "dena_2", type: "number", desc: "২য় দেনা" },
+    { name: "fare_2", type: "number", desc: "২য় ভাড়া" },
+    { name: "supervisor", type: "string", desc: "সুপারভাইজার" },
+  ],
+  expenses: [
+    { name: "expense_date", type: "date", desc: "তারিখ" },
+    { name: "vehicle_no", type: "string", desc: "গাড়ীর নম্বর" },
+    { name: "category", type: "string", desc: "ক্যাটাগরি" },
+    { name: "head", type: "string", desc: "হেড" },
+    { name: "description", type: "string", desc: "বিবরণ" },
+    { name: "vendor", type: "string", desc: "ভেন্ডর" },
+    { name: "amount", type: "number", desc: "টাকা" },
+  ],
+};
 
 function AiEntryPanel() {
   const qc = useQueryClient();
