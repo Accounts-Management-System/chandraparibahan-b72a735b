@@ -224,18 +224,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           {children}
-          <footer className="mt-8 pt-4 border-t text-center text-[11px] text-muted-foreground leading-relaxed">
-            {lang === "bn" ? (
-              <>
-                <div>অলরাইট রিসিভড Chandra State.</div>
-                <div>পরিকল্পনা, ডিজাইন এন্ড ডেভেলপড বাই জায়িম ভুইয়া। মোবাইল: ৮৮০১৭১২৮১১১১৮</div>
-              </>
-            ) : (
-              <>
-                <div>All Rights Reserved Chandra State.</div>
-                <div>Planned, Designed &amp; Developed By Zayem Bhuiya. Mobile: 8801712811118</div>
-              </>
-            )}
+          <footer className="mt-8 pt-6 text-[11px] text-muted-foreground bg-transparent">
+            <div className="border-t border-slate-800/40 dark:border-slate-200/10 max-w-7xl mx-auto px-4 my-6" />
+            <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="tracking-wide">
+                {lang === "bn" ? (
+                  <>&copy; ২০২৬ <span className="text-foreground/70 font-medium">চন্দ্রা পরিবহন</span>। সর্বস্বত্ব সংরক্ষিত।</>
+                ) : (
+                  <>&copy; 2026 <span className="text-foreground/70 font-medium">Chandra Paribahan</span>. All Rights Reserved.</>
+                )}
+              </div>
+              <div className="flex space-x-6">
+                <a href="#" className="hover:text-foreground/80 transition-colors">{lang === "bn" ? "শর্তাবলী" : "Terms of Service"}</a>
+                <a href="#" className="hover:text-foreground/80 transition-colors">{lang === "bn" ? "গোপনীয়তা নীতি" : "Privacy Policy"}</a>
+              </div>
+              <div className="flex items-center bg-transparent px-4 py-2 rounded-lg border border-slate-800/40 dark:border-slate-200/15 shadow-inner backdrop-blur-sm">
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+                <span className="mr-1">{lang === "bn" ? "পরিকল্পনা, ডিজাইন এন্ড ডেভেলপড বাই" : "Designed & Developed by"}</span>
+                <span className="text-blue-500 dark:text-blue-400 font-semibold tracking-wider hover:text-blue-400 transition-colors cursor-pointer">
+                  {lang === "bn" ? "জায়িম ভুইয়া" : "Zayem Bhuiya"}
+                </span>
+              </div>
+            </div>
           </footer>
         </main>
       </div>
