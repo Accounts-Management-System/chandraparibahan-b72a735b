@@ -114,6 +114,8 @@ ${schema.instructions}
       // unknown keys ignored
       void allowed;
       return out;
+    });
+    return { rows: cleaned, columns: schema.columns };
   });
 
 export const extractColumnFromImage = createServerFn({ method: "POST" })
@@ -170,5 +172,4 @@ export const extractColumnFromImage = createServerFn({ method: "POST" })
     });
     return { column: col, values };
   });
-    return { rows: cleaned, columns: schema.columns };
-  });
+
