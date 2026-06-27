@@ -114,6 +114,61 @@ ${schema.instructions}
       // unknown keys ignored
       void allowed;
       return out;
+  });
+
+export const extractColumnFromImage = createServerFn({ method: "POST" })
+  .inputValidator((d: { imageDataUrl: string; target: Target; column: string }) => d)
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("LOVABLE_API_KEY not configured");
+    const schema = SCHEMAS[data.target];
+    if (!schema) throw new Error("Invalid target");
+    const col = schema.columns.find((c) => c.name === data.column);
+    if (!col) throw new Error("Invalid column");
+
+    const systemPrompt = `তুমি একজন OCR এজেন্ট। ছবি থেকে শুধুমাত্র "${col.name}" (${col.desc}) এর মান গুলো বের কর। উপর থেকে নিচ ক্রমে যত গুলো মান আছে সব দাও। বাংলা সংখ্যাকে ইংরেজি ডিজিটে রূপান্তর কর।
+
+কঠোর JSON format দিবে:
+{"values": ["...", "...", ...]}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: `এই ছবি থেকে শুধু "${col.name}" কলামের মান গুলো বের কর।` },
+              { type: "image_url", image_url: { url: data.imageDataUrl } },
+            ],
+          },
+        ],
+        response_format: { type: "json_object" },
+      }),
     });
+    if (!res.ok) {
+      const txt = await res.text();
+      if (res.status === 429) throw new Error("AI rate limit।");
+      if (res.status === 402) throw new Error("AI credits শেষ।");
+      throw new Error(`AI error ${res.status}: ${txt.slice(0, 200)}`);
+    }
+    const json = await res.json();
+    const content = json.choices?.[0]?.message?.content ?? "{}";
+    let parsed: any = {};
+    try { parsed = typeof content === "string" ? JSON.parse(content) : content; } catch { parsed = { values: [] }; }
+    const raw = Array.isArray(parsed.values) ? parsed.values : [];
+    const values = raw.map((v: any) => {
+      if (v === null || v === undefined) return col.type === "number" ? 0 : "";
+      if (col.type === "number") {
+        const n = Number(String(v).replace(/[^\d.-]/g, ""));
+        return isNaN(n) ? 0 : n;
+      }
+      return String(v);
+    });
+    return { column: col, values };
+  });
     return { rows: cleaned, columns: schema.columns };
   });
