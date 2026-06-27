@@ -44,14 +44,16 @@ function Page() {
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{t("admin")}</h1>
         <Tabs defaultValue="calc">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="calc">{t("calculation")}</TabsTrigger>
             <TabsTrigger value="mods">{t("moderator")}</TabsTrigger>
             <TabsTrigger value="diary">{t("myDiary")}</TabsTrigger>
+            <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" />AI এন্ট্রি</TabsTrigger>
           </TabsList>
           <TabsContent value="calc"><CalcPanel /></TabsContent>
           <TabsContent value="mods"><ModeratorPanel /></TabsContent>
           <TabsContent value="diary"><DiaryPanel /></TabsContent>
+          <TabsContent value="ai"><AiEntryPanel /></TabsContent>
         </Tabs>
       </div>
     </AppLayout>
