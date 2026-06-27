@@ -374,3 +374,172 @@ function DiaryPanel() {
     </div>
   );
 }
+
+type AiTarget = "trips" | "expenses";
+
+function AiEntryPanel() {
+  const qc = useQueryClient();
+  const doExtract = useServerFn(extractRowsFromImage);
+  const [target, setTarget] = useState<AiTarget>("trips");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [rows, setRows] = useState<Record<string, any>[]>([]);
+  const [columns, setColumns] = useState<{ name: string; type: string; desc: string }[]>([]);
+
+  async function onFile(f: File | null) {
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setImageUrl(String(reader.result));
+    reader.readAsDataURL(f);
+    setRows([]);
+  }
+
+  async function extract() {
+    if (!imageUrl) { toast.error("আগে ছবি দিন"); return; }
+    setLoading(true);
+    try {
+      const r: any = await doExtract({ data: { imageDataUrl: imageUrl, target } });
+      setColumns(r.columns);
+      setRows(r.rows.length ? r.rows : [Object.fromEntries(r.columns.map((c: any) => [c.name, c.type === "number" ? 0 : ""]))]);
+      toast.success(`${r.rows.length}টি row পাওয়া গেছে`);
+    } catch (e: any) {
+      toast.error(e.message || "Extract ব্যর্থ");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function updateCell(rowIdx: number, key: string, value: string) {
+    setRows((prev) => prev.map((r, i) => (i === rowIdx ? { ...r, [key]: value } : r)));
+  }
+  function addRow() {
+    setRows((prev) => [...prev, Object.fromEntries(columns.map((c) => [c.name, c.type === "number" ? 0 : ""]))]);
+  }
+  function removeRow(i: number) {
+    setRows((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  async function save() {
+    if (!rows.length) { toast.error("সেভ করার মত row নেই"); return; }
+    setSaving(true);
+    try {
+      const payload = rows.map((r) => {
+        const o: Record<string, any> = {};
+        for (const c of columns) {
+          const v = r[c.name];
+          if (c.type === "number") {
+            const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
+            o[c.name] = isNaN(n) ? 0 : n;
+          } else if (c.type === "date") {
+            o[c.name] = v || new Date().toISOString().slice(0, 10);
+          } else {
+            o[c.name] = v === "" ? null : v;
+          }
+        }
+        return o;
+      });
+      // ensure required fields
+      if (target === "trips") {
+        payload.forEach((p) => { if (!p.vehicle_no) p.vehicle_no = "অজানা"; });
+      } else {
+        payload.forEach((p) => { if (!p.category) p.category = "অন্যান্য"; });
+      }
+      const { error } = await supabase.from(target).insert(payload as any);
+      if (error) throw error;
+      toast.success(`${payload.length}টি row সংরক্ষিত`);
+      setRows([]);
+      setImageUrl(null);
+      qc.invalidateQueries();
+    } catch (e: any) {
+      toast.error(e.message || "সেভ ব্যর্থ");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => { setTarget("trips"); setRows([]); }}
+            className={`px-3 py-2 rounded-md text-sm border ${target === "trips" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
+          >দৈনিক জমা (trips)</button>
+          <button
+            onClick={() => { setTarget("expenses"); setRows([]); }}
+            className={`px-3 py-2 rounded-md text-sm border ${target === "expenses" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
+          >খরচ (expenses)</button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/60 p-4 cursor-pointer hover:bg-muted/50">
+            <Camera className="h-5 w-5" />
+            <span className="text-xs">ক্যামেরা</span>
+            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+          </label>
+          <label className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/60 p-4 cursor-pointer hover:bg-muted/50">
+            <Plus className="h-5 w-5" />
+            <span className="text-xs">গ্যালারী</span>
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+          </label>
+        </div>
+
+        {imageUrl && (
+          <div className="space-y-2">
+            <img src={imageUrl} alt="preview" className="max-h-64 mx-auto rounded-md border" />
+            <Button onClick={extract} disabled={loading} className="w-full">
+              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              {loading ? "পড়া হচ্ছে..." : "লেখা বের কর"}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {rows.length > 0 && (
+        <div className="space-y-3">
+          <div className="overflow-x-auto rounded-md border bg-card">
+            <table className="w-full text-xs">
+              <thead className="bg-muted">
+                <tr>
+                  {columns.map((c) => (
+                    <th key={c.name} className="text-left px-2 py-2 whitespace-nowrap">{c.name}</th>
+                  ))}
+                  <th className="px-2 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i} className="border-t">
+                    {columns.map((c) => (
+                      <td key={c.name} className="px-1 py-1">
+                        <Input
+                          type={c.type === "date" ? "date" : c.type === "number" ? "number" : "text"}
+                          value={r[c.name] ?? ""}
+                          onChange={(e) => updateCell(i, c.name, e.target.value)}
+                          className="h-9 min-w-[110px]"
+                        />
+                      </td>
+                    ))}
+                    <td className="px-1 py-1">
+                      <Button size="icon" variant="ghost" onClick={() => removeRow(i)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={addRow}><Plus className="h-4 w-4 mr-1" />Row</Button>
+            <Button onClick={save} disabled={saving} className="flex-1">
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              OK — সেভ কর ({rows.length})
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
