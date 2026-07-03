@@ -36,10 +36,44 @@ export const createModerator = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const uid = created.user?.id;
     if (!uid) throw new Error("Failed to create user");
-    await supabaseAdmin
+    const { error: roleErr } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: uid, role: "moderator" });
+    if (roleErr) throw new Error(`রোল সেট করা যায়নি: ${roleErr.message}`);
     return { id: uid, email: data.email };
+  });
+
+/**
+ * Ensure the user with the given email has the "moderator" role in
+ * user_roles. Useful to repair accounts created before role insert was
+ * verified, or to promote an existing auth user without re-creating them.
+ */
+export const assignModeratorRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ email: z.string().email() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin.helpers.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await requireAdmin(context.userId);
+
+    const target = data.email.trim().toLowerCase();
+    const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 200 });
+    if (listErr) throw new Error(listErr.message);
+    const user = list.users.find((u) => (u.email ?? "").toLowerCase() === target);
+    if (!user) throw new Error("এই ইমেইলে কোনো ইউজার পাওয়া যায়নি");
+
+    const { data: existing } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    if ((existing ?? []).some((r) => r.role === "moderator")) {
+      return { ok: true, alreadyAssigned: true, userId: user.id };
+    }
+    const { error: insErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: user.id, role: "moderator" });
+    if (insErr) throw new Error(insErr.message);
+    return { ok: true, alreadyAssigned: false, userId: user.id };
   });
 
 /** Create a shareholder login (login_id + pin) and link to a contacts row. */
