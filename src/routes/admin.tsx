@@ -14,7 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, Table as TableIcon } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
+import { createModerator, listManagedUsers, deleteManagedUser, assignModeratorRole } from "@/lib/admin.functions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
