@@ -81,7 +81,10 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
   .toolbar .status.failed{background:#b91c1c;color:#fff}
   @media print { .toolbar{display:none !important} body{padding:0} }
   @page{size:A4 ${orientation};margin:5mm}
-</style></head><body>
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head><body>
   <div class="toolbar">
     <b>📱 WhatsApp:</b>
     <div class="group">
@@ -94,15 +97,22 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
       <button class="add" id="wa-add">+ যোগ</button>
     </div>
     <button class="send" id="wa-send">📤 WhatsApp এ পাঠান</button>
-    <button class="print" id="wa-print">🖨️ Print / Save PDF</button>
-    <div class="hint">প্রথমে "Print / Save PDF" ক্লিক করে PDF টি সেভ করুন, এরপর "WhatsApp এ পাঠান" এ ক্লিক করলে চ্যাট খুলবে — সেখানে সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।</div>
+    <button class="add" id="wa-savepdf" title="সব ডাটা একটি লম্বা পেইজে PDF হিসেবে সেভ হবে">📄 PDF সেভ (এক পেইজ)</button>
+    <button class="print" id="wa-print" title="প্রিন্টের সময় প্রতি A4 পেইজে ফিট হয়ে অটো ভাগ হবে">🖨️ Print</button>
+    <label style="display:flex;gap:6px;align-items:center;font-size:12px;cursor:pointer">
+      <input type="checkbox" id="wa-folder" checked style="accent-color:#25D366"/> ফোল্ডার বেছে নিন
+    </label>
+    <div class="hint">📄 <b>PDF সেভ</b> — ডাটা যত বড় হোক একটি পেইজেই সেভ হবে। "ফোল্ডার বেছে নিন" চালু থাকলে ফোল্ডার বাছাই ও একই নাম হলে রিপ্লেসের সতর্কতা আসবে। 🖨️ <b>Print</b> — A4 পেইজে অটো পেইজ-ব্রেক দিয়ে প্রিন্ট হবে।</div>
     <div id="wa-status" class="status"></div>
   </div>
 
-  <div class="brand">চন্দ্রা পরিবহন</div>
-  <h1>${esc(title)}</h1>
-  ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
-  ${body}
+  <div id="pdf-content">
+    <div class="brand">চন্দ্রা পরিবহন</div>
+    <h1>${esc(title)}</h1>
+    ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
+    ${body}
+  </div>
+
   <script>
     (function(){
       function classify(header){
@@ -188,13 +198,71 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
         setStatus('ready','✅ Ready — WhatsApp চ্যাট খোলা হয়েছে। এখন সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।');
       };
       document.getElementById('wa-print').onclick=function(){
-        setStatus('ready','🖨️ Print ডায়ালগ খোলা হচ্ছে — "Save as PDF" নির্বাচন করুন...');
+        setStatus('ready','🖨️ Print ডায়ালগ খোলা হচ্ছে — কাগজে A4 পেইজ অনুযায়ী পেইজ ব্রেক হবে...');
         window.print();
       };
       window.addEventListener('afterprint',function(){
         pdfSaved=true;
-        setStatus('saved','✅ Saved — PDF সেভ হয়েছে। এখন "WhatsApp এ পাঠান" ক্লিক করুন।');
+        setStatus('saved','✅ Saved — প্রিন্ট/সেভ সম্পন্ন। এখন "WhatsApp এ পাঠান" ক্লিক করুন।');
       });
+
+      // ---- Single-page PDF export (any height) ----
+      var baseTitle=${JSON.stringify(title)};
+      function safeName(s){ return (s||'export').replace(/[\\\\/:*?"<>|]+/g,'_').replace(/\\s+/g,'_').slice(0,80); }
+      async function saveSinglePagePdf(){
+        var btn=document.getElementById('wa-savepdf');
+        btn.disabled=true; var oldTxt=btn.textContent; btn.textContent='⏳ তৈরি হচ্ছে...';
+        try{
+          if(!window.html2canvas || !window.jspdf){ throw new Error('PDF লাইব্রেরি লোড হয়নি — ইন্টারনেট চেক করুন'); }
+          var target=document.getElementById('pdf-content');
+          var canvas=await window.html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:target.scrollWidth});
+          var imgData=canvas.toDataURL('image/jpeg',0.95);
+          var orientation=${JSON.stringify(orientation)};
+          var marginMm=5;
+          var pageWidthMm=(orientation==='landscape'?297:210);
+          var contentWidthMm=pageWidthMm - marginMm*2;
+          var contentHeightMm=contentWidthMm * canvas.height / canvas.width;
+          var pageHeightMm=contentHeightMm + marginMm*2;
+          var jsPDF=window.jspdf.jsPDF;
+          var pdf=new jsPDF({unit:'mm',format:[pageWidthMm,pageHeightMm],orientation:pageHeightMm>pageWidthMm?'portrait':'landscape'});
+          pdf.addImage(imgData,'JPEG',marginMm,marginMm,contentWidthMm,contentHeightMm,undefined,'FAST');
+          var blob=pdf.output('blob');
+          var filename=safeName(baseTitle)+'.pdf';
+          var useFolder=document.getElementById('wa-folder').checked;
+          if(useFolder && window.showSaveFilePicker){
+            try{
+              var handle=await window.showSaveFilePicker({
+                suggestedName:filename,
+                types:[{description:'PDF',accept:{'application/pdf':['.pdf']}}]
+              });
+              // Browser (Chrome/Edge) shows native "Replace/Overwrite" warning when same name is chosen.
+              var w=await handle.createWritable();
+              await w.write(blob); await w.close();
+              pdfSaved=true;
+              setStatus('saved','✅ Saved — "'+handle.name+'" নির্বাচিত ফোল্ডারে সেভ হয়েছে।');
+            }catch(e){
+              if(e && e.name==='AbortError'){ setStatus('ready','⚠️ বাতিল করা হয়েছে।'); return; }
+              throw e;
+            }
+          } else {
+            if(useFolder && !window.showSaveFilePicker){
+              setStatus('ready','ℹ️ এই ব্রাউজারে ফোল্ডার চুজ সাপোর্ট নেই — ডিফল্ট ডাউনলোড ফোল্ডারে সেভ হচ্ছে।');
+            }
+            var a=document.createElement('a');
+            var url=URL.createObjectURL(blob);
+            a.href=url; a.download=filename;
+            document.body.appendChild(a); a.click();
+            setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },1000);
+            pdfSaved=true;
+            setStatus('saved','✅ Saved — "'+filename+'" ডাউনলোড ফোল্ডারে সেভ হয়েছে।');
+          }
+        }catch(e){
+          setStatus('failed','❌ Failed — '+(e && e.message ? e.message : 'PDF সেভ ব্যর্থ'));
+        }finally{
+          btn.disabled=false; btn.textContent=oldTxt;
+        }
+      }
+      document.getElementById('wa-savepdf').onclick=saveSinglePagePdf;
     })();
 
   <\/script>
