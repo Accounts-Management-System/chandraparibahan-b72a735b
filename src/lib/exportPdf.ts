@@ -81,7 +81,10 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
   .toolbar .status.failed{background:#b91c1c;color:#fff}
   @media print { .toolbar{display:none !important} body{padding:0} }
   @page{size:A4 ${orientation};margin:5mm}
-</style></head><body>
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head><body>
   <div class="toolbar">
     <b>📱 WhatsApp:</b>
     <div class="group">
@@ -94,15 +97,22 @@ function openPrint(opts: { title: string; subtitle?: string; body: string; orien
       <button class="add" id="wa-add">+ যোগ</button>
     </div>
     <button class="send" id="wa-send">📤 WhatsApp এ পাঠান</button>
-    <button class="print" id="wa-print">🖨️ Print / Save PDF</button>
-    <div class="hint">প্রথমে "Print / Save PDF" ক্লিক করে PDF টি সেভ করুন, এরপর "WhatsApp এ পাঠান" এ ক্লিক করলে চ্যাট খুলবে — সেখানে সেভ করা PDF ফাইলটি অ্যাটাচ করে পাঠান।</div>
+    <button class="add" id="wa-savepdf" title="সব ডাটা একটি লম্বা পেইজে PDF হিসেবে সেভ হবে">📄 PDF সেভ (এক পেইজ)</button>
+    <button class="print" id="wa-print" title="প্রিন্টের সময় প্রতি A4 পেইজে ফিট হয়ে অটো ভাগ হবে">🖨️ Print</button>
+    <label style="display:flex;gap:6px;align-items:center;font-size:12px;cursor:pointer">
+      <input type="checkbox" id="wa-folder" checked style="accent-color:#25D366"/> ফোল্ডার বেছে নিন
+    </label>
+    <div class="hint">📄 <b>PDF সেভ</b> — ডাটা যত বড় হোক একটি পেইজেই সেভ হবে। "ফোল্ডার বেছে নিন" চালু থাকলে ফোল্ডার বাছাই ও একই নাম হলে রিপ্লেসের সতর্কতা আসবে। 🖨️ <b>Print</b> — A4 পেইজে অটো পেইজ-ব্রেক দিয়ে প্রিন্ট হবে।</div>
     <div id="wa-status" class="status"></div>
   </div>
 
-  <div class="brand">চন্দ্রা পরিবহন</div>
-  <h1>${esc(title)}</h1>
-  ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
-  ${body}
+  <div id="pdf-content">
+    <div class="brand">চন্দ্রা পরিবহন</div>
+    <h1>${esc(title)}</h1>
+    ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ""}
+    ${body}
+  </div>
+
   <script>
     (function(){
       function classify(header){
