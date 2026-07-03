@@ -20,7 +20,7 @@ function Page() {
   const { data: expenses = [] } = useQuery({
     queryKey: ["de-expenses"],
     queryFn: async () =>
-      ((await supabase.from("expenses").select("id,expense_date,vehicle_no,category,head,description,amount,owner_id").order("expense_date", { ascending: false }).limit(5000)).data ?? []) as any[],
+      ((await supabase.from("expenses").select("id,expense_date,vehicle_no,category,head,description,amount,owner_id,created_at").order("expense_date", { ascending: true }).order("created_at", { ascending: true }).limit(5000)).data ?? []) as any[],
   });
   const { data: trips = [] } = useQuery({
     queryKey: ["de-trips"],
