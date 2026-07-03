@@ -12,13 +12,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Camera, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Table as TableIcon } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
-import { extractRowsFromImage, extractColumnFromImage } from "@/lib/ai-extract.functions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
+
 
 export const Route = createFileRoute("/admin")({ component: Page });
 
