@@ -12,13 +12,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Camera, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Table as TableIcon } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
-import { extractRowsFromImage, extractColumnFromImage } from "@/lib/ai-extract.functions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
+
 
 export const Route = createFileRoute("/admin")({ component: Page });
 
@@ -44,18 +44,19 @@ function Page() {
     <AppLayout>
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{t("admin")}</h1>
-        <Tabs defaultValue="calc">
+        <Tabs defaultValue="bulk">
           <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="bulk"><TableIcon className="h-3.5 w-3.5 mr-1" />বাল্ক এন্ট্রি</TabsTrigger>
             <TabsTrigger value="calc">{t("calculation")}</TabsTrigger>
             <TabsTrigger value="mods">{t("moderator")}</TabsTrigger>
             <TabsTrigger value="diary">{t("myDiary")}</TabsTrigger>
-            <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" />AI এন্ট্রি</TabsTrigger>
           </TabsList>
+          <TabsContent value="bulk"><BulkEntryPanel /></TabsContent>
           <TabsContent value="calc"><CalcPanel /></TabsContent>
           <TabsContent value="mods"><ModeratorPanel /></TabsContent>
           <TabsContent value="diary"><DiaryPanel /></TabsContent>
-          <TabsContent value="ai"><AiEntryPanel /></TabsContent>
         </Tabs>
+
       </div>
     </AppLayout>
   );
@@ -376,147 +377,78 @@ function DiaryPanel() {
   );
 }
 
-type AiTarget = "trips" | "expenses";
-type ColMeta = { name: string; type: string; desc: string };
-
-const TARGET_COLUMNS: Record<AiTarget, ColMeta[]> = {
-  trips: [
-    { name: "trip_date", type: "date", desc: "তারিখ" },
-    { name: "vehicle_no", type: "string", desc: "গাড়ীর নম্বর" },
-    { name: "route_1", type: "string", desc: "১ম রুট" },
-    { name: "jama_1", type: "number", desc: "১ম জমা" },
-    { name: "dena_1", type: "number", desc: "১ম দেনা" },
-    { name: "fare_1", type: "number", desc: "১ম ভাড়া" },
-    { name: "route_2", type: "string", desc: "২য় রুট" },
-    { name: "jama_2", type: "number", desc: "২য় জমা" },
-    { name: "dena_2", type: "number", desc: "২য় দেনা" },
-    { name: "fare_2", type: "number", desc: "২য় ভাড়া" },
-    { name: "supervisor", type: "string", desc: "সুপারভাইজার" },
-  ],
-  expenses: [
-    { name: "expense_date", type: "date", desc: "তারিখ" },
-    { name: "vehicle_no", type: "string", desc: "গাড়ীর নম্বর" },
-    { name: "category", type: "string", desc: "ক্যাটাগরি" },
-    { name: "head", type: "string", desc: "হেড" },
-    { name: "description", type: "string", desc: "বিবরণ" },
-    { name: "vendor", type: "string", desc: "ভেন্ডর" },
-    { name: "amount", type: "number", desc: "টাকা" },
-  ],
+type BulkRow = {
+  trip_date: string;
+  vehicle_no: string;
+  jama_1: string;
+  jama_2: string;
+  dena_1: string;
+  dena_2: string;
+  supervisor: string;
 };
 
-function AiEntryPanel() {
+function emptyBulkRow(defaultDate: string): BulkRow {
+  return { trip_date: defaultDate, vehicle_no: "", jama_1: "", jama_2: "", dena_1: "", dena_2: "", supervisor: "" };
+}
+
+function BulkEntryPanel() {
+  const { t, lang } = useT();
   const qc = useQueryClient();
-  const doExtract = useServerFn(extractRowsFromImage);
-  const doExtractCol = useServerFn(extractColumnFromImage);
-  const [target, setTarget] = useState<AiTarget>("trips");
-  const [mode, setMode] = useState<"full" | "single">("full");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const [rows, setRows] = useState<BulkRow[]>(() =>
+    Array.from({ length: 5 }, () => emptyBulkRow(today)),
+  );
   const [saving, setSaving] = useState(false);
-  const [rows, setRows] = useState<Record<string, any>[]>([]);
-  const [columns, setColumns] = useState<ColMeta[]>([]);
-  const [activeCol, setActiveCol] = useState<string>("");
 
-  const allCols = TARGET_COLUMNS[target];
-  const availableCols = allCols.filter((c) => !columns.some((x) => x.name === c.name));
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ["bulk-vehicles"],
+    queryFn: async () =>
+      ((await supabase.from("vehicles").select("vehicle_no").order("vehicle_no")).data ?? []) as { vehicle_no: string }[],
+  });
+  const { data: supervisors = [] } = useQuery({
+    queryKey: ["entry_lookups", "supervisor"],
+    queryFn: async () => {
+      const { data } = await supabase.from("entry_lookups").select("value").eq("kind", "supervisor").order("value");
+      return ((data ?? []) as { value: string }[]).map((r) => r.value);
+    },
+  });
 
-  async function onFile(f: File | null) {
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => setImageUrl(String(reader.result));
-    reader.readAsDataURL(f);
-  }
+  const update = (i: number, key: keyof BulkRow, value: string) =>
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [key]: value } : r)));
 
-  function resetAll() {
-    setRows([]); setColumns([]); setImageUrl(null); setActiveCol("");
-  }
+  const addRow = () => setRows((prev) => [...prev, emptyBulkRow(prev[prev.length - 1]?.trip_date || today)]);
+  const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
+  const clearAll = () => setRows(Array.from({ length: 5 }, () => emptyBulkRow(today)));
 
-  async function extract() {
-    if (!imageUrl) { toast.error("আগে ছবি দিন"); return; }
-    setLoading(true);
-    try {
-      const r: any = await doExtract({ data: { imageDataUrl: imageUrl, target } });
-      setColumns(r.columns);
-      setRows(r.rows.length ? r.rows : [Object.fromEntries(r.columns.map((c: any) => [c.name, c.type === "number" ? 0 : ""]))]);
-      toast.success(`${r.rows.length}টি row পাওয়া গেছে`);
-    } catch (e: any) {
-      toast.error(e.message || "Extract ব্যর্থ");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const num = (v: string) => Number(String(v || "").replace(/[^\d.-]/g, "")) || 0;
+  const rowBalance = (r: BulkRow) => num(r.jama_1) + num(r.jama_2) - num(r.dena_1) - num(r.dena_2);
 
-  async function extractColumn() {
-    if (!imageUrl) { toast.error("আগে ছবি দিন"); return; }
-    if (!activeCol) { toast.error("কলাম সিলেক্ট করুন"); return; }
-    setLoading(true);
-    try {
-      const r: any = await doExtractCol({ data: { imageDataUrl: imageUrl, target, column: activeCol } });
-      const col: ColMeta = r.column;
-      const values: any[] = r.values;
-      // merge into rows: extend columns + fill column for each row
-      setColumns((prev) => (prev.some((c) => c.name === col.name) ? prev : [...prev, col]));
-      setRows((prev) => {
-        const max = Math.max(prev.length, values.length);
-        const next: Record<string, any>[] = [];
-        for (let i = 0; i < max; i++) {
-          const base = prev[i] ? { ...prev[i] } : Object.fromEntries(
-            [...columns, col].map((c) => [c.name, c.type === "number" ? 0 : ""])
-          );
-          base[col.name] = values[i] ?? (col.type === "number" ? 0 : "");
-          next.push(base);
-        }
-        return next;
-      });
-      setImageUrl(null);
-      setActiveCol("");
-      toast.success(`"${col.name}" এ ${values.length}টি মান যোগ`);
-    } catch (e: any) {
-      toast.error(e.message || "Extract ব্যর্থ");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const validRows = rows.filter((r) => r.vehicle_no.trim());
+  const totalJama = validRows.reduce((s, r) => s + num(r.jama_1) + num(r.jama_2), 0);
+  const totalDena = validRows.reduce((s, r) => s + num(r.dena_1) + num(r.dena_2), 0);
+  const totalBal = totalJama - totalDena;
 
-  function updateCell(rowIdx: number, key: string, value: string) {
-    setRows((prev) => prev.map((r, i) => (i === rowIdx ? { ...r, [key]: value } : r)));
-  }
-  function addRow() {
-    setRows((prev) => [...prev, Object.fromEntries(columns.map((c) => [c.name, c.type === "number" ? 0 : ""]))]);
-  }
-  function removeRow(i: number) {
-    setRows((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  async function save() {
-    if (!rows.length) { toast.error("সেভ করার মত row নেই"); return; }
+  async function saveAll() {
+    if (!validRows.length) { toast.error("অন্তত একটি গাড়ীর নম্বর দিন"); return; }
     setSaving(true);
     try {
-      const payload = rows.map((r) => {
-        const o: Record<string, any> = {};
-        for (const c of columns) {
-          const v = r[c.name];
-          if (c.type === "number") {
-            const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
-            o[c.name] = isNaN(n) ? 0 : n;
-          } else if (c.type === "date") {
-            o[c.name] = v || new Date().toISOString().slice(0, 10);
-          } else {
-            o[c.name] = v === "" ? null : v;
-          }
-        }
-        return o;
-      });
-      // ensure required fields
-      if (target === "trips") {
-        payload.forEach((p) => { if (!p.vehicle_no) p.vehicle_no = "অজানা"; });
-      } else {
-        payload.forEach((p) => { if (!p.category) p.category = "অন্যান্য"; });
-      }
-      const { error } = await supabase.from(target).insert(payload as any);
+      const payload = validRows.map((r) => ({
+        trip_date: r.trip_date || today,
+        vehicle_no: r.vehicle_no.trim(),
+        jama_1: num(r.jama_1),
+        jama_2: num(r.jama_2),
+        dena_1: num(r.dena_1),
+        dena_2: num(r.dena_2),
+        fare_1: 0,
+        fare_2: 0,
+        route_1: null,
+        route_2: null,
+        supervisor: r.supervisor.trim() || null,
+      }));
+      const { error } = await supabase.from("trips").insert(payload);
       if (error) throw error;
-      toast.success(`${payload.length}টি row সংরক্ষিত`);
-      resetAll();
+      toast.success(`${payload.length}টি এন্ট্রি সেভ হয়েছে`);
+      clearAll();
       qc.invalidateQueries();
     } catch (e: any) {
       toast.error(e.message || "সেভ ব্যর্থ");
@@ -526,119 +458,94 @@ function AiEntryPanel() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border bg-card p-4 space-y-3">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => { setTarget("trips"); resetAll(); }}
-            className={`px-3 py-2 rounded-md text-sm border ${target === "trips" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
-          >দৈনিক জমা (trips)</button>
-          <button
-            onClick={() => { setTarget("expenses"); resetAll(); }}
-            className={`px-3 py-2 rounded-md text-sm border ${target === "expenses" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60"}`}
-          >খরচ (expenses)</button>
-        </div>
-
-        <div className="flex flex-wrap gap-2 pt-1 border-t">
-          <button
-            onClick={() => { setMode("full"); resetAll(); }}
-            className={`px-3 py-1.5 rounded-md text-xs border ${mode === "full" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-card border-border/60"}`}
-          >ফুল রো মোড</button>
-          <button
-            onClick={() => { setMode("single"); resetAll(); }}
-            className={`px-3 py-1.5 rounded-md text-xs border ${mode === "single" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-card border-border/60"}`}
-          >একক কলাম মোড</button>
-        </div>
-
-        {mode === "single" && (
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">কলাম বাছাই করুন</label>
-            <Select value={activeCol} onValueChange={setActiveCol}>
-              <SelectTrigger className="h-10"><SelectValue placeholder="কলাম..." /></SelectTrigger>
-              <SelectContent>
-                {(availableCols.length ? availableCols : allCols).map((c) => (
-                  <SelectItem key={c.name} value={c.name}>{c.name} — {c.desc}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-2">
-          <label className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/60 p-4 cursor-pointer hover:bg-muted/50">
-            <Camera className="h-5 w-5" />
-            <span className="text-xs">ক্যামেরা</span>
-            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
-          </label>
-          <label className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/60 p-4 cursor-pointer hover:bg-muted/50">
-            <Plus className="h-5 w-5" />
-            <span className="text-xs">গ্যালারী</span>
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
-          </label>
-        </div>
-
-        {imageUrl && (
-          <div className="space-y-2">
-            <img src={imageUrl} alt="preview" className="max-h-64 mx-auto rounded-md border" />
-            <Button onClick={mode === "full" ? extract : extractColumn} disabled={loading} className="w-full">
-              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              {loading ? "পড়া হচ্ছে..." : mode === "full" ? "লেখা বের কর" : `"${activeCol || "কলাম"}" এর মান বের কর`}
-            </Button>
-          </div>
-        )}
-
-        {mode === "single" && rows.length > 0 && !imageUrl && (
-          <div className="text-xs text-muted-foreground">
-            যোগকৃত কলাম: {columns.map((c) => c.name).join(", ") || "—"} • আরও কলাম যোগ করতে উপরে কলাম বাছাই করে ছবি দিন।
-          </div>
-        )}
+    <div className="space-y-3">
+      <div className="rounded-md border bg-card/60 p-3 text-xs text-muted-foreground">
+        এক্সেলের মত সেলে ডাটা লিখে "OK — সব সেভ কর" ক্লিক করুন। ব্যালেন্স ও যোগফল স্বয়ংক্রিয়ভাবে হিসাব হবে এবং দৈনিক জমা হিসাবে যুক্ত হয়ে দৈনিক রিপোর্টে দেখাবে।
       </div>
 
+      <div className="overflow-x-auto rounded-md border bg-card">
+        <table className="w-full text-xs">
+          <thead className="bg-muted">
+            <tr>
+              <th className="px-2 py-2 text-center w-10">SL</th>
+              <th className="px-2 py-2 text-left min-w-[140px]">{t("date")}</th>
+              <th className="px-2 py-2 text-left min-w-[130px]">{t("vehicleNo")}</th>
+              <th className="px-2 py-2 text-right min-w-[100px] text-emerald-500">জমা ১</th>
+              <th className="px-2 py-2 text-right min-w-[100px] text-emerald-500">জমা ২</th>
+              <th className="px-2 py-2 text-right min-w-[100px] text-rose-500">দেনা ১</th>
+              <th className="px-2 py-2 text-right min-w-[100px] text-rose-500">দেনা ২</th>
+              <th className="px-2 py-2 text-right min-w-[100px] text-primary">{t("balance")}</th>
+              <th className="px-2 py-2 text-left min-w-[140px]">{t("supervisor")}</th>
+              <th className="px-2 py-2 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} className="border-t">
+                <td className="px-2 py-1 text-center text-muted-foreground">{fmtNum(i + 1, lang)}</td>
+                <td className="px-1 py-1">
+                  <Input type="date" value={r.trip_date} onChange={(e) => update(i, "trip_date", e.target.value)} className="h-9" />
+                </td>
+                <td className="px-1 py-1">
+                  <input
+                    list="bulk-vehicles-list"
+                    value={r.vehicle_no}
+                    onChange={(e) => update(i, "vehicle_no", e.target.value)}
+                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                    placeholder="গাড়ী…"
+                  />
+                </td>
+                <td className="px-1 py-1"><Input type="number" step="any" value={r.jama_1} onChange={(e) => update(i, "jama_1", e.target.value)} className="h-9 text-right text-emerald-600 dark:text-emerald-400" /></td>
+                <td className="px-1 py-1"><Input type="number" step="any" value={r.jama_2} onChange={(e) => update(i, "jama_2", e.target.value)} className="h-9 text-right text-emerald-600 dark:text-emerald-400" /></td>
+                <td className="px-1 py-1"><Input type="number" step="any" value={r.dena_1} onChange={(e) => update(i, "dena_1", e.target.value)} className="h-9 text-right text-rose-600 dark:text-rose-400" /></td>
+                <td className="px-1 py-1"><Input type="number" step="any" value={r.dena_2} onChange={(e) => update(i, "dena_2", e.target.value)} className="h-9 text-right text-rose-600 dark:text-rose-400" /></td>
+                <td className={`px-2 py-1 text-right font-semibold ${rowBalance(r) >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                  {fmtNum(rowBalance(r), lang)}
+                </td>
+                <td className="px-1 py-1">
+                  <input
+                    list="bulk-supervisors-list"
+                    value={r.supervisor}
+                    onChange={(e) => update(i, "supervisor", e.target.value)}
+                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                    placeholder="সুপারভাইজার…"
+                  />
+                </td>
+                <td className="px-1 py-1 text-center">
+                  <Button size="icon" variant="ghost" onClick={() => removeRow(i)} disabled={rows.length <= 1}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot className="bg-muted/50 font-semibold">
+            <tr className="border-t">
+              <td colSpan={3} className="px-2 py-2 text-right">মোট</td>
+              <td colSpan={2} className="px-2 py-2 text-right text-emerald-500">{fmtNum(totalJama, lang)}</td>
+              <td colSpan={2} className="px-2 py-2 text-right text-rose-500">{fmtNum(totalDena, lang)}</td>
+              <td className={`px-2 py-2 text-right ${totalBal >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{fmtNum(totalBal, lang)}</td>
+              <td colSpan={2}></td>
+            </tr>
+          </tfoot>
+        </table>
+        <datalist id="bulk-vehicles-list">
+          {vehicles.map((v) => <option key={v.vehicle_no} value={v.vehicle_no} />)}
+        </datalist>
+        <datalist id="bulk-supervisors-list">
+          {supervisors.map((s) => <option key={s} value={s} />)}
+        </datalist>
+      </div>
 
-      {rows.length > 0 && (
-        <div className="space-y-3">
-          <div className="overflow-x-auto rounded-md border bg-card">
-            <table className="w-full text-xs">
-              <thead className="bg-muted">
-                <tr>
-                  {columns.map((c) => (
-                    <th key={c.name} className="text-left px-2 py-2 whitespace-nowrap">{c.name}</th>
-                  ))}
-                  <th className="px-2 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, i) => (
-                  <tr key={i} className="border-t">
-                    {columns.map((c) => (
-                      <td key={c.name} className="px-1 py-1">
-                        <Input
-                          type={c.type === "date" ? "date" : c.type === "number" ? "number" : "text"}
-                          value={r[c.name] ?? ""}
-                          onChange={(e) => updateCell(i, c.name, e.target.value)}
-                          className="h-9 min-w-[110px]"
-                        />
-                      </td>
-                    ))}
-                    <td className="px-1 py-1">
-                      <Button size="icon" variant="ghost" onClick={() => removeRow(i)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={addRow}><Plus className="h-4 w-4 mr-1" />Row</Button>
-            <Button onClick={save} disabled={saving} className="flex-1">
-              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              OK — সেভ কর ({rows.length})
-            </Button>
-          </div>
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={addRow}><Plus className="h-4 w-4 mr-1" />রো যোগ</Button>
+        <Button variant="ghost" onClick={clearAll}>ক্লিয়ার</Button>
+        <Button onClick={saveAll} disabled={saving} className="flex-1 min-w-[160px]">
+          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+          OK — সব সেভ কর ({validRows.length})
+        </Button>
+      </div>
     </div>
   );
 }
+
