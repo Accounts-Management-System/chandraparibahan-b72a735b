@@ -14,7 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, Table as TableIcon } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createModerator, listManagedUsers, deleteManagedUser } from "@/lib/admin.functions";
+import { createModerator, listManagedUsers, deleteManagedUser, assignModeratorRole } from "@/lib/admin.functions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from "@/lib/useRole";
 import { useAuth } from "@/lib/auth";
@@ -197,14 +197,33 @@ function ModeratorPanel() {
   const { t } = useT();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [repairEmail, setRepairEmail] = useState("");
+  const [repairing, setRepairing] = useState(false);
   const doCreate = useServerFn(createModerator);
   const doList = useServerFn(listManagedUsers);
   const doDelete = useServerFn(deleteManagedUser);
+  const doAssign = useServerFn(assignModeratorRole);
 
   const { data: users = [] } = useQuery({
     queryKey: ["managed-users"],
     queryFn: () => doList({}),
   });
+
+  const handleRepair = async () => {
+    const email = repairEmail.trim();
+    if (!email) return;
+    setRepairing(true);
+    try {
+      const res: any = await doAssign({ data: { email } });
+      toast.success(res.alreadyAssigned ? "রোল আগেই সেট আছে" : "মডারেটর রোল যুক্ত হয়েছে");
+      setRepairEmail("");
+      qc.invalidateQueries({ queryKey: ["managed-users"] });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRepairing(false);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -213,6 +232,25 @@ function ModeratorPanel() {
           <Plus className="h-4 w-4 mr-2" />{t("createModerator")}
         </Button>
       </div>
+      <div className="rounded-md border bg-card/60 p-3 space-y-2">
+        <div className="text-sm font-semibold">ডাটা শো না করলে রোল মেরামত করুন</div>
+        <div className="text-xs text-muted-foreground">
+          যদি কোনো মডারেটর লগইন করে কিন্তু কোনো ডাটা দেখতে না পায়, নিচে তার ইমেইল লিখে "মডারেটর রোল দিন" ক্লিক করুন।
+        </div>
+        <div className="flex gap-2">
+          <Input
+            type="email"
+            placeholder="moderator@gmail.com"
+            value={repairEmail}
+            onChange={(e) => setRepairEmail(e.target.value)}
+            className="h-10"
+          />
+          <Button onClick={handleRepair} disabled={repairing || !repairEmail}>
+            {repairing ? "..." : "মডারেটর রোল দিন"}
+          </Button>
+        </div>
+      </div>
+
       <div className="overflow-x-auto rounded-md border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted"><tr>
