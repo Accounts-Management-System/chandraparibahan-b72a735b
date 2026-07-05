@@ -56,6 +56,7 @@ const tiles = [
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
   { to: "/data-bank", key: "supervisorDb" as const, icon: UserCog },
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
+  { to: "/reports", key: "ownerReport" as const, icon: FileBarChart, search: { tab: "owner" } as any },
   { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
 
