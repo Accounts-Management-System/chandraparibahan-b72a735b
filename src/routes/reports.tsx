@@ -506,7 +506,7 @@ function Page() {
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleCsv}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
             <Button variant="outline" onClick={handlePdf}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
-            <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
+            <Button variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
           </div>
         </div>
 
