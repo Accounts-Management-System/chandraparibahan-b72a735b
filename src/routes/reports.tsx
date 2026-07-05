@@ -315,7 +315,166 @@ function Page() {
     supervisor: trBn("সুপারভাইজার রিপোর্ট", lang),
   };
 
+  const exportOwnerLandscapePdf = () => {
+    const ownerLabel = ownerId ? ownerName(ownerId) : trBn("সকল ওনার", lang);
+    const ownerBal = ownerFares + ownerJama - ownerKhoroch;
+
+    const vehRowsHtml = ownerByVehicle.map((v) => `
+      <tr>
+        <td>${esc(v.vno)}</td>
+        <td class="wrap">${esc(v.owner)}</td>
+        <td>${esc(fmtNum(v.trips, lang))}</td>
+        <td class="c-jama">${esc(fmtNum(v.fare, lang))}</td>
+      </tr>`).join("");
+
+    const trips = ownerTrips;
+    const exps = ownerExp;
+    const maxLen = Math.max(trips.length, exps.length);
+    const mainRows: string[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      const tr = trips[i];
+      const ex = exps[i];
+      const f = tr ? Number(tr.fare_1 || 0) + Number(tr.fare_2 || 0) : 0;
+      const route = tr ? [tr.route_1, tr.route_2].filter(Boolean).join(" / ") : "";
+      mainRows.push(`<tr>
+        <td>${tr ? esc(fmtNum(i + 1, lang)) : ""}</td>
+        <td>${tr ? esc(fmtDate(tr.trip_date, lang)) : ""}</td>
+        <td>${tr ? esc(tr.vehicle_no ?? "") : ""}</td>
+        <td class="wrap">${tr ? esc(ownerName(ownerVehNos.get(tr.vehicle_no))) : ""}</td>
+        <td class="wrap">${tr ? esc(route) : ""}</td>
+        <td class="c-jama">${tr ? esc(fmtNum(f, lang)) : ""}</td>
+        <td class="sep"></td>
+        <td>${ex ? esc(fmtDate(ex.expense_date, lang)) : ""}</td>
+        <td>${ex ? esc(ex.category ?? "") : ""}</td>
+        <td>${ex ? esc(ex.head ?? "") : ""}</td>
+        <td class="wrap">${ex ? esc(ex.description ?? "") : ""}</td>
+        <td class="c-exp">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
+      </tr>`);
+    }
+
+    const officeRows = ownerOth.map((r: any) => `<tr>
+      <td>${esc(fmtDate(r.income_date, lang))}</td>
+      <td>${esc(r.vehicle_no ?? "-")}</td>
+      <td>${esc(r.category ?? "")}</td>
+      <td>${esc(r.head ?? "")}</td>
+      <td class="wrap">${esc(r.description ?? "")}</td>
+      <td class="c-jama">${esc(fmtNum(r.amount, lang))}</td>
+    </tr>`).join("");
+
+    const subtitle = `${fmtDate(from, lang)} → ${fmtDate(to, lang)} &nbsp;|&nbsp; ${trBn("ওনার:", lang)} ${esc(ownerLabel)}`;
+
+    const body = `
+      <div class="banner green-banner">চন্দ্রা পরিবহন — ওনার হিসাব</div>
+      <div class="meta">${subtitle}</div>
+
+      <table class="summary">
+        <thead>
+          <tr><th colspan="4" class="head-left">ওনার সারাংশ — ${esc(ownerLabel)}</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${trBn("গাড়ি ভাড়া (জমা)", lang)}<br/><b class="c-jama">${esc(fmtNum(ownerFares, lang))}</b></td>
+            <td>${trBn("জমা-খরচের জমা", lang)}<br/><b class="c-jama">${esc(fmtNum(ownerJama, lang))}</b></td>
+            <td>${trBn("জমা-খরচের খরচ", lang)}<br/><b class="c-exp">${esc(fmtNum(ownerKhoroch, lang))}</b></td>
+            <td>${trBn("ব্যালেন্স", lang)}<br/><b class="${ownerBal < 0 ? 'c-neg' : 'c-pos'}">${esc(fmtNum(ownerBal, lang))}</b></td>
+          </tr>
+          <tr><td colspan="4" class="formula">গাড়ি ভাড়া + জমা-খরচের জমা − জমা-খরচের খরচ = ব্যালেন্স</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin:6px 0 4px;font-size:13px;text-align:center">${esc(trBn("গাড়ি অনুযায়ী ভাড়া", lang))}</h3>
+      <table class="other">
+        <thead>
+          <tr><th>গাড়ী নাম্বার</th><th>ওনার</th><th>${trBn("মোট ট্রিপ", lang)}</th><th>${trBn("মোট ভাড়া", lang)}</th></tr>
+        </thead>
+        <tbody>${vehRowsHtml || `<tr><td colspan="4">${esc(t("noData"))}</td></tr>`}</tbody>
+        <tfoot><tr><td colspan="2">${esc(t("grandTotal"))}</td><td>${esc(fmtNum(ownerTrips.length, lang))}</td><td class="c-jama">${esc(fmtNum(ownerFares, lang))}</td></tr></tfoot>
+      </table>
+
+      <table class="main" style="margin-top:6px">
+        <thead>
+          <tr class="group">
+            <th colspan="6">জমা হিসাব (ট্রিপ অনুযায়ী গাড়ী ভাড়া)</th>
+            <th class="sep"></th>
+            <th colspan="5">খরচ হিসাব (জমা-খরচের খরচ)</th>
+          </tr>
+          <tr>
+            <th>SL</th>
+            <th>তারিখ</th>
+            <th>গাড়ী নাম্বার</th>
+            <th>ওনার</th>
+            <th>রুট</th>
+            <th>${trBn("গাড়ী ভাড়া", lang)}</th>
+            <th class="sep"></th>
+            <th>তারিখ</th>
+            <th>ক্যাটাগরী</th>
+            <th>খাত</th>
+            <th>বিবরন</th>
+            <th>পরিমান</th>
+          </tr>
+        </thead>
+        <tbody>${mainRows.join("") || `<tr><td colspan="12">${esc(t("noData"))}</td></tr>`}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">${esc(trBn("মোট ভাড়া", lang))}</td>
+            <td class="c-jama">${esc(fmtNum(ownerFares, lang))}</td>
+            <td class="sep"></td>
+            <td colspan="4">${esc(trBn("মোট খরচ", lang))}</td>
+            <td class="c-exp">${esc(fmtNum(ownerKhoroch, lang))}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      ${ownerOth.length ? `
+      <div class="office-note">⚠ অফিস কতৃক জমা</div>
+      <h3 style="margin:6px 0 4px;font-size:14px;text-align:center">${esc(trBn("জমা-খরচের জমা", lang))}</h3>
+      <table class="other">
+        <thead>
+          <tr><th>তারিখ</th><th>গাড়ী নাম্বার</th><th>ক্যাটাগরী</th><th>খাত</th><th>বিবরন</th><th>পরিমান</th></tr>
+        </thead>
+        <tbody>${officeRows}</tbody>
+        <tfoot><tr><td colspan="5">${esc(trBn("মোট", lang))}</td><td class="c-jama">${esc(fmtNum(ownerJama, lang))}</td></tr></tfoot>
+      </table>` : ""}
+    `;
+
+    const extraStyle = `<style>
+      .banner{background:#dbeafe;border:2px solid #525252;padding:4px;text-align:center;font-weight:700;font-size:13px;margin:2px 0}
+      .green-banner{background:#c6e0b4;border:2px solid #525252;font-size:15px;color:#111}
+      .meta{text-align:center;font-size:10px;margin-bottom:4px}
+      table{table-layout:auto;width:100%}
+      table.summary{margin-bottom:4px;border:2px solid #525252}
+      table.summary th,table.summary td{text-align:center;padding:3px 4px;border:1px solid #525252}
+      table.summary th{background:#e5e7eb}
+      table.summary .head-left{background:#cbd5e1;font-size:12px}
+      table.summary td{font-size:11px}
+      .formula{font-style:italic;background:#f9fafb;font-size:9px}
+      table.main{table-layout:auto;border:2px solid #525252}
+      table.main th,table.main td{text-align:center;vertical-align:middle;white-space:nowrap;padding:2px 3px;border:1px solid #525252;font-size:10px}
+      table.main th{background:#e5e7eb;font-size:11px}
+      table.main tr.group th{background:#cbd5e1;font-size:12px}
+      table.main td.wrap,table.main th.wrap{white-space:normal;word-break:break-word;min-width:80px}
+      table.main .sep{border-top:0;border-bottom:0;border-left:2px solid #525252;border-right:2px solid #525252;background:#f1f5f9;width:8px;padding:0}
+      table.other{border:2px solid #525252;margin-bottom:4px}
+      table.other th,table.other td{text-align:center;padding:2px 4px;border:1px solid #525252;font-size:10px}
+      table.other th{background:#e5e7eb}
+      table.other td.wrap{white-space:normal;word-break:break-word;min-width:100px}
+      tfoot td{font-weight:700;background:#f3f4f6}
+      .c-jama{color:#1d4ed8;font-weight:700}
+      .c-exp{color:#b91c1c;font-weight:700}
+      .c-pos{color:#15803d;font-weight:700}
+      .c-neg{color:#b91c1c;font-weight:700}
+      .office-note{margin-top:6px;background:#fef3c7;border:1px solid #d97706;color:#78350f;font-weight:700;text-align:center;padding:3px;font-size:11px;border-radius:3px}
+    </style>`;
+
+    exportPdfHtml({
+      title: `${trBn("চন্দ্রা পরিবহন — ওনার হিসাব", lang)} — ${ownerLabel}`,
+      body: extraStyle + body,
+      orientation: "landscape",
+    });
+  };
+
   const handlePdf = () => {
+    if (tab === "owner") { exportOwnerLandscapePdf(); return; }
     const d = tabData();
     const title = `${t("brand")} — ${tabTitles[tab] ?? t("reports")}`;
     if (d.extraHtml) {
@@ -323,6 +482,10 @@ function Page() {
     } else {
       exportPdf({ title, subtitle: sub(), headers: d.headers, rows: d.rows, footer: d.footer ? d.footer.join(" | ") : undefined, orientation: d.orientation });
     }
+  };
+  const handlePrint = () => {
+    if (tab === "owner") { exportOwnerLandscapePdf(); return; }
+    window.print();
   };
   const handleCsv = () => {
     const d = tabData();
@@ -343,7 +506,7 @@ function Page() {
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleCsv}><Download className="h-4 w-4 mr-2" />{t("exportCsv")}</Button>
             <Button variant="outline" onClick={handlePdf}><FileDown className="h-4 w-4 mr-2" />{t("exportPdf")}</Button>
-            <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
+            <Button variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-2" />{t("print")}</Button>
           </div>
         </div>
 
