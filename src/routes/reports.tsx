@@ -167,7 +167,12 @@ function Page() {
 
   const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (dailyJama - dena) + othTotal + mainJamaKhorochJama - expTotal;
 
-  const [tab, setTab] = useState("dashboard");
+  const initialTab = (() => {
+    if (typeof window === "undefined") return "dashboard";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t || "dashboard";
+  })();
+  const [tab, setTab] = useState(initialTab);
 
   const csvDownload = (name: string, headers: string[], rows: any[][]) => {
     const escq = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
