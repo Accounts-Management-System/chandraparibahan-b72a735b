@@ -449,7 +449,7 @@ function DashboardPage() {
                   <Link
                     key={`${tile.to}-${tile.key}`}
                     to={tile.to}
-                    search={("search" in tile ? (tile as any).search : undefined) as any}
+                    {...(("search" in tile ? { search: (tile as any).search } : {}) as any)}
                     className={`tile-3d tile-${tone} group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-md`}
                   >
                     <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">
