@@ -56,6 +56,7 @@ const tiles = [
   { to: "/data-bank", key: "dataBank" as const, icon: Database },
   { to: "/data-bank", key: "supervisorDb" as const, icon: UserCog },
   { to: "/reports", key: "reports" as const, icon: FileBarChart },
+  { to: "/reports", key: "ownerReport" as const, icon: FileBarChart, search: { tab: "owner" } as any },
   { to: "/admin", key: "admin" as const, icon: ShieldCheck, adminOnly: true },
 ];
 
@@ -448,6 +449,7 @@ function DashboardPage() {
                   <Link
                     key={`${tile.to}-${tile.key}`}
                     to={tile.to}
+                    {...(("search" in tile ? { search: (tile as any).search } : {}) as any)}
                     className={`tile-3d tile-${tone} group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-md`}
                   >
                     <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mb-3">

@@ -167,7 +167,12 @@ function Page() {
 
   const balance = ownerId ? ownerFares + ownerJama - ownerKhoroch : (dailyJama - dena) + othTotal + mainJamaKhorochJama - expTotal;
 
-  const [tab, setTab] = useState("dashboard");
+  const initialTab = (() => {
+    if (typeof window === "undefined") return "dashboard";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t || "dashboard";
+  })();
+  const [tab, setTab] = useState(initialTab);
 
   const csvDownload = (name: string, headers: string[], rows: any[][]) => {
     const escq = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -329,27 +334,47 @@ function Page() {
 
     const trips = ownerTrips;
     const exps = ownerExp;
-    const maxLen = Math.max(trips.length, exps.length);
+    // Group by date so jama and khoroch of the same date share the same rows.
+    // If one side has fewer entries for a date, the shorter side stays blank
+    // for the remaining rows; next date starts after the longer side ends.
+    const byDate = new Map<string, { trips: any[]; exps: any[] }>();
+    trips.forEach((tr: any) => {
+      const d = tr.trip_date;
+      if (!byDate.has(d)) byDate.set(d, { trips: [], exps: [] });
+      byDate.get(d)!.trips.push(tr);
+    });
+    exps.forEach((ex: any) => {
+      const d = ex.expense_date;
+      if (!byDate.has(d)) byDate.set(d, { trips: [], exps: [] });
+      byDate.get(d)!.exps.push(ex);
+    });
+    const dates = Array.from(byDate.keys()).sort();
     const mainRows: string[] = [];
-    for (let i = 0; i < maxLen; i++) {
-      const tr = trips[i];
-      const ex = exps[i];
-      const f = tr ? Number(tr.fare_1 || 0) + Number(tr.fare_2 || 0) : 0;
-      const route = tr ? [tr.route_1, tr.route_2].filter(Boolean).join(" / ") : "";
-      mainRows.push(`<tr>
-        <td>${tr ? esc(fmtNum(i + 1, lang)) : ""}</td>
-        <td>${tr ? esc(fmtDate(tr.trip_date, lang)) : ""}</td>
-        <td>${tr ? esc(tr.vehicle_no ?? "") : ""}</td>
-        <td class="wrap">${tr ? esc(ownerName(ownerVehNos.get(tr.vehicle_no))) : ""}</td>
-        <td class="wrap">${tr ? esc(route) : ""}</td>
-        <td class="c-jama">${tr ? esc(fmtNum(f, lang)) : ""}</td>
-        <td class="sep"></td>
-        <td>${ex ? esc(fmtDate(ex.expense_date, lang)) : ""}</td>
-        <td>${ex ? esc(ex.category ?? "") : ""}</td>
-        <td>${ex ? esc(ex.head ?? "") : ""}</td>
-        <td class="wrap">${ex ? esc(ex.description ?? "") : ""}</td>
-        <td class="c-exp">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
-      </tr>`);
+    let sl = 0;
+    for (const d of dates) {
+      const grp = byDate.get(d)!;
+      const rowCount = Math.max(grp.trips.length, grp.exps.length);
+      for (let i = 0; i < rowCount; i++) {
+        const tr = grp.trips[i];
+        const ex = grp.exps[i];
+        if (tr) sl++;
+        const f = tr ? Number(tr.fare_1 || 0) + Number(tr.fare_2 || 0) : 0;
+        const route = tr ? [tr.route_1, tr.route_2].filter(Boolean).join(" / ") : "";
+        mainRows.push(`<tr>
+          <td>${tr ? esc(fmtNum(sl, lang)) : ""}</td>
+          <td>${tr ? esc(fmtDate(tr.trip_date, lang)) : ""}</td>
+          <td>${tr ? esc(tr.vehicle_no ?? "") : ""}</td>
+          <td class="wrap">${tr ? esc(ownerName(ownerVehNos.get(tr.vehicle_no))) : ""}</td>
+          <td class="wrap">${tr ? esc(route) : ""}</td>
+          <td class="c-jama">${tr ? esc(fmtNum(f, lang)) : ""}</td>
+          <td class="sep"></td>
+          <td>${ex ? esc(fmtDate(ex.expense_date, lang)) : ""}</td>
+          <td>${ex ? esc(ex.category ?? "") : ""}</td>
+          <td>${ex ? esc(ex.head ?? "") : ""}</td>
+          <td class="wrap">${ex ? esc(ex.description ?? "") : ""}</td>
+          <td class="c-exp">${ex ? esc(fmtNum(ex.amount, lang)) : ""}</td>
+        </tr>`);
+      }
     }
 
     const officeRows = ownerOth.map((r: any) => `<tr>

@@ -169,6 +169,7 @@ const dict = {
   dailyExpense: { bn: "দৈনিক খরচ", en: "Daily Expense" },
   ownerAccounts: { bn: "ওনার হিসাব", en: "Owner Accounts" },
   dailyReport: { bn: "দৈনিক রিপোর্ট", en: "Daily Report" },
+  ownerReport: { bn: "ওনার রিপোর্ট", en: "Owner Report" },
   selectOwner: { bn: "ওনার নির্বাচন", en: "Select Owner" },
   grandTotal: { bn: "সর্বমোট", en: "Grand Total" },
   receivable: { bn: "পূর্বের পাওনা", en: "Previous Receivable" },
