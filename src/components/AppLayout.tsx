@@ -236,10 +236,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex items-center">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                <span className="mr-1">{lang === "bn" ? "ডিজাইন এবং ডেভেলপড" : "Designed & Developed by"}</span>
-                <span className="text-white font-semibold tracking-wider cursor-pointer">
-                  {lang === "bn" ? "জায়িম ভুইয়া।" : "Zayem Bhuiya."}
-                </span>
+                <span className="mr-1">{lang === "bn" ? "ডিজাইন এবং ডেভেলপড বাই জায়িম ভুইয়া।\u00a0" : "Designed & Developed by Zayem Bhuiya.\u00a0"}</span>
               </div>
             </div>
           </footer>
